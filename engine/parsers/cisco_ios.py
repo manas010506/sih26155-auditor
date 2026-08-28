@@ -21,7 +21,7 @@ class CiscoIOSParser(Parser):
             return doc
 
         doc["resources"].extend(self._vty_lines(cfg))       # DAY 1 - do this first
-        doc["resources"].extend(self._snmp_communities(cfg))  # DAY 1
+        # doc["resources"].extend(self._snmp_communities(cfg))  # DAY 1
         # doc["resources"].extend(self._snmp_settings(cfg))   # DAY 1
         # doc["resources"].append(self._global_settings(cfg)) # DAY 2
         # doc["resources"].extend(self._local_users(cfg))     # DAY 2
@@ -40,21 +40,36 @@ class CiscoIOSParser(Parser):
 
     # ------------------------------------------------------------ WORKED EXAMPLE
     def _vty_lines(self, cfg):
-        """This one is done for you. Copy the shape for everything else."""
+        """This one is done for you. Copy the shape for everything else.
+
+        Note how attribute_refs is built: whenever a child line is matched, its
+        line number is recorded against the attribute that line sets. The rule
+        engine uses schema.resolve_ref() to pick the per-attribute line when one
+        exists, so a finding about transport_input points at the transport line
+        rather than at the block header.
+
+        access_class is deliberately NOT in the map when the sub-command is
+        absent. It falls through to the block's own raw_ref, which is the right
+        answer: the block exists, only the setting is missing.
+        """
         out = []
         for block in cfg.find_objects(r"^line vty"):
             rng = block.text.strip().replace("line vty ", "")
             transport, timeout, access_class, login = [], None, None, "none"
+            refs = {}
 
             for child in block.children:
                 t = child.text.strip()
                 if t.startswith("transport input"):
                     transport = t.replace("transport input", "").split()
+                    refs["transport_input"] = self._ref(child)
                 elif t.startswith("exec-timeout"):
                     parts = t.split()
                     timeout = int(parts[1]) if len(parts) > 1 else None
+                    refs["exec_timeout_minutes"] = self._ref(child)
                 elif t.startswith("access-class"):
                     access_class = t.split()[1]
+                    refs["access_class"] = self._ref(child)
                 elif t.startswith("login authentication"):
                     login = "aaa"
                 elif t == "login":
@@ -71,6 +86,7 @@ class CiscoIOSParser(Parser):
                     "login_method": login,
                     "privilege_level": None,
                 },
+                "attribute_refs": refs,
                 "raw_ref": self._ref(block),
             })
         return out
