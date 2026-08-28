@@ -1,0 +1,62 @@
+/* Repo path: frontend/src/styles/tokens.css     Owner: Vedant
+   Decide once, tonight. Every component reads from here and nothing
+   hardcodes a colour or a size. Consistency is what makes a UI look
+   designed rather than generated. Change the values if you want a
+   different look - keep the discipline. */
+
+:root {
+  /* surfaces - security consoles are dark and dense */
+  --bg-0:        #0d1117;   /* app background */
+  --bg-1:        #161b22;   /* panels, cards */
+  --bg-2:        #1c2430;   /* raised: table header, active row */
+  --border:      #2b3543;
+  --border-soft: #212a36;
+
+  /* text */
+  --fg-0: #e6edf3;   /* primary */
+  --fg-1: #9aa8b8;   /* secondary, labels */
+  --fg-2: #6b7887;   /* tertiary, line numbers */
+
+  /* accent - ONE accent, used for interaction only */
+  --accent:     #4a9eff;
+  --accent-dim: #1f3a5c;
+
+  /* severity - these four are used for severity and NOTHING else.
+     Never decorate with them. That rule alone reads as professional. */
+  --sev-critical: #f2545b;
+  --sev-high:     #f0883e;
+  --sev-medium:   #d9a441;
+  --sev-low:      #7d8998;
+  --sev-pass:     #3fb950;
+
+  --sev-critical-bg: #2d1417;
+  --sev-high-bg:     #2b1c10;
+  --sev-medium-bg:   #26200f;
+  --sev-low-bg:      #1a1f26;
+
+  /* type */
+  --font-ui:   "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+
+  --fs-xs: 11px;   /* line numbers, table meta */
+  --fs-sm: 12px;   /* table body, labels */
+  --fs-md: 14px;   /* default */
+  --fs-lg: 18px;   /* panel titles */
+  --fs-xl: 28px;   /* the score */
+
+  /* spacing - 4px scale, never an arbitrary value */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
+  --sp-4: 16px; --sp-6: 24px; --sp-8: 32px;
+
+  --radius: 4px;      /* small. big radii read as consumer SaaS */
+  --row-h:  34px;     /* dense table rows */
+}
+
+/* Every technical value is monospace: rule IDs, line numbers, config
+   snippets, CLI remediation, hostnames, IPs. This single rule does more
+   for credibility than any amount of layout work. */
+.mono { font-family: var(--font-mono); font-size: var(--fs-sm); }
+
+/* NOT ALLOWED in this project:
+   gradients, emoji in headers, centered marketing layouts,
+   untouched component-library defaults, severity colours used as decoration. */

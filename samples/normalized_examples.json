@@ -1,0 +1,361 @@
+{
+  "cisco_example": {
+    "source": {
+      "type": "cisco_ios",
+      "filename": "sample_cisco_ios.cfg"
+    },
+    "resources": [
+      {
+        "id": "global",
+        "type": "global_settings",
+        "attributes": {
+          "hostname": "EDGE-RTR-01",
+          "os_version": "15.2",
+          "password_encryption": false,
+          "aaa_new_model": false,
+          "http_server": true,
+          "https_server": true,
+          "cdp_enabled": true,
+          "enable_secret_present": false,
+          "enable_password_present": true,
+          "enable_password_type": 0,
+          "login_banner": null,
+          "motd_banner": null
+        },
+        "raw_ref": {
+          "line": 9,
+          "snippet": "hostname EDGE-RTR-01"
+        }
+      },
+      {
+        "id": "enable-password",
+        "type": "enable_secret",
+        "attributes": {
+          "uses_secret": false,
+          "encryption_type": 0,
+          "encrypted": false
+        },
+        "raw_ref": {
+          "line": 14,
+          "snippet": "enable password cisco123"
+        }
+      },
+      {
+        "id": "user-admin",
+        "type": "local_user",
+        "attributes": {
+          "name": "admin",
+          "privilege": 15,
+          "encryption_type": 0,
+          "encrypted": false
+        },
+        "raw_ref": {
+          "line": 24,
+          "snippet": "username admin privilege 15 password 0 admin123"
+        }
+      },
+      {
+        "id": "user-netops",
+        "type": "local_user",
+        "attributes": {
+          "name": "netops",
+          "privilege": 15,
+          "encryption_type": 0,
+          "encrypted": false
+        },
+        "raw_ref": {
+          "line": 25,
+          "snippet": "username netops privilege 15 password 0 N3top2024"
+        }
+      },
+      {
+        "id": "snmp-public",
+        "type": "snmp_community",
+        "attributes": {
+          "community": "public",
+          "access": "RO",
+          "acl": null,
+          "is_default_string": true
+        },
+        "raw_ref": {
+          "line": 54,
+          "snippet": "snmp-server community public RO"
+        }
+      },
+      {
+        "id": "snmp-private",
+        "type": "snmp_community",
+        "attributes": {
+          "community": "private",
+          "access": "RW",
+          "acl": null,
+          "is_default_string": true
+        },
+        "raw_ref": {
+          "line": 55,
+          "snippet": "snmp-server community private RW"
+        }
+      },
+      {
+        "id": "snmp",
+        "type": "snmp_settings",
+        "attributes": {
+          "v3_configured": false,
+          "versions_in_use": [
+            "v1",
+            "v2c"
+          ],
+          "traps_enabled": false
+        },
+        "raw_ref": null
+      },
+      {
+        "id": "vty-0-4",
+        "type": "vty_line",
+        "attributes": {
+          "range": "0 4",
+          "transport_input": [
+            "telnet",
+            "ssh"
+          ],
+          "exec_timeout_minutes": 0,
+          "access_class": null,
+          "login_method": "password",
+          "privilege_level": null
+        },
+        "raw_ref": {
+          "line": 67,
+          "snippet": "line vty 0 4"
+        }
+      },
+      {
+        "id": "vty-5-15",
+        "type": "vty_line",
+        "attributes": {
+          "range": "5 15",
+          "transport_input": [
+            "telnet",
+            "ssh"
+          ],
+          "exec_timeout_minutes": 0,
+          "access_class": null,
+          "login_method": "password",
+          "privilege_level": null
+        },
+        "raw_ref": {
+          "line": 73,
+          "snippet": "line vty 5 15"
+        }
+      },
+      {
+        "id": "con-0",
+        "type": "console_line",
+        "attributes": {
+          "exec_timeout_minutes": 0,
+          "login_method": "none",
+          "privilege_level": 15
+        },
+        "raw_ref": {
+          "line": 59,
+          "snippet": "line con 0"
+        }
+      },
+      {
+        "id": "ssh",
+        "type": "ssh_settings",
+        "attributes": {
+          "version": null,
+          "timeout_seconds": null,
+          "auth_retries": null,
+          "key_bits": null
+        },
+        "raw_ref": null
+      },
+      {
+        "id": "logging",
+        "type": "logging",
+        "attributes": {
+          "hosts": [],
+          "buffered": false,
+          "trap_level": null,
+          "logs_admin_access": false
+        },
+        "raw_ref": null
+      },
+      {
+        "id": "ntp",
+        "type": "ntp",
+        "attributes": {
+          "servers": [
+            "10.10.0.250"
+          ],
+          "authenticated": false
+        },
+        "raw_ref": {
+          "line": 79,
+          "snippet": "ntp server 10.10.0.250"
+        }
+      }
+    ],
+    "_unparsed": []
+  },
+  "terraform_example": {
+    "source": {
+      "type": "terraform_aws",
+      "filename": "main.tf"
+    },
+    "resources": [
+      {
+        "id": "s3-sensitive_data",
+        "type": "s3_bucket",
+        "attributes": {
+          "name": "corp-sensitive-data-prod",
+          "acl": "public-read",
+          "public_access_block": false,
+          "encrypted": false,
+          "sse_algorithm": null,
+          "versioning": false,
+          "access_logging": false
+        },
+        "raw_ref": {
+          "line": 23,
+          "snippet": "acl    = \"public-read\""
+        }
+      },
+      {
+        "id": "s3-app_logs",
+        "type": "s3_bucket",
+        "attributes": {
+          "name": "corp-app-logs-prod",
+          "acl": null,
+          "public_access_block": false,
+          "encrypted": true,
+          "sse_algorithm": "AES256",
+          "versioning": true,
+          "access_logging": false
+        },
+        "raw_ref": {
+          "line": 27,
+          "snippet": "bucket = \"corp-app-logs-prod\""
+        }
+      },
+      {
+        "id": "sg-web-ingress-22",
+        "type": "security_group_rule",
+        "attributes": {
+          "group": "web-tier-sg",
+          "direction": "ingress",
+          "protocol": "tcp",
+          "from_port": 22,
+          "to_port": 22,
+          "cidr_blocks": [
+            "0.0.0.0/0"
+          ],
+          "open_to_internet": true
+        },
+        "raw_ref": {
+          "line": 56,
+          "snippet": "description = \"SSH from anywhere\""
+        }
+      },
+      {
+        "id": "sg-web-ingress-3389",
+        "type": "security_group_rule",
+        "attributes": {
+          "group": "web-tier-sg",
+          "direction": "ingress",
+          "protocol": "tcp",
+          "from_port": 3389,
+          "to_port": 3389,
+          "cidr_blocks": [
+            "0.0.0.0/0"
+          ],
+          "open_to_internet": true
+        },
+        "raw_ref": {
+          "line": 64,
+          "snippet": "description = \"RDP from anywhere\""
+        }
+      },
+      {
+        "id": "sg-web-ingress-0-65535",
+        "type": "security_group_rule",
+        "attributes": {
+          "group": "web-tier-sg",
+          "direction": "ingress",
+          "protocol": "tcp",
+          "from_port": 0,
+          "to_port": 65535,
+          "cidr_blocks": [
+            "0.0.0.0/0"
+          ],
+          "open_to_internet": true
+        },
+        "raw_ref": {
+          "line": 72,
+          "snippet": "description = \"Temporary debug access\""
+        }
+      },
+      {
+        "id": "iam-app_policy",
+        "type": "iam_policy",
+        "attributes": {
+          "name": "app-runtime-policy",
+          "wildcard_action": true,
+          "wildcard_resource": true,
+          "wildcard_principal": false,
+          "statement_count": 1
+        },
+        "raw_ref": {
+          "line": 98,
+          "snippet": "Action   = \"*\""
+        }
+      },
+      {
+        "id": "rds-app_db",
+        "type": "rds_instance",
+        "attributes": {
+          "identifier": "app-db-prod",
+          "engine": "postgres",
+          "publicly_accessible": true,
+          "storage_encrypted": false,
+          "backup_retention_days": 1,
+          "deletion_protection": true,
+          "auto_minor_version_upgrade": true
+        },
+        "raw_ref": {
+          "line": 113,
+          "snippet": "publicly_accessible        = true"
+        }
+      },
+      {
+        "id": "kms-app_key",
+        "type": "kms_key",
+        "attributes": {
+          "description": "Application data key",
+          "key_rotation": false
+        },
+        "raw_ref": {
+          "line": 125,
+          "snippet": "enable_key_rotation = false"
+        }
+      },
+      {
+        "id": "cloudtrail-main",
+        "type": "cloudtrail",
+        "attributes": {
+          "name": "corp-trail",
+          "exists": true,
+          "multi_region": false,
+          "log_file_validation": false,
+          "global_service_events": true
+        },
+        "raw_ref": {
+          "line": 131,
+          "snippet": "is_multi_region_trail         = false"
+        }
+      }
+    ],
+    "_unparsed": []
+  }
+}

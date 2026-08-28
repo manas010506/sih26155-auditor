@@ -1,0 +1,71 @@
+# =============================================================================
+# ATTACK CHAIN FORMAT — owned by Manas. Deep authors the chains.
+#
+#   chain_id            (required)  CHAIN-<DOMAIN>-<NAME>
+#   name                (required)  Shown as the graph title.
+#   severity            (required)  critical | high | medium | low
+#   requires            (required)  Rule ids that make up the chain.
+#   min_matches         (optional)  Fire when at least N of `requires` are
+#                                   present in the findings. Default: all.
+#   break_chain         (required)  fix_rule must be one of `requires`.
+#     fix_rule                      The single fix that breaks the path.
+#     why                           One sentence. This is what wins the demo.
+#   narrative_template  (required)  Deterministic prose. Shreyas's LLM layer
+#                                   may replace it; it is never null.
+#
+# A chain is a story, not a bag of findings. Every chain must read as
+# "attacker gets in -> escalates -> is not detected". If you can't tell that
+# story in one sentence, it isn't a chain.
+# =============================================================================
+
+- chain_id: CHAIN-NET-MGMT-TAKEOVER
+  name: Cleartext management plane to privileged takeover
+  severity: critical
+  requires: [CIS-NET-004, CIS-NET-001, CIS-NET-006, CIS-NET-011]
+  min_matches: 3
+  break_chain:
+    fix_rule: CIS-NET-004
+    why: >-
+      Applying an access-class removes reachability for every management
+      protocol at once, so the Telnet and credential weaknesses become
+      unreachable while they are being fixed.
+  narrative_template: >-
+    The management plane is reachable from any routable network because no
+    access-class is applied, and it accepts Telnet. An attacker on the path
+    captures credentials in cleartext, and the enable password stored in the
+    configuration grants privileged EXEC. With no syslog host, the entire
+    sequence leaves no off-box record.
+
+- chain_id: CHAIN-NET-SNMP-CONTROL
+  name: SNMP reconnaissance to device control
+  severity: critical
+  requires: [CIS-NET-008, CIS-NET-009, CIS-NET-011]
+  min_matches: 2
+  break_chain:
+    fix_rule: CIS-NET-009
+    why: >-
+      Removing the read-write community reduces the worst case from device
+      control to information disclosure, which is the difference between an
+      incident and an outage.
+  narrative_template: >-
+    The default read-only community exposes the full running configuration,
+    which reveals the read-write community. That second string permits
+    configuration writes over UDP with no session and no authentication beyond
+    the string itself. Neither step is logged remotely.
+
+- chain_id: CHAIN-NET-CRED-EXPOSURE
+  name: Configuration read to credential reuse
+  severity: high
+  requires: [CIS-NET-005, CIS-NET-006, CIS-NET-007, CIS-NET-003]
+  min_matches: 3
+  break_chain:
+    fix_rule: CIS-NET-006
+    why: >-
+      Moving to enable secret replaces a readable password with an irreversible
+      hash, so reading the configuration no longer yields privileged access.
+  narrative_template: >-
+    Every credential on this device is recoverable from the configuration text:
+    password encryption is off, the enable password is plaintext, and both
+    privilege-15 accounts use type 0 passwords. Anyone who obtains a config
+    backup obtains administrative access, and disabled session timeouts widen
+    the window for reuse.
