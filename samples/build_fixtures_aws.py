@@ -37,7 +37,11 @@ normalized = {
                 "versioning": False,
                 "access_logging": False,
             },
-            "raw_ref": ref('acl    = "public-read"'),
+            # raw_ref is null: the absence findings (no public access block, no
+            # encryption, no versioning, no logging) must resolve to null, and
+            # only `acl` has a line of its own.
+            "attribute_refs": {"acl": ref('acl    = "public-read"')},
+            "raw_ref": None,
         },
         {
             "id": "s3-app_logs",
@@ -51,7 +55,11 @@ normalized = {
                 "versioning": True,
                 "access_logging": False,
             },
-            "raw_ref": ref('bucket = "corp-app-logs-prod"'),
+            "attribute_refs": {
+                "name": ref('bucket = "corp-app-logs-prod"'),
+                "sse_algorithm": ref('sse_algorithm = "AES256"'),
+            },
+            "raw_ref": None,
         },
         {
             "id": "sg-web-ingress-22",
@@ -105,6 +113,10 @@ normalized = {
                 "wildcard_principal": False,
                 "statement_count": 1,
             },
+            "attribute_refs": {
+                "wildcard_action": ref('Action   = "*"'),
+                "wildcard_resource": ref('Resource = "*"'),
+            },
             "raw_ref": ref('Action   = "*"'),
         },
         {
@@ -119,12 +131,20 @@ normalized = {
                 "deletion_protection": True,
                 "auto_minor_version_upgrade": True,
             },
+            "attribute_refs": {
+                "publicly_accessible": ref("publicly_accessible        = true"),
+                "storage_encrypted": ref("storage_encrypted          = false"),
+                "backup_retention_days": ref("backup_retention_period    = 1"),
+                "deletion_protection": ref("deletion_protection        = true"),
+                "auto_minor_version_upgrade": ref("auto_minor_version_upgrade = true"),
+            },
             "raw_ref": ref("publicly_accessible        = true"),
         },
         {
             "id": "kms-app_key",
             "type": "kms_key",
             "attributes": {"description": "Application data key", "key_rotation": False},
+            "attribute_refs": {"key_rotation": ref("enable_key_rotation = false")},
             "raw_ref": ref("enable_key_rotation = false"),
         },
         {
@@ -136,6 +156,13 @@ normalized = {
                 "multi_region": False,
                 "log_file_validation": False,
                 "global_service_events": True,
+            },
+            # two rules read two different attributes of the same resource -
+            # this is exactly the case attribute_refs exists for.
+            "attribute_refs": {
+                "exists": ref('name                          = "corp-trail"'),
+                "multi_region": ref("is_multi_region_trail         = false"),
+                "log_file_validation": ref("enable_log_file_validation    = false"),
             },
             "raw_ref": ref("is_multi_region_trail         = false"),
         },

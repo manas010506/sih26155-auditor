@@ -22,10 +22,33 @@
           "login_banner": null,
           "motd_banner": null
         },
-        "raw_ref": {
-          "line": 9,
-          "snippet": "hostname EDGE-RTR-01"
-        }
+        "attribute_refs": {
+          "hostname": {
+            "line": 9,
+            "snippet": "hostname EDGE-RTR-01"
+          },
+          "password_encryption": {
+            "line": 7,
+            "snippet": "no service password-encryption"
+          },
+          "aaa_new_model": {
+            "line": 16,
+            "snippet": "no aaa new-model"
+          },
+          "http_server": {
+            "line": 29,
+            "snippet": "ip http server"
+          },
+          "https_server": {
+            "line": 30,
+            "snippet": "ip http secure-server"
+          },
+          "cdp_enabled": {
+            "line": 27,
+            "snippet": "cdp run"
+          }
+        },
+        "raw_ref": null
       },
       {
         "id": "enable-password",
@@ -34,6 +57,12 @@
           "uses_secret": false,
           "encryption_type": 0,
           "encrypted": false
+        },
+        "attribute_refs": {
+          "uses_secret": {
+            "line": 14,
+            "snippet": "enable password cisco123"
+          }
         },
         "raw_ref": {
           "line": 14,
@@ -49,6 +78,12 @@
           "encryption_type": 0,
           "encrypted": false
         },
+        "attribute_refs": {
+          "encrypted": {
+            "line": 24,
+            "snippet": "username admin privilege 15 password 0 admin123"
+          }
+        },
         "raw_ref": {
           "line": 24,
           "snippet": "username admin privilege 15 password 0 admin123"
@@ -62,6 +97,12 @@
           "privilege": 15,
           "encryption_type": 0,
           "encrypted": false
+        },
+        "attribute_refs": {
+          "encrypted": {
+            "line": 25,
+            "snippet": "username netops privilege 15 password 0 N3top2024"
+          }
         },
         "raw_ref": {
           "line": 25,
@@ -77,6 +118,12 @@
           "acl": null,
           "is_default_string": true
         },
+        "attribute_refs": {
+          "is_default_string": {
+            "line": 54,
+            "snippet": "snmp-server community public RO"
+          }
+        },
         "raw_ref": {
           "line": 54,
           "snippet": "snmp-server community public RO"
@@ -90,6 +137,12 @@
           "access": "RW",
           "acl": null,
           "is_default_string": true
+        },
+        "attribute_refs": {
+          "access": {
+            "line": 55,
+            "snippet": "snmp-server community private RW"
+          }
         },
         "raw_ref": {
           "line": 55,
@@ -123,6 +176,16 @@
           "login_method": "password",
           "privilege_level": null
         },
+        "attribute_refs": {
+          "transport_input": {
+            "line": 71,
+            "snippet": "transport input telnet ssh"
+          },
+          "exec_timeout_minutes": {
+            "line": 68,
+            "snippet": "exec-timeout 0 0"
+          }
+        },
         "raw_ref": {
           "line": 67,
           "snippet": "line vty 0 4"
@@ -142,6 +205,16 @@
           "login_method": "password",
           "privilege_level": null
         },
+        "attribute_refs": {
+          "transport_input": {
+            "line": 77,
+            "snippet": "transport input telnet ssh"
+          },
+          "exec_timeout_minutes": {
+            "line": 74,
+            "snippet": "exec-timeout 0 0"
+          }
+        },
         "raw_ref": {
           "line": 73,
           "snippet": "line vty 5 15"
@@ -154,6 +227,20 @@
           "exec_timeout_minutes": 0,
           "login_method": "none",
           "privilege_level": 15
+        },
+        "attribute_refs": {
+          "exec_timeout_minutes": {
+            "line": 60,
+            "snippet": "exec-timeout 0 0"
+          },
+          "privilege_level": {
+            "line": 61,
+            "snippet": "privilege level 15"
+          },
+          "login_method": {
+            "line": 62,
+            "snippet": "no login"
+          }
         },
         "raw_ref": {
           "line": 59,
@@ -191,6 +278,12 @@
           ],
           "authenticated": false
         },
+        "attribute_refs": {
+          "servers": {
+            "line": 79,
+            "snippet": "ntp server 10.10.0.250"
+          }
+        },
         "raw_ref": {
           "line": 79,
           "snippet": "ntp server 10.10.0.250"
@@ -217,10 +310,13 @@
           "versioning": false,
           "access_logging": false
         },
-        "raw_ref": {
-          "line": 23,
-          "snippet": "acl    = \"public-read\""
-        }
+        "attribute_refs": {
+          "acl": {
+            "line": 23,
+            "snippet": "acl    = \"public-read\""
+          }
+        },
+        "raw_ref": null
       },
       {
         "id": "s3-app_logs",
@@ -234,10 +330,17 @@
           "versioning": true,
           "access_logging": false
         },
-        "raw_ref": {
-          "line": 27,
-          "snippet": "bucket = \"corp-app-logs-prod\""
-        }
+        "attribute_refs": {
+          "name": {
+            "line": 27,
+            "snippet": "bucket = \"corp-app-logs-prod\""
+          },
+          "sse_algorithm": {
+            "line": 35,
+            "snippet": "sse_algorithm = \"AES256\""
+          }
+        },
+        "raw_ref": null
       },
       {
         "id": "sg-web-ingress-22",
@@ -306,6 +409,16 @@
           "wildcard_principal": false,
           "statement_count": 1
         },
+        "attribute_refs": {
+          "wildcard_action": {
+            "line": 98,
+            "snippet": "Action   = \"*\""
+          },
+          "wildcard_resource": {
+            "line": 99,
+            "snippet": "Resource = \"*\""
+          }
+        },
         "raw_ref": {
           "line": 98,
           "snippet": "Action   = \"*\""
@@ -323,6 +436,28 @@
           "deletion_protection": true,
           "auto_minor_version_upgrade": true
         },
+        "attribute_refs": {
+          "publicly_accessible": {
+            "line": 113,
+            "snippet": "publicly_accessible        = true"
+          },
+          "storage_encrypted": {
+            "line": 114,
+            "snippet": "storage_encrypted          = false"
+          },
+          "backup_retention_days": {
+            "line": 115,
+            "snippet": "backup_retention_period    = 1"
+          },
+          "deletion_protection": {
+            "line": 116,
+            "snippet": "deletion_protection        = true"
+          },
+          "auto_minor_version_upgrade": {
+            "line": 117,
+            "snippet": "auto_minor_version_upgrade = true"
+          }
+        },
         "raw_ref": {
           "line": 113,
           "snippet": "publicly_accessible        = true"
@@ -334,6 +469,12 @@
         "attributes": {
           "description": "Application data key",
           "key_rotation": false
+        },
+        "attribute_refs": {
+          "key_rotation": {
+            "line": 125,
+            "snippet": "enable_key_rotation = false"
+          }
         },
         "raw_ref": {
           "line": 125,
@@ -349,6 +490,20 @@
           "multi_region": false,
           "log_file_validation": false,
           "global_service_events": true
+        },
+        "attribute_refs": {
+          "exists": {
+            "line": 129,
+            "snippet": "name                          = \"corp-trail\""
+          },
+          "multi_region": {
+            "line": 131,
+            "snippet": "is_multi_region_trail         = false"
+          },
+          "log_file_validation": {
+            "line": 132,
+            "snippet": "enable_log_file_validation    = false"
+          }
         },
         "raw_ref": {
           "line": 131,

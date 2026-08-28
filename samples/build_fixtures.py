@@ -39,36 +39,53 @@ normalized = {
                 "login_banner": None,
                 "motd_banner": None,
             },
-            "raw_ref": {"line": ln("hostname EDGE-RTR-01"), "snippet": "hostname EDGE-RTR-01"},
+            # raw_ref is null: this resource is a bag of settings with no single
+            # anchor line. Per-attribute lines live in attribute_refs, and an
+            # attribute absent from that map (login_banner) falls through to
+            # null - which is exactly what an absence-based finding needs.
+            "attribute_refs": {
+                "hostname": ref("hostname EDGE-RTR-01"),
+                "password_encryption": ref("no service password-encryption"),
+                "aaa_new_model": ref("no aaa new-model"),
+                "http_server": ref("ip http server"),
+                "https_server": ref("ip http secure-server"),
+                "cdp_enabled": ref("cdp run"),
+            },
+            "raw_ref": None,
         },
         {
             "id": "enable-password",
             "type": "enable_secret",
             "attributes": {"uses_secret": False, "encryption_type": 0, "encrypted": False},
+            "attribute_refs": {"uses_secret": ref("enable password cisco123")},
             "raw_ref": ref("enable password cisco123"),
         },
         {
             "id": "user-admin",
             "type": "local_user",
             "attributes": {"name": "admin", "privilege": 15, "encryption_type": 0, "encrypted": False},
+            "attribute_refs": {"encrypted": ref("username admin privilege 15 password 0 admin123")},
             "raw_ref": ref("username admin privilege 15 password 0 admin123"),
         },
         {
             "id": "user-netops",
             "type": "local_user",
             "attributes": {"name": "netops", "privilege": 15, "encryption_type": 0, "encrypted": False},
+            "attribute_refs": {"encrypted": ref("username netops privilege 15 password 0 N3top2024")},
             "raw_ref": ref("username netops privilege 15 password 0 N3top2024"),
         },
         {
             "id": "snmp-public",
             "type": "snmp_community",
             "attributes": {"community": "public", "access": "RO", "acl": None, "is_default_string": True},
+            "attribute_refs": {"is_default_string": ref("snmp-server community public RO")},
             "raw_ref": ref("snmp-server community public RO"),
         },
         {
             "id": "snmp-private",
             "type": "snmp_community",
             "attributes": {"community": "private", "access": "RW", "acl": None, "is_default_string": True},
+            "attribute_refs": {"access": ref("snmp-server community private RW")},
             "raw_ref": ref("snmp-server community private RW"),
         },
         {
@@ -88,6 +105,13 @@ normalized = {
                 "login_method": "password",
                 "privilege_level": None,
             },
+            # access_class is deliberately absent from attribute_refs: the
+            # sub-command is missing but the block exists, so it falls through
+            # to the block header line.
+            "attribute_refs": {
+                "transport_input": ref("transport input telnet ssh", 1),
+                "exec_timeout_minutes": ref("exec-timeout 0 0", 2),
+            },
             "raw_ref": ref("line vty 0 4"),
         },
         {
@@ -101,12 +125,21 @@ normalized = {
                 "login_method": "password",
                 "privilege_level": None,
             },
+            "attribute_refs": {
+                "transport_input": ref("transport input telnet ssh", 2),
+                "exec_timeout_minutes": ref("exec-timeout 0 0", 3),
+            },
             "raw_ref": ref("line vty 5 15"),
         },
         {
             "id": "con-0",
             "type": "console_line",
             "attributes": {"exec_timeout_minutes": 0, "login_method": "none", "privilege_level": 15},
+            "attribute_refs": {
+                "exec_timeout_minutes": ref("exec-timeout 0 0", 1),
+                "privilege_level": ref("privilege level 15"),
+                "login_method": ref("no login"),
+            },
             "raw_ref": ref("line con 0"),
         },
         {
@@ -125,6 +158,7 @@ normalized = {
             "id": "ntp",
             "type": "ntp",
             "attributes": {"servers": ["10.10.0.250"], "authenticated": False},
+            "attribute_refs": {"servers": ref("ntp server 10.10.0.250")},
             "raw_ref": ref("ntp server 10.10.0.250"),
         },
     ],

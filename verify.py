@@ -136,7 +136,23 @@ def check_pair(cfg_rel, norm_key, report_rel, rules_rel, label):
             fail(f"[{label}] rules_failed is {sb['rules_failed']} but there are "
                  f"{len(report['findings'])} findings")
 
-    # 6. schema validation
+    # 6. the raw_ref resolution rule the engine will use
+    by_res = {r["id"]: r for r in norm["resources"]}
+    for f in report["findings"]:
+        rule = rule_by_id.get(f["rule_id"])
+        if not rule:
+            continue
+        res = by_res.get(f["resource_id"])
+        if not res:
+            continue
+        attr = rule["check"]["attribute"]
+        got = (res.get("attribute_refs") or {}).get(attr) or res.get("raw_ref")
+        if got != f["raw_ref"]:
+            fail(f"[{label}] {f['rule_id']}: resolve_ref({f['resource_id']}, "
+                 f"{attr!r}) gives line {got and got['line']} but the report "
+                 f"says {f['raw_ref'] and f['raw_ref']['line']}")
+
+    # 7. schema validation
     try:
         from engine.schema.schema import validate
         for e in validate(norm):

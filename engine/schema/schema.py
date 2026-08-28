@@ -19,6 +19,19 @@ RESOURCE_TYPES = {
 }
 
 
+def resolve_ref(resource: dict, attribute: str):
+    """The line a finding should point at.
+
+    Per-attribute line if the parser recorded one, otherwise the resource's own
+    anchor. A resource with raw_ref=None and no entry for `attribute` resolves
+    to None, which is how absence-based findings get a null raw_ref.
+
+    This is the ONLY place raw_ref for a finding is decided. The rule engine
+    calls it; nothing else computes line numbers.
+    """
+    return (resource.get("attribute_refs") or {}).get(attribute) or resource.get("raw_ref")
+
+
 def empty(source_type: str, filename: str) -> dict:
     return {"source": {"type": source_type, "filename": filename},
             "resources": [], "_unparsed": []}
@@ -60,6 +73,19 @@ def validate(doc: Any) -> list[str]:
                         f"(add it to RESOURCE_TYPES and tell the group)")
         if not isinstance(r.get("attributes"), dict):
             errs.append(f"{where} 'attributes' must be an object")
+
+        arefs = r.get("attribute_refs")
+        if arefs is not None:
+            if not isinstance(arefs, dict):
+                errs.append(f"{where}.attribute_refs must be an object")
+            else:
+                for attr, aref in arefs.items():
+                    if attr not in r.get("attributes", {}):
+                        errs.append(f"{where}.attribute_refs has {attr!r} "
+                                    f"which is not in attributes")
+                    if not isinstance(aref, dict) or not isinstance(aref.get("line"), int):
+                        errs.append(f"{where}.attribute_refs[{attr!r}] must be "
+                                    f"{{line, snippet}}")
 
         ref = r.get("raw_ref", "MISSING")
         if ref == "MISSING":
