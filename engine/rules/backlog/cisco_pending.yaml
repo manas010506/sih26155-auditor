@@ -1,0 +1,5 @@
+# Rules that are correct but cannot run yet: no parser emits the resource types
+# they inspect. Do not load these. They exist so the coverage table can show
+# them as "written, pending parser support".
+
+[]

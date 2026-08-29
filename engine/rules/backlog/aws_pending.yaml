@@ -1,0 +1,16 @@
+# Rules that are correct but cannot run yet: no parser emits the resource types
+# they inspect. Do not load these. They exist so the coverage table can show
+# them as "written, pending parser support".
+
+- id: AWS-LOG-003
+  title: Ensure AWS Config is enabled
+  applies_to: aws_config
+  cis_control: CIS AWS Foundations 3.5.1
+  severity: high
+  check:
+    attribute: is_enabled
+    operator: equals
+    value: true
+  remediation: Enable AWS Config to start recording resource configuration changes.
+  explanation: AWS Config provides a historical record of resource configurations,
+    allowing the team to identify when a security drift occurred.

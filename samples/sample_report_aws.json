@@ -10,7 +10,7 @@
     "version": "provider ~> 5.0",
     "role": "cloud_account"
   },
-  "compliance_score": 11,
+  "compliance_score": 40,
   "score_breakdown": {
     "formula": "100 * (1 - failed_weight / total_weight)",
     "severity_weights": {
@@ -19,10 +19,10 @@
       "medium": 5,
       "low": 2
     },
-    "rules_evaluated": 18,
+    "rules_evaluated": 26,
     "rules_failed": 15,
     "failed_weight": 169,
-    "total_weight": 189
+    "total_weight": 281
   },
   "findings": [
     {

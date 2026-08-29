@@ -10,7 +10,7 @@
     "version": "15.2",
     "role": "router"
   },
-  "compliance_score": 22,
+  "compliance_score": 49,
   "score_breakdown": {
     "formula": "100 * (1 - failed_weight / total_weight)",
     "severity_weights": {
@@ -19,10 +19,10 @@
       "medium": 5,
       "low": 2
     },
-    "rules_evaluated": 20,
+    "rules_evaluated": 33,
     "rules_failed": 15,
     "failed_weight": 136,
-    "total_weight": 175
+    "total_weight": 267
   },
   "findings": [
     {
