@@ -17,7 +17,7 @@ import re
 
 import yaml
 
-from engine.schema.schema import resolve_ref
+from engine.schema.schema import RESOURCE_TYPES, resolve_ref
 
 SEVERITY_WEIGHT = {"critical": 20, "high": 10, "medium": 5, "low": 2}
 
@@ -77,6 +77,15 @@ def load_rules(path: str) -> list[dict]:
         if rule["id"] in seen:
             raise RuleError(f"{path}: duplicate rule id {rule['id']}")
         seen.add(rule["id"])
+
+        if rule["applies_to"] not in RESOURCE_TYPES:
+            raise RuleError(
+                f"{path}: {where} applies_to {rule['applies_to']!r}, which no "
+                f"parser emits. A rule against a resource type nothing produces "
+                f"never fires, but still counts toward total_weight and inflates "
+                f"the score. Add it to schema.RESOURCE_TYPES only when a parser "
+                f"actually emits it; otherwise move the rule to "
+                f"engine/rules/backlog/.")
 
         if rule["severity"] not in SEVERITY_WEIGHT:
             raise RuleError(f"{path}: {where} has severity {rule['severity']!r}; "
