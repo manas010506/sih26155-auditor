@@ -166,158 +166,17 @@ normalized = {
 }
 
 # ------------------------------------------------------------------ findings
-F = [
-    dict(
-        rule_id="CIS-NET-001",
-        title="VTY lines permit Telnet",
-        severity="critical",
-        resource_id="vty-0-4",
-        raw_ref=ref("transport input telnet ssh", 1),
-        cis_control="CIS Cisco IOS 1.1.5 - Set transport input ssh on VTY lines",
-        remediation_template="line vty 0 4\n transport input ssh",
-        explanation="Telnet carries usernames and passwords in cleartext. Any device on the path between an administrator and this router can read the enable password and take control. Restrict VTY transport to SSH only.",
-    ),
-    dict(
-        rule_id="CIS-NET-006",
-        title="Enable password stored unencrypted",
-        severity="critical",
-        resource_id="enable-password",
-        raw_ref=ref("enable password cisco123"),
-        cis_control="CIS Cisco IOS 1.1.1 - Use enable secret instead of enable password",
-        remediation_template="no enable password\nenable secret <strong-password>",
-        explanation="The privileged-EXEC password is stored in the configuration in plaintext, so anyone who can read a config backup, a TFTP transfer or an SNMP dump holds full administrative control. enable secret stores an irreversible hash instead.",
-    ),
-    dict(
-        rule_id="CIS-NET-009",
-        title="SNMP read-write community uses a default string",
-        severity="critical",
-        resource_id="snmp-private",
-        raw_ref=ref("snmp-server community private RW"),
-        cis_control="CIS Cisco IOS 2.2.2 - Do not use default or read-write SNMP community strings",
-        remediation_template="no snmp-server community private RW",
-        explanation="A read-write community named 'private' is a guessable credential that permits configuration changes over UDP with no logging and no session. This is remote device control, not monitoring.",
-    ),
-    dict(
-        rule_id="CIS-NET-002",
-        title="HTTP management server enabled",
-        severity="high",
-        resource_id="global",
-        raw_ref=ref("ip http server"),
-        cis_control="CIS Cisco IOS 1.2.1 - Disable the HTTP server",
-        remediation_template="no ip http server",
-        explanation="The unencrypted web management interface is running. Credentials submitted to it travel in cleartext, and the HTTP server has historically been a source of remote code execution vulnerabilities. HTTPS is already enabled, so nothing is lost by disabling it.",
-    ),
-    dict(
-        rule_id="CIS-NET-004",
-        title="VTY lines have no access-class restriction",
-        severity="high",
-        resource_id="vty-0-4",
-        raw_ref=ref("line vty 0 4"),
-        cis_control="CIS Cisco IOS 1.1.4 - Apply an access-class to VTY lines",
-        remediation_template="ip access-list standard MGMT-HOSTS\n permit 10.10.0.0 0.0.0.255\nline vty 0 4\n access-class MGMT-HOSTS in",
-        explanation="No ACL limits who may open a management session, so the management plane is reachable from every network that can route to this device, including the WAN interface. An access-class restricts it to the operations subnet.",
-    ),
-    dict(
-        rule_id="CIS-NET-007",
-        title="Privilege-15 local user with unencrypted password",
-        severity="high",
-        resource_id="user-admin",
-        raw_ref=ref("username admin privilege 15 password 0 admin123"),
-        cis_control="CIS Cisco IOS 1.1.2 - Store local user passwords using irreversible encryption",
-        remediation_template="no username admin\nusername admin privilege 15 secret <strong-password>",
-        explanation="This account has full administrative rights and its password is stored as type 0, meaning plaintext. Two accounts on this device share the problem. Use the secret keyword so the password is hashed rather than stored.",
-    ),
-    dict(
-        rule_id="CIS-NET-008",
-        title="Default SNMP read-only community string",
-        severity="high",
-        resource_id="snmp-public",
-        raw_ref=ref("snmp-server community public RO"),
-        cis_control="CIS Cisco IOS 2.2.1 - Do not use default SNMP community strings",
-        remediation_template="no snmp-server community public RO",
-        explanation="The community string 'public' is the first value any scanner tries. It exposes the full running configuration, interface list, routing table and ARP cache to anyone who can reach UDP/161.",
-    ),
-    dict(
-        rule_id="CIS-NET-011",
-        title="No syslog server configured",
-        severity="high",
-        resource_id="logging",
-        raw_ref=None,
-        cis_control="CIS Cisco IOS 3.1.1 - Configure a remote syslog host",
-        remediation_template="logging host 10.10.0.200\nlogging trap informational",
-        explanation="Nothing is sent off-box, so administrative logins, configuration changes and interface events exist only in a buffer that is cleared on reboot and editable by anyone with privileged access. Without remote logging, a compromise leaves no evidence.",
-    ),
-    dict(
-        rule_id="CIS-NET-003",
-        title="VTY session timeout disabled",
-        severity="medium",
-        resource_id="vty-0-4",
-        raw_ref=ref("exec-timeout 0 0", 2),
-        cis_control="CIS Cisco IOS 1.1.6 - Set exec-timeout to 10 minutes or less",
-        remediation_template="line vty 0 4\n exec-timeout 10 0",
-        explanation="exec-timeout 0 0 disables the idle timer, so an abandoned session stays authenticated indefinitely and can be reused by anyone with access to that terminal.",
-    ),
-    dict(
-        rule_id="CIS-NET-005",
-        title="Password encryption service disabled",
-        severity="medium",
-        resource_id="global",
-        raw_ref=ref("no service password-encryption"),
-        cis_control="CIS Cisco IOS 1.1.3 - Enable service password-encryption",
-        remediation_template="service password-encryption",
-        explanation="Passwords that have no stronger option are written to the configuration in clear text. Type 7 encryption is reversible and is not a substitute for secret hashes, but it removes casual over-the-shoulder and config-backup exposure.",
-    ),
-    dict(
-        rule_id="CIS-NET-013",
-        title="AAA not enabled",
-        severity="medium",
-        resource_id="global",
-        raw_ref=ref("no aaa new-model"),
-        cis_control="CIS Cisco IOS 1.3.1 - Enable AAA",
-        remediation_template="aaa new-model\naaa authentication login default group tacacs+ local\naaa accounting exec default start-stop group tacacs+",
-        explanation="Authentication falls back to shared local passwords, so administrator actions cannot be attributed to an individual and revoking one person's access means changing credentials for everyone.",
-    ),
-    dict(
-        rule_id="CIS-NET-016",
-        title="SSH version 2 not enforced",
-        severity="medium",
-        resource_id="ssh",
-        raw_ref=None,
-        cis_control="CIS Cisco IOS 1.2.3 - Set ip ssh version 2",
-        remediation_template="ip ssh version 2\nip ssh time-out 60\nip ssh authentication-retries 3",
-        explanation="With no explicit version the device may negotiate SSHv1, which has known integrity weaknesses and is downgradeable by an on-path attacker.",
-    ),
-    dict(
-        rule_id="CIS-NET-014",
-        title="No login banner configured",
-        severity="low",
-        resource_id="global",
-        raw_ref=None,
-        cis_control="CIS Cisco IOS 1.4.1 - Configure a login banner",
-        remediation_template='banner login ^C\nAuthorised access only. Activity is monitored.\n^C',
-        explanation="No warning banner is presented before authentication. Beyond the hardening benchmark, this weakens the legal position when pursuing unauthorised access.",
-    ),
-    dict(
-        rule_id="CIS-NET-015",
-        title="CDP enabled globally",
-        severity="low",
-        resource_id="global",
-        raw_ref=ref("cdp run"),
-        cis_control="CIS Cisco IOS 2.1.1 - Disable CDP where not required",
-        remediation_template="no cdp run",
-        explanation="CDP advertises the model, IOS version, management address and native VLAN to any directly connected device, which hands an attacker on the local segment a free inventory.",
-    ),
-    dict(
-        rule_id="CIS-NET-012",
-        title="NTP configured without authentication",
-        severity="low",
-        resource_id="ntp",
-        raw_ref=ref("ntp server 10.10.0.250"),
-        cis_control="CIS Cisco IOS 3.2.1 - Use authenticated NTP",
-        remediation_template="ntp authenticate\nntp authentication-key 1 md5 <key>\nntp trusted-key 1\nntp server 10.10.0.250 key 1",
-        explanation="Time is accepted from an unauthenticated source. An attacker who can spoof NTP can shift the clock and desynchronise every timestamp used to correlate logs during an investigation.",
-    ),
-]
+# Findings are produced BY THE ENGINE, not hand-listed. The fixture is therefore
+# engine output by construction: add a rule, re-run this, the fixture follows.
+# verify.py independently checks the line numbers, cross-references and score
+# arithmetic against the raw config, so this is not circular.
+import sys as _sys
+_sys.path.insert(0, ".")
+from engine.rules.engine import load_rules as _load_rules, evaluate as _evaluate, score as _score
+
+_RULES = _load_rules('engine/rules/cisco_rules.yaml')
+_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+F = sorted(_evaluate(normalized, _RULES), key=lambda f: (_ORDER[f["severity"]], f["rule_id"]))
 
 # --------------------------------------------------------------- attack paths
 PATHS = [
@@ -364,7 +223,7 @@ import yaml as _yaml
 
 
 def _apply_rules(findings, rules_path):
-    rules = {r["id"]: r for r in _yaml.safe_load(open(rules_path, encoding="utf-8"))}
+    rules = {r["id"]: r for r in _yaml.safe_load(open(rules_path))}
     for f in findings:
         r = rules[f["rule_id"]]
         f["title"] = r["title"]
@@ -377,11 +236,8 @@ def _apply_rules(findings, rules_path):
 
 F = _apply_rules(F, "engine/rules/cisco_rules.yaml")
 
-W = {"critical": 20, "high": 10, "medium": 5, "low": 2}
-failed_weight = sum(W[f["severity"]] for f in F)
-_ALL_RULES = _yaml.safe_load(open("engine/rules/cisco_rules.yaml", encoding="utf-8"))
-TOTAL_WEIGHT = sum(W[r["severity"]] for r in _ALL_RULES)
-score = round(100 * (1 - failed_weight / TOTAL_WEIGHT))
+_SCORE = _score(F, _RULES)
+score = _SCORE["compliance_score"]
 
 report = {
     "source": {"type": "cisco_ios", "filename": "sample_cisco_ios.cfg"},
@@ -393,14 +249,7 @@ report = {
         "role": "router",
     },
     "compliance_score": score,
-    "score_breakdown": {
-        "formula": "100 * (1 - failed_weight / total_weight)",
-        "severity_weights": W,
-        "rules_evaluated": len(_ALL_RULES),
-        "rules_failed": len(F),
-        "failed_weight": failed_weight,
-        "total_weight": TOTAL_WEIGHT,
-    },
+    "score_breakdown": _SCORE["score_breakdown"],
     "findings": F,
     "attack_paths": PATHS,
 }
@@ -414,7 +263,7 @@ pathlib.Path("samples/sample_report.json").write_text(json.dumps(report, indent=
 pathlib.Path("samples/sample_attack_paths.json").write_text(
     json.dumps({"attack_paths": PATHS}, indent=2) + "\n")
 
-print(f"score={score}  findings={len(F)}  paths={len(PATHS)}  failed_weight={failed_weight}")
+print(f"score={score}  findings={len(F)}  paths={len(PATHS)}  rules={len(_RULES)}")
 by = {}
 for f in F:
     by[f["severity"]] = by.get(f["severity"], 0) + 1

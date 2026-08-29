@@ -174,158 +174,17 @@ normalized = {
 }
 
 # ------------------------------------------------------------------ findings
-F = [
-    dict(
-        rule_id="CIS-CLOUD-001",
-        title="Security group exposes an administrative port to the internet",
-        severity="critical",
-        resource_id="sg-web-ingress-22",
-        raw_ref=ref('description = "SSH from anywhere"'),
-        cis_control="CIS AWS 5.2 - Ensure no security group allows ingress from 0.0.0.0/0 to remote administration ports",
-        remediation_template='ingress {\n  from_port   = 22\n  to_port     = 22\n  protocol    = "tcp"\n  cidr_blocks = ["10.0.0.0/8"]\n}',
-        explanation="SSH is reachable from every address on the internet. This is the single most scanned port on AWS and it is the usual first step in a host compromise. Restrict the CIDR to the operations network or move access behind SSM Session Manager.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-003",
-        title="Security group exposes all TCP ports to the internet",
-        severity="critical",
-        resource_id="sg-web-ingress-0-65535",
-        raw_ref=ref('description = "Temporary debug access"'),
-        cis_control="CIS AWS 5.3 - Restrict security group ingress to required ports only",
-        remediation_template="# Remove the 0-65535 ingress block entirely.\n# Open only the ports the service actually needs.",
-        explanation="A rule opening ports 0-65535 to 0.0.0.0/0 makes every other ingress restriction on this group meaningless. The description says temporary, which in practice means it was never removed.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-004",
-        title="S3 bucket has a public ACL",
-        severity="critical",
-        resource_id="s3-sensitive_data",
-        raw_ref=ref('acl    = "public-read"'),
-        cis_control="CIS AWS 2.1.5 - Ensure S3 buckets are not publicly accessible",
-        remediation_template='resource "aws_s3_bucket_acl" "sensitive_data" {\n  bucket = aws_s3_bucket.sensitive_data.id\n  acl    = "private"\n}',
-        explanation="A public-read ACL exposes every object in this bucket to anonymous requests. The bucket name indicates it holds sensitive data, so this is a direct data exposure rather than a hardening gap.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-009",
-        title="IAM policy grants wildcard action on wildcard resource",
-        severity="critical",
-        resource_id="iam-app_policy",
-        raw_ref=ref('Action   = "*"'),
-        cis_control="CIS AWS 1.16 - Ensure IAM policies grant least privilege",
-        remediation_template='Statement = [{\n  Effect   = "Allow"\n  Action   = ["s3:GetObject", "s3:PutObject"]\n  Resource = ["arn:aws:s3:::corp-app-logs-prod/*"]\n}]',
-        explanation="Action \"*\" on Resource \"*\" is administrator access. Any workload holding this policy can create users, alter policies and read every bucket in the account, so a single compromised instance becomes full account control.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-011",
-        title="RDS instance is publicly accessible",
-        severity="critical",
-        resource_id="rds-app_db",
-        raw_ref=ref("publicly_accessible        = true"),
-        cis_control="CIS AWS 2.3.3 - Ensure RDS instances are not publicly accessible",
-        remediation_template="publicly_accessible = false",
-        explanation="The production database is assigned a public endpoint, so its only protection is the security group in front of it. Combined with an unrestricted ingress rule, the database is directly reachable from the internet.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-002",
-        title="Security group exposes RDP to the internet",
-        severity="high",
-        resource_id="sg-web-ingress-3389",
-        raw_ref=ref('description = "RDP from anywhere"'),
-        cis_control="CIS AWS 5.2 - Ensure no security group allows ingress from 0.0.0.0/0 to remote administration ports",
-        remediation_template='cidr_blocks = ["10.0.0.0/8"]',
-        explanation="RDP open to the world is continuously scanned and brute-forced. Even with strong credentials this exposes the service to protocol-level vulnerabilities.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-005",
-        title="S3 bucket has no public access block",
-        severity="high",
-        resource_id="s3-sensitive_data",
-        raw_ref=None,
-        cis_control="CIS AWS 2.1.5 - Enable S3 Block Public Access at the bucket level",
-        remediation_template='resource "aws_s3_bucket_public_access_block" "sensitive_data" {\n  bucket                  = aws_s3_bucket.sensitive_data.id\n  block_public_acls       = true\n  block_public_policy     = true\n  ignore_public_acls      = true\n  restrict_public_buckets = true\n}',
-        explanation="No public access block exists, so nothing prevents a future ACL or bucket policy from making this bucket public again. The block is the control that survives human error.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-006",
-        title="S3 bucket has no server-side encryption",
-        severity="high",
-        resource_id="s3-sensitive_data",
-        raw_ref=None,
-        cis_control="CIS AWS 2.1.1 - Ensure S3 buckets employ encryption at rest",
-        remediation_template='resource "aws_s3_bucket_server_side_encryption_configuration" "sensitive_data" {\n  bucket = aws_s3_bucket.sensitive_data.id\n  rule {\n    apply_server_side_encryption_by_default {\n      sse_algorithm     = "aws:kms"\n      kms_master_key_id = aws_kms_key.app_key.arn\n    }\n  }\n}',
-        explanation="Objects are stored unencrypted. The app_logs bucket in the same file is encrypted, so this is an inconsistency rather than a deliberate choice, which is exactly the class of drift an audit is meant to catch.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-010",
-        title="CloudTrail is not multi-region",
-        severity="high",
-        resource_id="cloudtrail-main",
-        raw_ref=ref("is_multi_region_trail         = false"),
-        cis_control="CIS AWS 3.1 - Ensure CloudTrail is enabled in all regions",
-        remediation_template="is_multi_region_trail = true",
-        explanation="Activity in every region except ap-south-1 is unrecorded. Attackers routinely operate in unused regions precisely because single-region trails do not see them.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-012",
-        title="RDS storage is not encrypted",
-        severity="high",
-        resource_id="rds-app_db",
-        raw_ref=ref("storage_encrypted          = false"),
-        cis_control="CIS AWS 2.3.1 - Ensure RDS instances have encryption at rest enabled",
-        remediation_template="storage_encrypted = true\nkms_key_id        = aws_kms_key.app_key.arn",
-        explanation="Database volumes and their automated snapshots are stored unencrypted. This cannot be changed in place: fixing it requires a snapshot, an encrypted copy and a restore, so the cost only grows.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-007",
-        title="S3 bucket versioning disabled",
-        severity="medium",
-        resource_id="s3-sensitive_data",
-        raw_ref=None,
-        cis_control="CIS AWS 2.1.3 - Ensure S3 bucket versioning is enabled",
-        remediation_template='resource "aws_s3_bucket_versioning" "sensitive_data" {\n  bucket = aws_s3_bucket.sensitive_data.id\n  versioning_configuration {\n    status = "Enabled"\n  }\n}',
-        explanation="Without versioning an overwrite or deletion is unrecoverable, whether accidental or from ransomware. Versioning is the cheapest recovery control S3 offers.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-008",
-        title="S3 access logging disabled",
-        severity="medium",
-        resource_id="s3-sensitive_data",
-        raw_ref=None,
-        cis_control="CIS AWS 2.1.2 - Ensure S3 bucket access logging is enabled",
-        remediation_template='resource "aws_s3_bucket_logging" "sensitive_data" {\n  bucket        = aws_s3_bucket.sensitive_data.id\n  target_bucket = aws_s3_bucket.app_logs.id\n  target_prefix = "s3-access/"\n}',
-        explanation="No record exists of who read objects from this bucket. If the public ACL is exploited there is no way to determine what was accessed or by whom.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-013",
-        title="KMS key rotation disabled",
-        severity="medium",
-        resource_id="kms-app_key",
-        raw_ref=ref("enable_key_rotation = false"),
-        cis_control="CIS AWS 3.6 - Ensure rotation for customer-created KMS keys is enabled",
-        remediation_template="enable_key_rotation = true",
-        explanation="The key material never changes, so a key compromised at any point stays useful indefinitely. Annual rotation is automatic and requires no application change.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-014",
-        title="RDS backup retention below policy minimum",
-        severity="low",
-        resource_id="rds-app_db",
-        raw_ref=ref("backup_retention_period    = 1"),
-        cis_control="CIS AWS 2.3.2 - Ensure adequate RDS backup retention",
-        remediation_template="backup_retention_period = 7",
-        explanation="A single day of automated backups means a problem discovered on a Monday morning may already be unrecoverable. Seven days is the usual floor.",
-    ),
-    dict(
-        rule_id="CIS-CLOUD-015",
-        title="CloudTrail log file validation disabled",
-        severity="low",
-        resource_id="cloudtrail-main",
-        raw_ref=ref("enable_log_file_validation    = false"),
-        cis_control="CIS AWS 3.2 - Ensure CloudTrail log file validation is enabled",
-        remediation_template="enable_log_file_validation = true",
-        explanation="Without validation there is no way to prove log files were not altered after delivery, which undermines their value as evidence during an investigation.",
-    ),
-]
+# Findings are produced BY THE ENGINE, not hand-listed. The fixture is therefore
+# engine output by construction: add a rule, re-run this, the fixture follows.
+# verify.py independently checks the line numbers, cross-references and score
+# arithmetic against the raw config, so this is not circular.
+import sys as _sys
+_sys.path.insert(0, ".")
+from engine.rules.engine import load_rules as _load_rules, evaluate as _evaluate, score as _score
+
+_RULES = _load_rules('engine/rules/aws_rules.yaml')
+_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+F = sorted(_evaluate(normalized, _RULES), key=lambda f: (_ORDER[f["severity"]], f["rule_id"]))
 
 # --------------------------------------------------------------- attack paths
 PATHS = [
@@ -372,7 +231,7 @@ PATHS = [
 import yaml as _yaml
 
 def _apply_rules(findings, rules_path):
-    rules = {r["id"]: r for r in _yaml.safe_load(open(rules_path, encoding="utf-8"))}
+    rules = {r["id"]: r for r in _yaml.safe_load(open(rules_path))}
     for f in findings:
         r = rules[f["rule_id"]]
         f["title"] = r["title"]
@@ -385,11 +244,8 @@ def _apply_rules(findings, rules_path):
 F = _apply_rules(F, 'engine/rules/aws_rules.yaml')
 
 # ---------------------------------------------------------------------- score
-W = {"critical": 20, "high": 10, "medium": 5, "low": 2}
-failed_weight = sum(W[f["severity"]] for f in F)
-_ALL_RULES = _yaml.safe_load(open("engine/rules/aws_rules.yaml", encoding="utf-8"))
-TOTAL_WEIGHT = sum(W[r["severity"]] for r in _ALL_RULES)
-score = round(100 * (1 - failed_weight / TOTAL_WEIGHT))
+_SCORE = _score(F, _RULES)
+score = _SCORE["compliance_score"]
 
 report = {
     "source": {"type": "terraform_aws", "filename": "main.tf"},
@@ -401,14 +257,7 @@ report = {
         "role": "cloud_account",
     },
     "compliance_score": score,
-    "score_breakdown": {
-        "formula": "100 * (1 - failed_weight / total_weight)",
-        "severity_weights": W,
-        "rules_evaluated": len(_ALL_RULES),
-        "rules_failed": len(F),
-        "failed_weight": failed_weight,
-        "total_weight": TOTAL_WEIGHT,
-    },
+    "score_breakdown": _SCORE["score_breakdown"],
     "findings": F,
     "attack_paths": PATHS,
 }
@@ -421,8 +270,7 @@ NE.write_text(json.dumps(existing, indent=2) + "\n")
 
 pathlib.Path("samples/sample_report_aws.json").write_text(json.dumps(report, indent=2) + "\n")
 
-print(f"score={score}  findings={len(F)}  paths={len(PATHS)}  "
-      f"failed_weight={failed_weight}  total_weight={TOTAL_WEIGHT}")
+print(f"score={score}  findings={len(F)}  paths={len(PATHS)}  rules={len(_RULES)}")
 by = {}
 for f in F:
     by[f["severity"]] = by.get(f["severity"], 0) + 1

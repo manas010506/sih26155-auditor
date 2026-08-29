@@ -63,10 +63,13 @@ def test_resolve_returns_none_for_absent_feature():
 
 
 # ------------------------------------------------------------------- loading
-def test_rules_load():
-    rules = load_rules(CISCO_RULES)
-    assert len(rules) == 20
+@pytest.mark.parametrize("rules_path", [CISCO_RULES, AWS_RULES])
+def test_rules_load(rules_path):
+    """No hardcoded count - the ruleset grows as Deep adds rules."""
+    rules = load_rules(rules_path)
+    assert rules, "no rules loaded"
     assert all(r["check"]["operator"] in OPS for r in rules)
+    assert len({r["id"] for r in rules}) == len(rules), "duplicate rule ids"
 
 
 # ------------------------------------------------------- the acceptance test
@@ -92,12 +95,16 @@ def test_dedupe_by_rule():
     assert sum(f["rule_id"] == "CIS-NET-001" for f in got) == 1
 
 
-@pytest.mark.parametrize("key,rules_path,report_path,expected", [
-    ("cisco_example", CISCO_RULES, "samples/sample_report.json", 22),
-    ("terraform_example", AWS_RULES, "samples/sample_report_aws.json", 11),
+@pytest.mark.parametrize("key,rules_path,report_path", [
+    ("cisco_example", CISCO_RULES, "samples/sample_report.json"),
+    ("terraform_example", AWS_RULES, "samples/sample_report_aws.json"),
 ])
-def test_score(key, rules_path, report_path, expected):
+def test_score(key, rules_path, report_path):
+    """Compared against the fixture, not a hardcoded number. If this fails after
+    a rule change, the fixture wasn't regenerated - run samples/build_fixtures*.py
+    """
     rules = load_rules(rules_path)
+    rep = report(report_path)
     got = score(evaluate(norm(key), rules), rules)
-    assert got["compliance_score"] == expected
-    assert got["score_breakdown"] == report(report_path)["score_breakdown"]
+    assert got["compliance_score"] == rep["compliance_score"]
+    assert got["score_breakdown"] == rep["score_breakdown"]
