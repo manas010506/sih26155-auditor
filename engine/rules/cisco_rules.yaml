@@ -44,7 +44,7 @@
   cis_control: "CIS Cisco IOS 1.1.5 - Set transport input ssh on VTY lines"
   severity: critical
   check: { attribute: transport_input, operator: not_contains, value: telnet }
-  remediation: |
+  remediation: |-
     line vty 0 4
      transport input ssh
   explanation: >-
@@ -70,7 +70,7 @@
   cis_control: "CIS Cisco IOS 1.1.6 - Set exec-timeout to 10 minutes or less"
   severity: medium
   check: { attribute: exec_timeout_minutes, operator: in_range, value: [1, 10] }
-  remediation: |
+  remediation: |-
     line vty 0 4
      exec-timeout 10 0
   explanation: >-
@@ -84,7 +84,7 @@
   cis_control: "CIS Cisco IOS 1.1.4 - Apply an access-class to VTY lines"
   severity: high
   check: { attribute: access_class, operator: exists }
-  remediation: |
+  remediation: |-
     ip access-list standard MGMT-HOSTS
      permit 10.10.0.0 0.0.0.255
     line vty 0 4
@@ -112,7 +112,7 @@
   cis_control: "CIS Cisco IOS 1.1.1 - Use enable secret instead of enable password"
   severity: critical
   check: { attribute: uses_secret, operator: equals, value: true }
-  remediation: |
+  remediation: |-
     no enable password
     enable secret <strong-password>
   explanation: >-
@@ -127,7 +127,7 @@
   cis_control: "CIS Cisco IOS 1.1.2 - Store local user passwords using irreversible encryption"
   severity: high
   check: { attribute: encrypted, operator: equals, value: true }
-  remediation: |
+  remediation: |-
     no username admin
     username admin privilege 15 secret <strong-password>
   explanation: >-
@@ -165,7 +165,7 @@
   cis_control: "CIS Cisco IOS 3.1.1 - Configure a remote syslog host"
   severity: high
   check: { attribute: hosts, operator: min_length, value: 1 }
-  remediation: |
+  remediation: |-
     logging host 10.10.0.200
     logging trap informational
   explanation: >-
@@ -179,7 +179,7 @@
   cis_control: "CIS Cisco IOS 3.2.1 - Use authenticated NTP"
   severity: low
   check: { attribute: authenticated, operator: equals, value: true }
-  remediation: |
+  remediation: |-
     ntp authenticate
     ntp authentication-key 1 md5 <key>
     ntp trusted-key 1
@@ -195,7 +195,7 @@
   cis_control: "CIS Cisco IOS 1.3.1 - Enable AAA"
   severity: medium
   check: { attribute: aaa_new_model, operator: equals, value: true }
-  remediation: |
+  remediation: |-
     aaa new-model
     aaa authentication login default group tacacs+ local
     aaa accounting exec default start-stop group tacacs+
@@ -210,7 +210,7 @@
   cis_control: "CIS Cisco IOS 1.4.1 - Configure a login banner"
   severity: low
   check: { attribute: login_banner, operator: exists }
-  remediation: |
+  remediation: |-
     banner login ^C
     Authorised access only. Activity is monitored.
     ^C
@@ -236,10 +236,73 @@
   cis_control: "CIS Cisco IOS 1.2.3 - Set ip ssh version 2"
   severity: medium
   check: { attribute: version, operator: equals, value: 2 }
-  remediation: |
+  remediation: |-
     ip ssh version 2
     ip ssh time-out 60
     ip ssh authentication-retries 3
   explanation: >-
     With no explicit version the device may negotiate SSHv1, which has known
     integrity weaknesses and is downgradeable by an on-path attacker.
+
+# =============================================================================
+# The rules below PASS against samples/sample_cisco_ios.cfg. Keep rules like
+# these in the set. total_weight sums EVERY rule loaded, so a set where all
+# rules fail scores 0 and the gauge tells a judge nothing.
+# =============================================================================
+
+- id: CIS-NET-017
+  title: HTTPS management server not enabled
+  applies_to: global_settings
+  cis_control: "CIS Cisco IOS 1.2.2 - Use HTTPS if web management is required"
+  severity: high
+  check: { attribute: https_server, operator: equals, value: true }
+  remediation: "ip http secure-server"
+  explanation: >-
+    If web management is needed at all it must be encrypted; the plaintext HTTP
+    server is never an acceptable substitute.
+
+- id: CIS-NET-018
+  title: No NTP server configured
+  applies_to: ntp
+  cis_control: "CIS Cisco IOS 3.2.2 - Configure at least one NTP server"
+  severity: medium
+  check: { attribute: servers, operator: min_length, value: 1 }
+  remediation: "ntp server 10.10.0.250"
+  explanation: >-
+    Without a time source, log timestamps drift and cannot be correlated with
+    any other device during an investigation.
+
+- id: CIS-NET-019
+  title: VTY lines allow login without authentication
+  applies_to: vty_line
+  cis_control: "CIS Cisco IOS 1.1.7 - Require authentication on VTY lines"
+  severity: critical
+  check: { attribute: login_method, operator: not_equals, value: none }
+  remediation: |-
+    line vty 0 4
+     login authentication default
+  explanation: >-
+    A VTY line with no login requirement grants a shell to anyone who can reach
+    the port, with no credential at all.
+
+- id: CIS-NET-020
+  title: Device hostname not set
+  applies_to: global_settings
+  cis_control: "CIS Cisco IOS 1.5.1 - Set a unique device hostname"
+  severity: low
+  check: { attribute: hostname, operator: exists }
+  remediation: "hostname EDGE-RTR-01"
+  explanation: >-
+    A device left on its default hostname is hard to identify in logs and in an
+    inventory, which slows every incident response.
+
+- id: CIS-NET-021
+  title: IOS version not recorded
+  applies_to: global_settings
+  cis_control: "CIS Cisco IOS 1.5.2 - Track the running software version"
+  severity: low
+  check: { attribute: os_version, operator: exists }
+  remediation: "# informational - version is read from the config header"
+  explanation: >-
+    The running version determines which CVEs apply, so an audit that cannot
+    determine it cannot assess patch exposure.

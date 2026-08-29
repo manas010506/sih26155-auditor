@@ -72,6 +72,7 @@ normalized = {
                 "to_port": 22,
                 "cidr_blocks": ["0.0.0.0/0"],
                 "open_to_internet": True,
+                "is_wide_range": False,
             },
             "raw_ref": ref('description = "SSH from anywhere"'),
         },
@@ -86,6 +87,7 @@ normalized = {
                 "to_port": 3389,
                 "cidr_blocks": ["0.0.0.0/0"],
                 "open_to_internet": True,
+                "is_wide_range": False,
             },
             "raw_ref": ref('description = "RDP from anywhere"'),
         },
@@ -100,6 +102,7 @@ normalized = {
                 "to_port": 65535,
                 "cidr_blocks": ["0.0.0.0/0"],
                 "open_to_internet": True,
+                "is_wide_range": True,
             },
             "raw_ref": ref('description = "Temporary debug access"'),
         },
@@ -361,11 +364,31 @@ PATHS = [
     },
 ]
 
+
+# ---------------------------------------------------------------------- rules
+# The rules YAML is the SINGLE SOURCE OF TRUTH for a finding's text. We only
+# compute rule_id / resource_id / raw_ref here; everything else is copied from
+# the rule so the two files can never drift apart again.
+import yaml as _yaml
+
+def _apply_rules(findings, rules_path):
+    rules = {r["id"]: r for r in _yaml.safe_load(open(rules_path, encoding="utf-8"))}
+    for f in findings:
+        r = rules[f["rule_id"]]
+        f["title"] = r["title"]
+        f["severity"] = r["severity"]
+        f["cis_control"] = r["cis_control"]
+        f["remediation_template"] = r["remediation"]
+        f["explanation"] = r["explanation"]
+    return findings
+
+F = _apply_rules(F, 'engine/rules/aws_rules.yaml')
+
 # ---------------------------------------------------------------------- score
 W = {"critical": 20, "high": 10, "medium": 5, "low": 2}
 failed_weight = sum(W[f["severity"]] for f in F)
-PASSING_WEIGHT = 20          # CIS-CLOUD-016 (high) + 017 (medium) + 018 (medium)
-TOTAL_WEIGHT = failed_weight + PASSING_WEIGHT
+_ALL_RULES = _yaml.safe_load(open("engine/rules/aws_rules.yaml", encoding="utf-8"))
+TOTAL_WEIGHT = sum(W[r["severity"]] for r in _ALL_RULES)
 score = round(100 * (1 - failed_weight / TOTAL_WEIGHT))
 
 report = {
@@ -381,7 +404,7 @@ report = {
     "score_breakdown": {
         "formula": "100 * (1 - failed_weight / total_weight)",
         "severity_weights": W,
-        "rules_evaluated": 18,
+        "rules_evaluated": len(_ALL_RULES),
         "rules_failed": len(F),
         "failed_weight": failed_weight,
         "total_weight": TOTAL_WEIGHT,

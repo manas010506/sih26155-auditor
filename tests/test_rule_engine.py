@@ -65,7 +65,7 @@ def test_resolve_returns_none_for_absent_feature():
 # ------------------------------------------------------------------- loading
 def test_rules_load():
     rules = load_rules(CISCO_RULES)
-    assert len(rules) == 15
+    assert len(rules) == 20
     assert all(r["check"]["operator"] in OPS for r in rules)
 
 
@@ -93,7 +93,7 @@ def test_dedupe_by_rule():
 
 
 @pytest.mark.parametrize("key,rules_path,report_path,expected", [
-    ("cisco_example", CISCO_RULES, "samples/sample_report.json", 24),
+    ("cisco_example", CISCO_RULES, "samples/sample_report.json", 22),
     ("terraform_example", AWS_RULES, "samples/sample_report_aws.json", 11),
 ])
 def test_score(key, rules_path, report_path, expected):

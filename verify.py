@@ -32,7 +32,7 @@ def load_json(rel):
         fail(f"missing file: {rel}")
         return None
     try:
-        return json.loads(p.read_text())
+        return json.loads(p.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         fail(f"{rel} is not valid JSON: {e}")
         return None
@@ -44,7 +44,7 @@ def load_yaml(rel):
         fail(f"missing file: {rel}")
         return None
     try:
-        return yaml.safe_load(p.read_text())
+        return yaml.safe_load(p.read_text(encoding="utf-8"))
     except yaml.YAMLError as e:
         fail(f"{rel} is not valid YAML: {e}")
         return None
@@ -55,7 +55,7 @@ def check_pair(cfg_rel, norm_key, report_rel, rules_rel, label):
     if not cfg_path.exists():
         fail(f"missing file: {cfg_rel}")
         return
-    lines = cfg_path.read_text().splitlines()
+    lines = cfg_path.read_text(encoding="utf-8").splitlines()
 
     norm_all = load_json("samples/normalized_examples.json")
     report = load_json(report_rel)
@@ -170,7 +170,7 @@ def check_pair(cfg_rel, norm_key, report_rel, rules_rel, label):
 
 def check_secrets():
     gi = ROOT / ".gitignore"
-    if not gi.exists() or ".env" not in gi.read_text():
+    if not gi.exists() or ".env" not in gi.read_text(encoding="utf-8"):
         fail(".gitignore does not exclude .env — an API key will get committed")
     for env in ROOT.rglob(".env"):
         if "node_modules" not in str(env):

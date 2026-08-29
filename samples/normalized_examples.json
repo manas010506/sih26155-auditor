@@ -354,7 +354,8 @@
           "cidr_blocks": [
             "0.0.0.0/0"
           ],
-          "open_to_internet": true
+          "open_to_internet": true,
+          "is_wide_range": false
         },
         "raw_ref": {
           "line": 56,
@@ -373,7 +374,8 @@
           "cidr_blocks": [
             "0.0.0.0/0"
           ],
-          "open_to_internet": true
+          "open_to_internet": true,
+          "is_wide_range": false
         },
         "raw_ref": {
           "line": 64,
@@ -392,7 +394,8 @@
           "cidr_blocks": [
             "0.0.0.0/0"
           ],
-          "open_to_internet": true
+          "open_to_internet": true,
+          "is_wide_range": true
         },
         "raw_ref": {
           "line": 72,

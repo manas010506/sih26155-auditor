@@ -16,7 +16,7 @@
   cis_control: "CIS AWS 5.2 - No ingress from 0.0.0.0/0 to remote administration ports"
   severity: critical
   check: { attribute: from_port, operator: not_in, value: [22, 3389] }
-  remediation: |
+  remediation: |-
     ingress {
       from_port   = 22
       to_port     = 22
@@ -45,8 +45,8 @@
   when: { open_to_internet: true }
   cis_control: "CIS AWS 5.3 - Restrict security group ingress to required ports only"
   severity: critical
-  check: { attribute: to_port, operator: lte, value: 1024 }
-  remediation: |
+  check: { attribute: is_wide_range, operator: equals, value: false }
+  remediation: |-
     # Remove the 0-65535 ingress block entirely.
     # Open only the ports the service actually needs.
   explanation: >-
@@ -60,7 +60,7 @@
   cis_control: "CIS AWS 2.1.5 - Ensure S3 buckets are not publicly accessible"
   severity: critical
   check: { attribute: acl, operator: not_in, value: ["public-read", "public-read-write", "authenticated-read"] }
-  remediation: |
+  remediation: |-
     resource "aws_s3_bucket_acl" "sensitive_data" {
       bucket = aws_s3_bucket.sensitive_data.id
       acl    = "private"
@@ -74,7 +74,7 @@
   cis_control: "CIS AWS 2.1.5 - Enable S3 Block Public Access at the bucket level"
   severity: high
   check: { attribute: public_access_block, operator: equals, value: true }
-  remediation: |
+  remediation: |-
     resource "aws_s3_bucket_public_access_block" "sensitive_data" {
       bucket                  = aws_s3_bucket.sensitive_data.id
       block_public_acls       = true
@@ -92,7 +92,7 @@
   cis_control: "CIS AWS 2.1.1 - Ensure S3 buckets employ encryption at rest"
   severity: high
   check: { attribute: encrypted, operator: equals, value: true }
-  remediation: |
+  remediation: |-
     resource "aws_s3_bucket_server_side_encryption_configuration" "sensitive_data" {
       bucket = aws_s3_bucket.sensitive_data.id
       rule {
@@ -112,7 +112,7 @@
   cis_control: "CIS AWS 2.1.3 - Ensure S3 bucket versioning is enabled"
   severity: medium
   check: { attribute: versioning, operator: equals, value: true }
-  remediation: |
+  remediation: |-
     resource "aws_s3_bucket_versioning" "sensitive_data" {
       bucket = aws_s3_bucket.sensitive_data.id
       versioning_configuration {
@@ -129,7 +129,7 @@
   cis_control: "CIS AWS 2.1.2 - Ensure S3 bucket access logging is enabled"
   severity: medium
   check: { attribute: access_logging, operator: equals, value: true }
-  remediation: |
+  remediation: |-
     resource "aws_s3_bucket_logging" "sensitive_data" {
       bucket        = aws_s3_bucket.sensitive_data.id
       target_bucket = aws_s3_bucket.app_logs.id
@@ -147,7 +147,7 @@
   cis_control: "CIS AWS 1.16 - Ensure IAM policies grant least privilege"
   severity: critical
   check: { attribute: wildcard_action, operator: equals, value: false }
-  remediation: |
+  remediation: |-
     Statement = [{
       Effect   = "Allow"
       Action   = ["s3:GetObject", "s3:PutObject"]
@@ -198,7 +198,7 @@
   cis_control: "CIS AWS 2.3.1 - Ensure RDS instances have encryption at rest enabled"
   severity: high
   check: { attribute: storage_encrypted, operator: equals, value: true }
-  remediation: |
+  remediation: |-
     storage_encrypted = true
     kms_key_id        = aws_kms_key.app_key.arn
   explanation: >-

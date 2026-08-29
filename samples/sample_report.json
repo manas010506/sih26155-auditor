@@ -10,7 +10,7 @@
     "version": "15.2",
     "role": "router"
   },
-  "compliance_score": 24,
+  "compliance_score": 22,
   "score_breakdown": {
     "formula": "100 * (1 - failed_weight / total_weight)",
     "severity_weights": {
@@ -19,10 +19,10 @@
       "medium": 5,
       "low": 2
     },
-    "rules_evaluated": 27,
+    "rules_evaluated": 20,
     "rules_failed": 15,
     "failed_weight": 136,
-    "total_weight": 180
+    "total_weight": 175
   },
   "findings": [
     {
@@ -49,7 +49,7 @@
       },
       "cis_control": "CIS Cisco IOS 1.1.1 - Use enable secret instead of enable password",
       "remediation_template": "no enable password\nenable secret <strong-password>",
-      "explanation": "The privileged-EXEC password is stored in the configuration in plaintext, so anyone who can read a config backup, a TFTP transfer or an SNMP dump holds full administrative control. enable secret stores an irreversible hash instead."
+      "explanation": "The privileged-EXEC password is stored in the configuration in plaintext, so anyone who can read a config backup, a TFTP transfer or an SNMP dump holds full administrative control."
     },
     {
       "rule_id": "CIS-NET-009",
@@ -62,7 +62,7 @@
       },
       "cis_control": "CIS Cisco IOS 2.2.2 - Do not use default or read-write SNMP community strings",
       "remediation_template": "no snmp-server community private RW",
-      "explanation": "A read-write community named 'private' is a guessable credential that permits configuration changes over UDP with no logging and no session. This is remote device control, not monitoring."
+      "explanation": "A read-write community is a guessable credential that permits configuration changes over UDP with no logging and no session. This is remote device control, not monitoring."
     },
     {
       "rule_id": "CIS-NET-002",
@@ -75,7 +75,7 @@
       },
       "cis_control": "CIS Cisco IOS 1.2.1 - Disable the HTTP server",
       "remediation_template": "no ip http server",
-      "explanation": "The unencrypted web management interface is running. Credentials submitted to it travel in cleartext, and the HTTP server has historically been a source of remote code execution vulnerabilities. HTTPS is already enabled, so nothing is lost by disabling it."
+      "explanation": "The unencrypted web management interface is running. Credentials submitted to it travel in cleartext, and the HTTP server has historically been a source of remote code execution vulnerabilities."
     },
     {
       "rule_id": "CIS-NET-004",
@@ -88,7 +88,7 @@
       },
       "cis_control": "CIS Cisco IOS 1.1.4 - Apply an access-class to VTY lines",
       "remediation_template": "ip access-list standard MGMT-HOSTS\n permit 10.10.0.0 0.0.0.255\nline vty 0 4\n access-class MGMT-HOSTS in",
-      "explanation": "No ACL limits who may open a management session, so the management plane is reachable from every network that can route to this device, including the WAN interface. An access-class restricts it to the operations subnet."
+      "explanation": "No ACL limits who may open a management session, so the management plane is reachable from every network that can route to this device, including the WAN interface."
     },
     {
       "rule_id": "CIS-NET-007",
@@ -101,7 +101,7 @@
       },
       "cis_control": "CIS Cisco IOS 1.1.2 - Store local user passwords using irreversible encryption",
       "remediation_template": "no username admin\nusername admin privilege 15 secret <strong-password>",
-      "explanation": "This account has full administrative rights and its password is stored as type 0, meaning plaintext. Two accounts on this device share the problem. Use the secret keyword so the password is hashed rather than stored."
+      "explanation": "This account has full administrative rights and its password is stored as type 0, meaning plaintext. Use the secret keyword so the password is hashed."
     },
     {
       "rule_id": "CIS-NET-008",
@@ -124,7 +124,7 @@
       "raw_ref": null,
       "cis_control": "CIS Cisco IOS 3.1.1 - Configure a remote syslog host",
       "remediation_template": "logging host 10.10.0.200\nlogging trap informational",
-      "explanation": "Nothing is sent off-box, so administrative logins, configuration changes and interface events exist only in a buffer that is cleared on reboot and editable by anyone with privileged access. Without remote logging, a compromise leaves no evidence."
+      "explanation": "Nothing is sent off-box, so administrative logins and configuration changes exist only in a buffer that is cleared on reboot and editable by anyone with privileged access."
     },
     {
       "rule_id": "CIS-NET-003",
@@ -150,7 +150,7 @@
       },
       "cis_control": "CIS Cisco IOS 1.1.3 - Enable service password-encryption",
       "remediation_template": "service password-encryption",
-      "explanation": "Passwords that have no stronger option are written to the configuration in clear text. Type 7 encryption is reversible and is not a substitute for secret hashes, but it removes casual over-the-shoulder and config-backup exposure."
+      "explanation": "Passwords that have no stronger option are written to the configuration in clear text. Type 7 encryption is reversible and is not a substitute for secret hashes, but it removes casual config-backup exposure."
     },
     {
       "rule_id": "CIS-NET-013",
@@ -196,7 +196,7 @@
       },
       "cis_control": "CIS Cisco IOS 2.1.1 - Disable CDP where not required",
       "remediation_template": "no cdp run",
-      "explanation": "CDP advertises the model, IOS version, management address and native VLAN to any directly connected device, which hands an attacker on the local segment a free inventory."
+      "explanation": "CDP advertises the model, IOS version, management address and native VLAN to any directly connected device, handing an attacker on the local segment a free inventory."
     },
     {
       "rule_id": "CIS-NET-012",
