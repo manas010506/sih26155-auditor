@@ -284,7 +284,7 @@
   cis_control: \"CIS Cisco IOS 1.2.4 - Set SSH timeout to 60 seconds or less\"
   severity: low
   check:
-    attribute: timeout
+    attribute: timeout_seconds
     operator: lte
     value: 60
   remediation: \"ip ssh time-out 60\"

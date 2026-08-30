@@ -291,5 +291,52 @@
       "explanation": "Without validation there is no way to prove log files were not altered after delivery, which undermines their value as evidence."
     }
   ],
-  "attack_paths": []
+  "attack_paths": [
+    {
+      "chain_id": "CHAIN-CLOUD-PRIVESC",
+      "name": "Administrative port exposure to privilege escalation",
+      "severity": "critical",
+      "contributing_findings": [
+        "CIS-CLOUD-001",
+        "CIS-CLOUD-003",
+        "CIS-CLOUD-009"
+      ],
+      "narrative": "An administrative port is exposed to the internet, and security groups lack restrictive ingress. This allows an attacker to reach the  infrastructure and leverage a wildcard IAM policy to escalate to full  account administrative privileges.",
+      "break_chain": {
+        "fix_rule": "CIS-CLOUD-009",
+        "why": "Restricting wildcard permissions in IAM policies prevents an attacker from using an exposed port to escalate to full administrative control."
+      }
+    },
+    {
+      "chain_id": "CHAIN-CLOUD-DATA-EXPOSURE",
+      "name": "Public storage access to data exfiltration",
+      "severity": "critical",
+      "contributing_findings": [
+        "CIS-CLOUD-004",
+        "CIS-CLOUD-005",
+        "CIS-CLOUD-006",
+        "CIS-CLOUD-008"
+      ],
+      "narrative": "A bucket has a public ACL and lacks a Public Access Block, allowing  anonymous read access. Because the data is unencrypted and access  logging is disabled, an attacker can exfiltrate sensitive data  without leaving a trace.",
+      "break_chain": {
+        "fix_rule": "CIS-CLOUD-005",
+        "why": "Enabling Block Public Access at the bucket level acts as a global  guardrail that overrides any accidental public ACLs or policies."
+      }
+    },
+    {
+      "chain_id": "CHAIN-CLOUD-DB-EXPOSURE",
+      "name": "Public database exposure to data theft",
+      "severity": "critical",
+      "contributing_findings": [
+        "CIS-CLOUD-011",
+        "CIS-CLOUD-003",
+        "CIS-CLOUD-012"
+      ],
+      "narrative": "The database is publicly accessible and the surrounding security  groups are overly permissive. Combined with unencrypted storage,  an attacker can directly target the database endpoint to exfiltrate  the entire dataset.",
+      "break_chain": {
+        "fix_rule": "CIS-CLOUD-011",
+        "why": "Disabling public accessibility for the RDS instance removes the  direct internet path, forcing all traffic through secure internal  network controls."
+      }
+    }
+  ]
 }
