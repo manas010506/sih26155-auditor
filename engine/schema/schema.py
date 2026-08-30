@@ -11,13 +11,11 @@ SOURCE_TYPES = {"cisco_ios", "terraform_aws"}
 RESOURCE_TYPES = {
     # cisco_ios
     "global_settings", "enable_secret", "local_user", "snmp_community",
-    "snmp_settings", "vty_line", "console_line", "aux_line", "ssh_settings",
+    "snmp_settings", "vty_line", "console_line", "ssh_settings",
     "logging", "ntp", "interface", "access_list",
     # terraform_aws
     "s3_bucket", "security_group_rule", "iam_policy", "kms_key",
-    "cloudtrail", "aws_config", "rds_instance", "efs_file_system", "vpc", "subnet", "vpc_peering_connection",
-    "account", "iam_password_policy", "iam_user", "iam_role",
-    "ec2_instance", "iam_certificate", "access_analyzer",
+    "cloudtrail", "rds_instance",
 }
 
 
