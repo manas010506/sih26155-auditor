@@ -1,254 +1,419 @@
-# =============================================================================
-# RULE FORMAT — owned by Manas. Deep writes rules using ONLY what is defined here.
-# If a CIS control needs something this vocabulary can't express, ASK — don't
-# invent syntax. A rule the engine can't load is worse than a missing rule.
-# =============================================================================
-#
-# FIELDS
-#   id           (required)  Stable unique id. CIS-<DOMAIN>-<NNN>. Never reused.
-#   title        (required)  One line, shown as the finding headline in the UI.
-#   applies_to   (required)  The resource "type" this rule inspects.
-#   cis_control  (required)  Human-readable benchmark reference.
-#   severity     (required)  critical | high | medium | low
-#   check        (required)  The COMPLIANT state. A finding is raised when a
-#                            resource does NOT satisfy it.
-#   remediation  (required)  Device-specific CLI. Multi-line allowed.
-#   explanation  (required)  Plain-English default text. Shreyas's LLM layer may
-#                            upgrade this in place; it is never null.
-#   when         (optional)  Filter — the rule only applies to resources whose
-#                            attributes match every key here.
-#   dedupe       (optional)  by_rule (default) = one finding per rule even if
-#                            several resources fail; resource_id is the first
-#                            match. per_resource = one finding per failing
-#                            resource. Use per_resource only where the UI
-#                            genuinely needs each instance listed.
-#
-# CHECK OPERATORS — the complete vocabulary. Nothing else is supported.
-#   equals, not_equals            scalar comparison
-#   contains, not_contains        substring, or list membership
-#   in, not_in                    value is/isn't in the given list
-#   exists, not_exists            attribute is present and non-null (no `value`)
-#   gte, lte                      numeric
-#   in_range                      value: [min, max] inclusive
-#   min_length                    list or string length >= value
-#   matches                       regex, full-string match
-#
-# NOTE ON NULLS: an attribute that is null because the feature is absent from
-# the config counts as NOT satisfying exists / equals / in_range. That is how
-# absence-based findings (missing syslog host, no SSH version) are raised.
-# =============================================================================
-
 - id: CIS-NET-001
   title: VTY lines permit Telnet
   applies_to: vty_line
-  cis_control: "CIS Cisco IOS 1.1.5 - Set transport input ssh on VTY lines"
+  cis_control: CIS Cisco IOS 1.1.5 - Set transport input ssh on VTY lines
   severity: critical
-  check: { attribute: transport_input, operator: not_contains, value: telnet }
-  remediation: |-
-    line vty 0 4
-     transport input ssh
-  explanation: >-
-    Telnet carries usernames and passwords in cleartext. Any device on the path
-    between an administrator and this router can read the enable password and
-    take control. Restrict VTY transport to SSH only.
-
+  check:
+    attribute: transport_input
+    operator: not_contains
+    value: telnet
+  remediation: "line vty 0 4\n transport input ssh"
+  explanation: Telnet carries usernames and passwords in cleartext. Any device on
+    the path between an administrator and this router can read the enable password
+    and take control. Restrict VTY transport to SSH only.
 - id: CIS-NET-002
   title: HTTP management server enabled
   applies_to: global_settings
-  cis_control: "CIS Cisco IOS 1.2.1 - Disable the HTTP server"
+  cis_control: CIS Cisco IOS 1.2.1 - Disable the HTTP server
   severity: high
-  check: { attribute: http_server, operator: equals, value: false }
-  remediation: "no ip http server"
-  explanation: >-
-    The unencrypted web management interface is running. Credentials submitted
-    to it travel in cleartext, and the HTTP server has historically been a
-    source of remote code execution vulnerabilities.
-
+  check:
+    attribute: http_server
+    operator: equals
+    value: false
+  remediation: no ip http server
+  explanation: The unencrypted web management interface is running. Credentials submitted
+    to it travel in cleartext, and the HTTP server has historically been a source
+    of remote code execution vulnerabilities.
 - id: CIS-NET-003
   title: VTY session timeout disabled
   applies_to: vty_line
-  cis_control: "CIS Cisco IOS 1.1.6 - Set exec-timeout to 10 minutes or less"
+  cis_control: CIS Cisco IOS 1.1.6 - Set exec-timeout to 10 minutes or less
   severity: medium
-  check: { attribute: exec_timeout_minutes, operator: in_range, value: [1, 10] }
-  remediation: |-
-    line vty 0 4
-     exec-timeout 10 0
-  explanation: >-
-    exec-timeout 0 0 disables the idle timer, so an abandoned session stays
-    authenticated indefinitely and can be reused by anyone with access to that
-    terminal.
-
+  check:
+    attribute: exec_timeout_minutes
+    operator: in_range
+    value:
+    - 1
+    - 10
+  remediation: "line vty 0 4\n exec-timeout 10 0"
+  explanation: exec-timeout 0 0 disables the idle timer, so an abandoned session stays
+    authenticated indefinitely and can be reused by anyone with access to that terminal.
 - id: CIS-NET-004
   title: VTY lines have no access-class restriction
   applies_to: vty_line
-  cis_control: "CIS Cisco IOS 1.1.4 - Apply an access-class to VTY lines"
+  cis_control: CIS Cisco IOS 1.1.4 - Apply an access-class to VTY lines
   severity: high
-  check: { attribute: access_class, operator: exists }
-  remediation: |-
-    ip access-list standard MGMT-HOSTS
-     permit 10.10.0.0 0.0.0.255
-    line vty 0 4
-     access-class MGMT-HOSTS in
-  explanation: >-
-    No ACL limits who may open a management session, so the management plane is
-    reachable from every network that can route to this device, including the
-    WAN interface.
-
+  check:
+    attribute: access_class
+    operator: exists
+  remediation: "ip access-list standard MGMT-HOSTS\n permit 10.10.0.0 0.0.0.255\n\
+    line vty 0 4\n access-class MGMT-HOSTS in"
+  explanation: No ACL limits who may open a management session, so the management
+    plane is reachable from every network that can route to this device, including
+    the WAN interface.
 - id: CIS-NET-005
   title: Password encryption service disabled
   applies_to: global_settings
-  cis_control: "CIS Cisco IOS 1.1.3 - Enable service password-encryption"
+  cis_control: CIS Cisco IOS 1.1.3 - Enable service password-encryption
   severity: medium
-  check: { attribute: password_encryption, operator: equals, value: true }
-  remediation: "service password-encryption"
-  explanation: >-
-    Passwords that have no stronger option are written to the configuration in
-    clear text. Type 7 encryption is reversible and is not a substitute for
-    secret hashes, but it removes casual config-backup exposure.
-
+  check:
+    attribute: password_encryption
+    operator: equals
+    value: true
+  remediation: service password-encryption
+  explanation: Passwords that have no stronger option are written to the configuration
+    in clear text. Type 7 encryption is reversible and is not a substitute for secret
+    hashes, but it removes casual config-backup exposure.
 - id: CIS-NET-006
   title: Enable password stored unencrypted
   applies_to: enable_secret
-  cis_control: "CIS Cisco IOS 1.1.1 - Use enable secret instead of enable password"
+  cis_control: CIS Cisco IOS 1.1.1 - Use enable secret instead of enable password
   severity: critical
-  check: { attribute: uses_secret, operator: equals, value: true }
-  remediation: |-
-    no enable password
-    enable secret <strong-password>
-  explanation: >-
-    The privileged-EXEC password is stored in the configuration in plaintext, so
-    anyone who can read a config backup, a TFTP transfer or an SNMP dump holds
-    full administrative control.
+  check:
+    attribute: uses_secret
+    operator: equals
+    value: true
+  remediation: 'no enable password
 
+    enable secret <strong-password>'
+  explanation: The privileged-EXEC password is stored in the configuration in plaintext,
+    so anyone who can read a config backup, a TFTP transfer or an SNMP dump holds
+    full administrative control.
 - id: CIS-NET-007
   title: Privilege-15 local user with unencrypted password
   applies_to: local_user
-  when: { privilege: 15 }
-  cis_control: "CIS Cisco IOS 1.1.2 - Store local user passwords using irreversible encryption"
+  when:
+    privilege: 15
+  cis_control: CIS Cisco IOS 1.1.2 - Store local user passwords using irreversible
+    encryption
   severity: high
-  check: { attribute: encrypted, operator: equals, value: true }
-  remediation: |-
-    no username admin
-    username admin privilege 15 secret <strong-password>
-  explanation: >-
-    This account has full administrative rights and its password is stored as
-    type 0, meaning plaintext. Use the secret keyword so the password is hashed.
+  check:
+    attribute: encrypted
+    operator: equals
+    value: true
+  remediation: 'no username admin
 
+    username admin privilege 15 secret <strong-password>'
+  explanation: This account has full administrative rights and its password is stored
+    as type 0, meaning plaintext. Use the secret keyword so the password is hashed.
 - id: CIS-NET-008
   title: Default SNMP read-only community string
   applies_to: snmp_community
-  when: { access: RO }
-  cis_control: "CIS Cisco IOS 2.2.1 - Do not use default SNMP community strings"
+  when:
+    access: RO
+  cis_control: CIS Cisco IOS 2.2.1 - Do not use default SNMP community strings
   severity: high
-  check: { attribute: is_default_string, operator: equals, value: false }
-  remediation: "no snmp-server community public RO"
-  explanation: >-
-    The community string 'public' is the first value any scanner tries. It
-    exposes the full running configuration, interface list, routing table and
-    ARP cache to anyone who can reach UDP/161.
-
+  check:
+    attribute: is_default_string
+    operator: equals
+    value: false
+  remediation: no snmp-server community public RO
+  explanation: The community string 'public' is the first value any scanner tries.
+    It exposes the full running configuration, interface list, routing table and ARP
+    cache to anyone who can reach UDP/161.
 - id: CIS-NET-009
   title: SNMP read-write community uses a default string
   applies_to: snmp_community
-  cis_control: "CIS Cisco IOS 2.2.2 - Do not use default or read-write SNMP community strings"
+  cis_control: CIS Cisco IOS 2.2.2 - Do not use default or read-write SNMP community
+    strings
   severity: critical
-  check: { attribute: access, operator: not_equals, value: RW }
-  remediation: "no snmp-server community private RW"
-  explanation: >-
-    A read-write community is a guessable credential that permits configuration
-    changes over UDP with no logging and no session. This is remote device
-    control, not monitoring.
-
+  check:
+    attribute: access
+    operator: not_equals
+    value: RW
+  remediation: no snmp-server community private RW
+  explanation: A read-write community is a guessable credential that permits configuration
+    changes over UDP with no logging and no session. This is remote device control,
+    not monitoring.
 - id: CIS-NET-011
   title: No syslog server configured
   applies_to: logging
-  cis_control: "CIS Cisco IOS 3.1.1 - Configure a remote syslog host"
+  cis_control: CIS Cisco IOS 3.1.1 - Configure a remote syslog host
   severity: high
-  check: { attribute: hosts, operator: min_length, value: 1 }
-  remediation: |-
-    logging host 10.10.0.200
-    logging trap informational
-  explanation: >-
-    Nothing is sent off-box, so administrative logins and configuration changes
-    exist only in a buffer that is cleared on reboot and editable by anyone with
-    privileged access.
+  check:
+    attribute: hosts
+    operator: min_length
+    value: 1
+  remediation: 'logging host 10.10.0.200
 
+    logging trap informational'
+  explanation: Nothing is sent off-box, so administrative logins and configuration
+    changes exist only in a buffer that is cleared on reboot and editable by anyone
+    with privileged access.
 - id: CIS-NET-012
   title: NTP configured without authentication
   applies_to: ntp
-  cis_control: "CIS Cisco IOS 3.2.1 - Use authenticated NTP"
+  cis_control: CIS Cisco IOS 3.2.1 - Use authenticated NTP
   severity: low
-  check: { attribute: authenticated, operator: equals, value: true }
-  remediation: |-
-    ntp authenticate
-    ntp authentication-key 1 md5 <key>
-    ntp trusted-key 1
-    ntp server 10.10.0.250 key 1
-  explanation: >-
-    Time is accepted from an unauthenticated source. An attacker who can spoof
-    NTP can shift the clock and desynchronise every timestamp used to correlate
-    logs during an investigation.
+  check:
+    attribute: authenticated
+    operator: equals
+    value: true
+  remediation: 'ntp authenticate
 
+    ntp authentication-key 1 md5 <key>
+
+    ntp trusted-key 1
+
+    ntp server 10.10.0.250 key 1'
+  explanation: Time is accepted from an unauthenticated source. An attacker who can
+    spoof NTP can shift the clock and desynchronise every timestamp used to correlate
+    logs during an investigation.
 - id: CIS-NET-013
   title: AAA not enabled
   applies_to: global_settings
-  cis_control: "CIS Cisco IOS 1.3.1 - Enable AAA"
+  cis_control: CIS Cisco IOS 1.3.1 - Enable AAA
   severity: medium
-  check: { attribute: aaa_new_model, operator: equals, value: true }
-  remediation: |-
-    aaa new-model
-    aaa authentication login default group tacacs+ local
-    aaa accounting exec default start-stop group tacacs+
-  explanation: >-
-    Authentication falls back to shared local passwords, so administrator
-    actions cannot be attributed to an individual and revoking one person's
-    access means changing credentials for everyone.
+  check:
+    attribute: aaa_new_model
+    operator: equals
+    value: true
+  remediation: 'aaa new-model
 
+    aaa authentication login default group tacacs+ local
+
+    aaa accounting exec default start-stop group tacacs+'
+  explanation: Authentication falls back to shared local passwords, so administrator
+    actions cannot be attributed to an individual and revoking one person's access
+    means changing credentials for everyone.
 - id: CIS-NET-014
   title: No login banner configured
   applies_to: global_settings
-  cis_control: "CIS Cisco IOS 1.4.1 - Configure a login banner"
+  cis_control: CIS Cisco IOS 1.4.1 - Configure a login banner
   severity: low
-  check: { attribute: login_banner, operator: exists }
-  remediation: |-
-    banner login ^C
-    Authorised access only. Activity is monitored.
-    ^C
-  explanation: >-
-    No warning banner is presented before authentication. Beyond the hardening
-    benchmark, this weakens the legal position when pursuing unauthorised access.
+  check:
+    attribute: login_banner
+    operator: exists
+  remediation: 'banner login ^C
 
+    Authorised access only. Activity is monitored.
+
+    ^C'
+  explanation: No warning banner is presented before authentication. Beyond the hardening
+    benchmark, this weakens the legal position when pursuing unauthorised access.
 - id: CIS-NET-015
   title: CDP enabled globally
   applies_to: global_settings
-  cis_control: "CIS Cisco IOS 2.1.1 - Disable CDP where not required"
+  cis_control: CIS Cisco IOS 2.1.1 - Disable CDP where not required
   severity: low
-  check: { attribute: cdp_enabled, operator: equals, value: false }
-  remediation: "no cdp run"
-  explanation: >-
-    CDP advertises the model, IOS version, management address and native VLAN to
-    any directly connected device, handing an attacker on the local segment a
-    free inventory.
-
+  check:
+    attribute: cdp_enabled
+    operator: equals
+    value: false
+  remediation: no cdp run
+  explanation: CDP advertises the model, IOS version, management address and native
+    VLAN to any directly connected device, handing an attacker on the local segment
+    a free inventory.
 - id: CIS-NET-016
   title: SSH version 2 not enforced
   applies_to: ssh_settings
-  cis_control: "CIS Cisco IOS 1.2.3 - Set ip ssh version 2"
+  cis_control: CIS Cisco IOS 1.2.3 - Set ip ssh version 2
   severity: medium
-  check: { attribute: version, operator: equals, value: 2 }
-  remediation: |-
-    ip ssh version 2
-    ip ssh time-out 60
-    ip ssh authentication-retries 3
-  explanation: >-
-    With no explicit version the device may negotiate SSHv1, which has known
-    integrity weaknesses and is downgradeable by an on-path attacker.
+  check:
+    attribute: version
+    operator: equals
+    value: 2
+  remediation: 'ip ssh version 2
 
-# =============================================================================
-# The rules below PASS against samples/sample_cisco_ios.cfg. Keep rules like
-# these in the set. total_weight sums EVERY rule loaded, so a set where all
-# rules fail scores 0 and the gauge tells a judge nothing.
-# =============================================================================
+    ip ssh time-out 60
+
+    ip ssh authentication-retries 3'
+  explanation: With no explicit version the device may negotiate SSHv1, which has
+    known integrity weaknesses and is downgradeable by an on-path attacker.
+- id: CIS-NET-018
+  title: No NTP server configured
+  applies_to: ntp
+  cis_control: CIS Cisco IOS 3.2.2 - Configure at least one NTP server
+  severity: medium
+  check:
+    attribute: servers
+    operator: min_length
+    value: 1
+  remediation: ntp server 10.10.0.250
+  explanation: Without a time source, log timestamps drift and cannot be correlated
+    with any other device during an investigation.
+- id: CIS-NET-019
+  title: VTY lines allow login without authentication
+  applies_to: vty_line
+  cis_control: CIS Cisco IOS 1.1.7 - Require authentication on VTY lines
+  severity: critical
+  check:
+    attribute: login_method
+    operator: not_equals
+    value: none
+  remediation: "line vty 0 4\n login authentication default"
+  explanation: A VTY line with no login requirement grants a shell to anyone who can
+    reach the port, with no credential at all.
+- id: CIS-NET-020
+  title: Device hostname not set
+  applies_to: global_settings
+  cis_control: CIS Cisco IOS 1.5.1 - Set a unique device hostname
+  severity: low
+  check:
+    attribute: hostname
+    operator: exists
+  remediation: hostname EDGE-RTR-01
+  explanation: A device left on its default hostname is hard to identify in logs and
+    in an inventory, which slows every incident response.
+- id: CIS-NET-021
+  title: IOS version not recorded
+  applies_to: global_settings
+  cis_control: CIS Cisco IOS 1.5.2 - Track the running software version
+  severity: low
+  check:
+    attribute: os_version
+    operator: exists
+  remediation: '# informational - version is read from the config header'
+  explanation: The running version determines which CVEs apply, so an audit that cannot
+    determine it cannot assess patch exposure.
+- id: CIS-NET-022
+  title: SNMP v1/v2c community strings in use
+  applies_to: snmp_community
+  cis_control: \"CIS Cisco IOS 2.2.0 - Use SNMPv3\"
+  severity: high
+  check:
+    attribute: version
+    operator: equals
+    value: 3
+  remediation: \"Configure snmp-server group with v3 auth and priv\"
+  explanation: SNMP v1 and v2c transmit community strings in plaintext. An attacker
+    capturing traffic can gain full read or write access to the device configuration.
+- id: CIS-NET-023
+  title: SSH session timeout too high
+  applies_to: ssh_settings
+  cis_control: \"CIS Cisco IOS 1.2.4 - Set SSH timeout to 60 seconds or less\"
+  severity: low
+  check:
+    attribute: timeout
+    operator: lte
+    value: 60
+  remediation: \"ip ssh time-out 60\"
+  explanation: Excessively long timeouts leave authenticated sessions open longer
+    than necessary, increasing the risk of session hijacking if a terminal is left
+    unattended.
+- id: CIS-NET-024
+  title: IP source routing enabled
+  applies_to: global_settings
+  cis_control: \"CIS Cisco IOS 1.6.1 - Disable IP source routing\"
+  severity: medium
+  check:
+    attribute: source_routing
+    operator: equals
+    value: false
+  remediation: \"no ip source-route\"
+  explanation: Source routing allows a sender to specify the path a packet takes.
+    This can be used by attackers to bypass security controls or map internal network
+    topology.
+- id: CIS-NET-025
+  title: No MOTD banner configured
+  applies_to: global_settings
+  cis_control: \"CIS Cisco IOS 1.4.2 - Configure a Message of the Day (MOTD) banner\"
+  severity: low
+  check:
+    attribute: motd_banner
+    operator: exists
+  remediation: \"banner motd ^C Authorized Access Only ^C\"
+  explanation: A MOTD banner provides a legal warning to unauthorized users. Without
+    it, it is harder to prosecute unauthorized access in many legal jurisdictions.
+
+- id: CIS-NET-027
+  title: AAA login authentication not configured
+  applies_to: global_settings
+  cis_control: \"CIS Cisco IOS 1.1.2 - Enable 'aaa authentication login'\"
+  severity: critical
+  check:
+    attribute: aaa_auth_login
+    operator: equals
+    value: true
+  remediation: \"aaa authentication login default group tacacs+ local\"
+  explanation: Without AAA login authentication, the device may fall back to insecure
+    local passwords or no authentication at all.
+- id: CIS-NET-028
+  title: AAA enable authentication not configured
+  applies_to: global_settings
+  cis_control: \"CIS Cisco IOS 1.1.3 - Enable 'aaa authentication enable default'\"
+  severity: critical
+  check:
+    attribute: aaa_auth_enable
+    operator: equals
+    value: true
+  remediation: \"aaa authentication enable default group tacacs+ enable\"
+  explanation: Privileged EXEC mode must be protected by AAA to ensure that only authorized
+    administrators can enter enable mode.
+- id: CIS-NET-029
+  title: AAA command accounting disabled
+  applies_to: global_settings
+  cis_control: \"CIS Cisco IOS 1.1.6 - Set 'aaa accounting' to log all privileged
+    use commands\"
+  severity: medium
+  check:
+    attribute: aaa_accounting_commands
+    operator: equals
+    value: true
+  remediation: \"aaa accounting commands 15 default start-stop group tacacs+\"
+  explanation: Accounting for privilege 15 commands is essential for forensic audits
+    to see exactly what changes were made by which administrator.
+- id: CIS-NET-030
+  title: AAA connection accounting disabled
+  applies_to: global_settings
+  cis_control: \"CIS Cisco IOS 1.1.7 - Set 'aaa accounting connection'\"
+  severity: low
+  check:
+    attribute: aaa_accounting_connection
+    operator: equals
+    value: true
+  remediation: \"aaa accounting connection default start-stop group tacacs+\"
+  explanation: Connection accounting tracks the start and end of sessions, helping
+    to identify session hijacking or unusual login patterns.
+- id: CIS-NET-031
+  title: AAA exec accounting disabled
+  applies_to: global_settings
+  cis_control: \"CIS Cisco IOS 1.1.8 - Set 'aaa accounting exec'\"
+  severity: low
+  check:
+    attribute: aaa_accounting_exec
+    operator: equals
+    value: true
+  remediation: \"aaa accounting exec default start-stop group tacacs+\"
+  explanation: Exec accounting logs the start and end of the shell session itself.
+- id: CIS-NET-032
+  title: AAA network accounting disabled
+  applies_to: global_settings
+  cis_control: \"CIS Cisco IOS 1.1.9 - Set 'aaa accounting network'\"
+  severity: low
+  check:
+    attribute: aaa_accounting_network
+    operator: equals
+    value: true
+  remediation: \"aaa accounting network default start-stop group tacacs+\"
+  explanation: Network accounting tracks network-related service requests.
+- id: CIS-NET-033
+  title: AAA system accounting disabled
+  applies_to: global_settings
+  cis_control: \"CIS Cisco IOS 1.1.10 - Set 'aaa accounting system'\"
+  severity: low
+  check:
+    attribute: aaa_accounting_system
+    operator: equals
+    value: true
+  remediation: \"aaa accounting system default start-stop group tacacs+\"
+  explanation: System accounting logs events not associated with users, such as system
+    reloads.
+- id: CIS-NET-034
+  title: Local users have excessive privileges
+  applies_to: local_user
+  when:
+    privilege: 15
+  cis_control: \"CIS Cisco IOS 1.2.1 - Set 'privilege 1' for local users\"
+  severity: high
+  check:
+    attribute: privilege
+    operator: equals
+    value: 1
+  remediation: \"username <user> privilege 1\"
+  explanation: Local accounts should be restricted to privilege 1. Administrative
+    access should be gained via the 'enable' command to ensure a second layer of auth.
+
 
 - id: CIS-NET-017
   title: HTTPS management server not enabled
@@ -260,49 +425,3 @@
   explanation: >-
     If web management is needed at all it must be encrypted; the plaintext HTTP
     server is never an acceptable substitute.
-
-- id: CIS-NET-018
-  title: No NTP server configured
-  applies_to: ntp
-  cis_control: "CIS Cisco IOS 3.2.2 - Configure at least one NTP server"
-  severity: medium
-  check: { attribute: servers, operator: min_length, value: 1 }
-  remediation: "ntp server 10.10.0.250"
-  explanation: >-
-    Without a time source, log timestamps drift and cannot be correlated with
-    any other device during an investigation.
-
-- id: CIS-NET-019
-  title: VTY lines allow login without authentication
-  applies_to: vty_line
-  cis_control: "CIS Cisco IOS 1.1.7 - Require authentication on VTY lines"
-  severity: critical
-  check: { attribute: login_method, operator: not_equals, value: none }
-  remediation: |-
-    line vty 0 4
-     login authentication default
-  explanation: >-
-    A VTY line with no login requirement grants a shell to anyone who can reach
-    the port, with no credential at all.
-
-- id: CIS-NET-020
-  title: Device hostname not set
-  applies_to: global_settings
-  cis_control: "CIS Cisco IOS 1.5.1 - Set a unique device hostname"
-  severity: low
-  check: { attribute: hostname, operator: exists }
-  remediation: "hostname EDGE-RTR-01"
-  explanation: >-
-    A device left on its default hostname is hard to identify in logs and in an
-    inventory, which slows every incident response.
-
-- id: CIS-NET-021
-  title: IOS version not recorded
-  applies_to: global_settings
-  cis_control: "CIS Cisco IOS 1.5.2 - Track the running software version"
-  severity: low
-  check: { attribute: os_version, operator: exists }
-  remediation: "# informational - version is read from the config header"
-  explanation: >-
-    The running version determines which CVEs apply, so an audit that cannot
-    determine it cannot assess patch exposure.

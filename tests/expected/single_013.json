@@ -1,0 +1,7 @@
+{
+  "config": "single_013.cfg",
+  "expected_rule_ids": [
+    "CIS-NET-014"
+  ],
+  "seeded_count": 1
+}

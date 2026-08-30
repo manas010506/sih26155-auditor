@@ -1,0 +1,10 @@
+{
+  "config": "combo_002.cfg",
+  "expected_rule_ids": [
+    "CIS-NET-002",
+    "CIS-NET-003",
+    "CIS-NET-008",
+    "CIS-NET-012"
+  ],
+  "seeded_count": 4
+}

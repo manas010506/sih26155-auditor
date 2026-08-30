@@ -10,7 +10,7 @@
     "version": "provider ~> 5.0",
     "role": "cloud_account"
   },
-  "compliance_score": 11,
+  "compliance_score": 8,
   "score_breakdown": {
     "formula": "100 * (1 - failed_weight / total_weight)",
     "severity_weights": {
@@ -19,12 +19,48 @@
       "medium": 5,
       "low": 2
     },
-    "rules_evaluated": 18,
-    "rules_failed": 15,
-    "failed_weight": 169,
-    "total_weight": 189
+    "rules_evaluated": 26,
+    "rules_failed": 22,
+    "failed_weight": 259,
+    "total_weight": 281
   },
   "findings": [
+    {
+      "rule_id": "AWS-LOG-001",
+      "title": "Ensure CloudTrail is enabled in all regions",
+      "severity": "critical",
+      "resource_id": "cloudtrail-main",
+      "raw_ref": {
+        "line": 131,
+        "snippet": "is_multi_region_trail         = false"
+      },
+      "cis_control": "CIS AWS Foundations 3.4.1",
+      "remediation_template": "Enable CloudTrail in all regions via the AWS Console or CLI.",
+      "explanation": "CloudTrail provides the primary audit log for all API calls in the account; without it, forensic analysis of security incidents is impossible."
+    },
+    {
+      "rule_id": "AWS-RDS-003",
+      "title": "Ensure that RDS instances are not publicly accessible",
+      "severity": "critical",
+      "resource_id": "rds-app_db",
+      "raw_ref": {
+        "line": 113,
+        "snippet": "publicly_accessible        = true"
+      },
+      "cis_control": "CIS AWS Foundations 3.2.3",
+      "remediation_template": "Modify the RDS instance and set 'Public access' to 'No'.",
+      "explanation": "Exposing a database directly to the internet significantly increases the risk of brute-force attacks and vulnerability exploitation."
+    },
+    {
+      "rule_id": "AWS-S3-002",
+      "title": "Ensure that S3 is configured with 'Block Public Access' enabled",
+      "severity": "critical",
+      "resource_id": "s3-sensitive_data",
+      "raw_ref": null,
+      "cis_control": "CIS AWS Foundations 3.1.4",
+      "remediation_template": "Enable all four 'Block Public Access' settings at the bucket or account level.",
+      "explanation": "Publicly accessible S3 buckets are a leading cause of massive data breaches. Block Public Access provides a fail-safe guardrail."
+    },
     {
       "rule_id": "CIS-CLOUD-001",
       "title": "Security group exposes an administrative port to the internet",
@@ -91,6 +127,29 @@
       "explanation": "The production database has a public endpoint, so its only protection is the security group in front of it."
     },
     {
+      "rule_id": "AWS-RDS-001",
+      "title": "Ensure that encryption-at-rest is enabled for RDS instances",
+      "severity": "high",
+      "resource_id": "rds-app_db",
+      "raw_ref": {
+        "line": 114,
+        "snippet": "storage_encrypted          = false"
+      },
+      "cis_control": "CIS AWS Foundations 3.2.1",
+      "remediation_template": "Create a snapshot of the unencrypted instance, copy the snapshot with encryption enabled, and restore from the encrypted snapshot.",
+      "explanation": "Encryption at rest protects the underlying storage from unauthorized physical access or snapshot theft."
+    },
+    {
+      "rule_id": "AWS-S3-001",
+      "title": "Ensure S3 Bucket Policy is set to deny HTTP requests",
+      "severity": "high",
+      "resource_id": "s3-sensitive_data",
+      "raw_ref": null,
+      "cis_control": "CIS AWS Foundations 3.1.1",
+      "remediation_template": "Add a bucket policy statement that denies any request where 'aws:SecureTransport' is false.",
+      "explanation": "Allowing HTTP requests exposes data in transit to interception and man-in-the-middle attacks."
+    },
+    {
       "rule_id": "CIS-CLOUD-002",
       "title": "Security group exposes RDP to the internet",
       "severity": "high",
@@ -148,6 +207,29 @@
       "cis_control": "CIS AWS 2.3.1 - Ensure RDS instances have encryption at rest enabled",
       "remediation_template": "storage_encrypted = true\nkms_key_id        = aws_kms_key.app_key.arn",
       "explanation": "Volumes and automated snapshots are unencrypted, and this cannot be fixed in place \u2014 it needs a snapshot, an encrypted copy and a restore."
+    },
+    {
+      "rule_id": "AWS-LOG-002",
+      "title": "Ensure CloudTrail log file validation is enabled",
+      "severity": "medium",
+      "resource_id": "cloudtrail-main",
+      "raw_ref": {
+        "line": 131,
+        "snippet": "is_multi_region_trail         = false"
+      },
+      "cis_control": "CIS AWS Foundations 3.4.2",
+      "remediation_template": "Enable log file validation in the CloudTrail settings.",
+      "explanation": "Log file validation ensures that logs have not been modified, deleted, or forged after CloudTrail delivered them."
+    },
+    {
+      "rule_id": "AWS-LOG-004",
+      "title": "Ensure S3 Server Access Logging is enabled for critical buckets",
+      "severity": "medium",
+      "resource_id": "s3-sensitive_data",
+      "raw_ref": null,
+      "cis_control": "CIS AWS Foundations 3.1.5",
+      "remediation_template": "Configure the S3 bucket to send access logs to a dedicated logging bucket.",
+      "explanation": "Server access logs provide detailed records for the requests that are made to a bucket, useful for detecting unauthorized access attempts."
     },
     {
       "rule_id": "CIS-CLOUD-007",

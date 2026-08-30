@@ -1,267 +1,346 @@
-# =============================================================================
-# AWS / CLOUD RULES
-# Same format and same operator vocabulary as cisco_rules.yaml — read the
-# comment block at the top of that file first. Nothing here introduces new
-# syntax.
-#
-# 18 rules. 15 fail against samples/main.tf; the last 3 pass, which is what
-# makes the compliance score meaningful rather than always zero.
-# =============================================================================
-
-# ------------------------------------------------------------------ NETWORK
 - id: CIS-CLOUD-001
   title: Security group exposes an administrative port to the internet
   applies_to: security_group_rule
-  when: { open_to_internet: true }
-  cis_control: "CIS AWS 5.2 - No ingress from 0.0.0.0/0 to remote administration ports"
+  when:
+    open_to_internet: true
+  cis_control: CIS AWS 5.2 - No ingress from 0.0.0.0/0 to remote administration ports
   severity: critical
-  check: { attribute: from_port, operator: not_in, value: [22, 3389] }
-  remediation: |-
-    ingress {
-      from_port   = 22
-      to_port     = 22
-      protocol    = "tcp"
-      cidr_blocks = ["10.0.0.0/8"]
-    }
-  explanation: >-
-    SSH is reachable from every address on the internet. This is the most
+  check:
+    attribute: from_port
+    operator: not_in
+    value:
+    - 22
+    - 3389
+  remediation: "ingress {\n  from_port   = 22\n  to_port     = 22\n  protocol    =\
+    \ \"tcp\"\n  cidr_blocks = [\"10.0.0.0/8\"]\n}"
+  explanation: SSH is reachable from every address on the internet. This is the most
     scanned port on AWS and the usual first step in a host compromise.
-
 - id: CIS-CLOUD-002
   title: Security group exposes RDP to the internet
   applies_to: security_group_rule
-  when: { open_to_internet: true, from_port: 3389 }
-  cis_control: "CIS AWS 5.2 - No ingress from 0.0.0.0/0 to remote administration ports"
+  when:
+    open_to_internet: true
+    from_port: 3389
+  cis_control: CIS AWS 5.2 - No ingress from 0.0.0.0/0 to remote administration ports
   severity: high
-  check: { attribute: cidr_blocks, operator: not_contains, value: "0.0.0.0/0" }
-  remediation: 'cidr_blocks = ["10.0.0.0/8"]'
-  explanation: >-
-    RDP open to the world is continuously scanned and brute-forced, and exposes
-    the service to protocol-level vulnerabilities regardless of password strength.
-
+  check:
+    attribute: cidr_blocks
+    operator: not_contains
+    value: 0.0.0.0/0
+  remediation: cidr_blocks = ["10.0.0.0/8"]
+  explanation: RDP open to the world is continuously scanned and brute-forced, and
+    exposes the service to protocol-level vulnerabilities regardless of password strength.
 - id: CIS-CLOUD-003
   title: Security group exposes all TCP ports to the internet
   applies_to: security_group_rule
-  when: { open_to_internet: true }
-  cis_control: "CIS AWS 5.3 - Restrict security group ingress to required ports only"
+  when:
+    open_to_internet: true
+  cis_control: CIS AWS 5.3 - Restrict security group ingress to required ports only
   severity: critical
-  check: { attribute: is_wide_range, operator: equals, value: false }
-  remediation: |-
-    # Remove the 0-65535 ingress block entirely.
-    # Open only the ports the service actually needs.
-  explanation: >-
-    A rule opening ports 0-65535 to 0.0.0.0/0 makes every other ingress
-    restriction on the group meaningless.
+  check:
+    attribute: is_wide_range
+    operator: equals
+    value: false
+  remediation: '# Remove the 0-65535 ingress block entirely.
 
-# ------------------------------------------------------------------ STORAGE
+    # Open only the ports the service actually needs.'
+  explanation: A rule opening ports 0-65535 to 0.0.0.0/0 makes every other ingress
+    restriction on the group meaningless.
 - id: CIS-CLOUD-004
   title: S3 bucket has a public ACL
   applies_to: s3_bucket
-  cis_control: "CIS AWS 2.1.5 - Ensure S3 buckets are not publicly accessible"
+  cis_control: CIS AWS 2.1.5 - Ensure S3 buckets are not publicly accessible
   severity: critical
-  check: { attribute: acl, operator: not_in, value: ["public-read", "public-read-write", "authenticated-read"] }
-  remediation: |-
-    resource "aws_s3_bucket_acl" "sensitive_data" {
-      bucket = aws_s3_bucket.sensitive_data.id
-      acl    = "private"
-    }
-  explanation: >-
-    A public-read ACL exposes every object in the bucket to anonymous requests.
-
+  check:
+    attribute: acl
+    operator: not_in
+    value:
+    - public-read
+    - public-read-write
+    - authenticated-read
+  remediation: "resource \"aws_s3_bucket_acl\" \"sensitive_data\" {\n  bucket = aws_s3_bucket.sensitive_data.id\n\
+    \  acl    = \"private\"\n}"
+  explanation: A public-read ACL exposes every object in the bucket to anonymous requests.
 - id: CIS-CLOUD-005
   title: S3 bucket has no public access block
   applies_to: s3_bucket
-  cis_control: "CIS AWS 2.1.5 - Enable S3 Block Public Access at the bucket level"
+  cis_control: CIS AWS 2.1.5 - Enable S3 Block Public Access at the bucket level
   severity: high
-  check: { attribute: public_access_block, operator: equals, value: true }
-  remediation: |-
-    resource "aws_s3_bucket_public_access_block" "sensitive_data" {
-      bucket                  = aws_s3_bucket.sensitive_data.id
-      block_public_acls       = true
-      block_public_policy     = true
-      ignore_public_acls      = true
-      restrict_public_buckets = true
-    }
-  explanation: >-
-    Nothing prevents a future ACL or bucket policy from making this bucket
+  check:
+    attribute: public_access_block
+    operator: equals
+    value: true
+  remediation: "resource \"aws_s3_bucket_public_access_block\" \"sensitive_data\"\
+    \ {\n  bucket                  = aws_s3_bucket.sensitive_data.id\n  block_public_acls\
+    \       = true\n  block_public_policy     = true\n  ignore_public_acls      =\
+    \ true\n  restrict_public_buckets = true\n}"
+  explanation: Nothing prevents a future ACL or bucket policy from making this bucket
     public again. The block is the control that survives human error.
-
 - id: CIS-CLOUD-006
   title: S3 bucket has no server-side encryption
   applies_to: s3_bucket
-  cis_control: "CIS AWS 2.1.1 - Ensure S3 buckets employ encryption at rest"
+  cis_control: CIS AWS 2.1.1 - Ensure S3 buckets employ encryption at rest
   severity: high
-  check: { attribute: encrypted, operator: equals, value: true }
-  remediation: |-
-    resource "aws_s3_bucket_server_side_encryption_configuration" "sensitive_data" {
-      bucket = aws_s3_bucket.sensitive_data.id
-      rule {
-        apply_server_side_encryption_by_default {
-          sse_algorithm     = "aws:kms"
-          kms_master_key_id = aws_kms_key.app_key.arn
-        }
-      }
-    }
-  explanation: >-
-    Objects are stored unencrypted while another bucket in the same file is
-    encrypted, which is drift rather than a deliberate choice.
-
+  check:
+    attribute: encrypted
+    operator: equals
+    value: true
+  remediation: "resource \"aws_s3_bucket_server_side_encryption_configuration\" \"\
+    sensitive_data\" {\n  bucket = aws_s3_bucket.sensitive_data.id\n  rule {\n   \
+    \ apply_server_side_encryption_by_default {\n      sse_algorithm     = \"aws:kms\"\
+    \n      kms_master_key_id = aws_kms_key.app_key.arn\n    }\n  }\n}"
+  explanation: Objects are stored unencrypted while another bucket in the same file
+    is encrypted, which is drift rather than a deliberate choice.
 - id: CIS-CLOUD-007
   title: S3 bucket versioning disabled
   applies_to: s3_bucket
-  cis_control: "CIS AWS 2.1.3 - Ensure S3 bucket versioning is enabled"
+  cis_control: CIS AWS 2.1.3 - Ensure S3 bucket versioning is enabled
   severity: medium
-  check: { attribute: versioning, operator: equals, value: true }
-  remediation: |-
-    resource "aws_s3_bucket_versioning" "sensitive_data" {
-      bucket = aws_s3_bucket.sensitive_data.id
-      versioning_configuration {
-        status = "Enabled"
-      }
-    }
-  explanation: >-
-    Without versioning an overwrite or deletion is unrecoverable, whether
+  check:
+    attribute: versioning
+    operator: equals
+    value: true
+  remediation: "resource \"aws_s3_bucket_versioning\" \"sensitive_data\" {\n  bucket\
+    \ = aws_s3_bucket.sensitive_data.id\n  versioning_configuration {\n    status\
+    \ = \"Enabled\"\n  }\n}"
+  explanation: Without versioning an overwrite or deletion is unrecoverable, whether
     accidental or from ransomware.
-
 - id: CIS-CLOUD-008
   title: S3 access logging disabled
   applies_to: s3_bucket
-  cis_control: "CIS AWS 2.1.2 - Ensure S3 bucket access logging is enabled"
+  cis_control: CIS AWS 2.1.2 - Ensure S3 bucket access logging is enabled
   severity: medium
-  check: { attribute: access_logging, operator: equals, value: true }
-  remediation: |-
-    resource "aws_s3_bucket_logging" "sensitive_data" {
-      bucket        = aws_s3_bucket.sensitive_data.id
-      target_bucket = aws_s3_bucket.app_logs.id
-      target_prefix = "s3-access/"
-    }
-  explanation: >-
-    No record exists of who read objects from this bucket, so an exploited
+  check:
+    attribute: access_logging
+    operator: equals
+    value: true
+  remediation: "resource \"aws_s3_bucket_logging\" \"sensitive_data\" {\n  bucket\
+    \        = aws_s3_bucket.sensitive_data.id\n  target_bucket = aws_s3_bucket.app_logs.id\n\
+    \  target_prefix = \"s3-access/\"\n}"
+  explanation: No record exists of who read objects from this bucket, so an exploited
     public ACL leaves no trail.
-
-# ----------------------------------------------------------------- IDENTITY
+- id: AWS-S3-001
+  title: Ensure S3 Bucket Policy is set to deny HTTP requests
+  applies_to: s3_bucket
+  cis_control: CIS AWS Foundations 3.1.1
+  severity: high
+  check:
+    attribute: deny_http_requests
+    operator: equals
+    value: true
+  remediation: Add a bucket policy statement that denies any request where 'aws:SecureTransport'
+    is false.
+  explanation: Allowing HTTP requests exposes data in transit to interception and
+    man-in-the-middle attacks.
+- id: AWS-S3-002
+  title: Ensure that S3 is configured with 'Block Public Access' enabled
+  applies_to: s3_bucket
+  cis_control: CIS AWS Foundations 3.1.4
+  severity: critical
+  check:
+    attribute: block_public_access_enabled
+    operator: equals
+    value: true
+  remediation: Enable all four 'Block Public Access' settings at the bucket or account
+    level.
+  explanation: Publicly accessible S3 buckets are a leading cause of massive data
+    breaches. Block Public Access provides a fail-safe guardrail.
+- id: AWS-RDS-001
+  title: Ensure that encryption-at-rest is enabled for RDS instances
+  applies_to: rds_instance
+  cis_control: CIS AWS Foundations 3.2.1
+  severity: high
+  check:
+    attribute: storage_encrypted
+    operator: equals
+    value: true
+  remediation: Create a snapshot of the unencrypted instance, copy the snapshot with
+    encryption enabled, and restore from the encrypted snapshot.
+  explanation: Encryption at rest protects the underlying storage from unauthorized
+    physical access or snapshot theft.
+- id: AWS-RDS-002
+  title: Ensure the Auto Minor Version Upgrade feature is enabled for RDS instances
+  applies_to: rds_instance
+  cis_control: CIS AWS Foundations 3.2.2
+  severity: low
+  check:
+    attribute: auto_minor_version_upgrade
+    operator: equals
+    value: true
+  remediation: Modify the RDS instance and enable 'Auto minor version upgrade'.
+  explanation: Automated minor version upgrades ensure that security patches and bug
+    fixes are applied promptly without manual intervention.
+- id: AWS-RDS-003
+  title: Ensure that RDS instances are not publicly accessible
+  applies_to: rds_instance
+  cis_control: CIS AWS Foundations 3.2.3
+  severity: critical
+  check:
+    attribute: publicly_accessible
+    operator: equals
+    value: false
+  remediation: Modify the RDS instance and set 'Public access' to 'No'.
+  explanation: Exposing a database directly to the internet significantly increases
+    the risk of brute-force attacks and vulnerability exploitation.
 - id: CIS-CLOUD-009
   title: IAM policy grants wildcard action on wildcard resource
   applies_to: iam_policy
-  when: { wildcard_resource: true }
-  cis_control: "CIS AWS 1.16 - Ensure IAM policies grant least privilege"
+  when:
+    wildcard_resource: true
+  cis_control: CIS AWS 1.16 - Ensure IAM policies grant least privilege
   severity: critical
-  check: { attribute: wildcard_action, operator: equals, value: false }
-  remediation: |-
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:GetObject", "s3:PutObject"]
-      Resource = ["arn:aws:s3:::corp-app-logs-prod/*"]
-    }]
-  explanation: >-
-    Action "*" on Resource "*" is administrator access, so a single compromised
+  check:
+    attribute: wildcard_action
+    operator: equals
+    value: false
+  remediation: "Statement = [{\n  Effect   = \"Allow\"\n  Action   = [\"s3:GetObject\"\
+    , \"s3:PutObject\"]\n  Resource = [\"arn:aws:s3:::corp-app-logs-prod/*\"]\n}]"
+  explanation: Action "*" on Resource "*" is administrator access, so a single compromised
     workload becomes full account control.
-
-# -------------------------------------------------------------------- AUDIT
 - id: CIS-CLOUD-010
   title: CloudTrail is not multi-region
   applies_to: cloudtrail
-  cis_control: "CIS AWS 3.1 - Ensure CloudTrail is enabled in all regions"
+  cis_control: CIS AWS 3.1 - Ensure CloudTrail is enabled in all regions
   severity: high
-  check: { attribute: multi_region, operator: equals, value: true }
-  remediation: "is_multi_region_trail = true"
-  explanation: >-
-    Activity outside the trail's region is unrecorded, and attackers routinely
+  check:
+    attribute: multi_region
+    operator: equals
+    value: true
+  remediation: is_multi_region_trail = true
+  explanation: Activity outside the trail's region is unrecorded, and attackers routinely
     operate in unused regions for exactly that reason.
-
 - id: CIS-CLOUD-015
   title: CloudTrail log file validation disabled
   applies_to: cloudtrail
-  cis_control: "CIS AWS 3.2 - Ensure CloudTrail log file validation is enabled"
+  cis_control: CIS AWS 3.2 - Ensure CloudTrail log file validation is enabled
   severity: low
-  check: { attribute: log_file_validation, operator: equals, value: true }
-  remediation: "enable_log_file_validation = true"
-  explanation: >-
-    Without validation there is no way to prove log files were not altered
+  check:
+    attribute: log_file_validation
+    operator: equals
+    value: true
+  remediation: enable_log_file_validation = true
+  explanation: Without validation there is no way to prove log files were not altered
     after delivery, which undermines their value as evidence.
-
-# --------------------------------------------------------------------- DATA
 - id: CIS-CLOUD-011
   title: RDS instance is publicly accessible
   applies_to: rds_instance
-  cis_control: "CIS AWS 2.3.3 - Ensure RDS instances are not publicly accessible"
+  cis_control: CIS AWS 2.3.3 - Ensure RDS instances are not publicly accessible
   severity: critical
-  check: { attribute: publicly_accessible, operator: equals, value: false }
-  remediation: "publicly_accessible = false"
-  explanation: >-
-    The production database has a public endpoint, so its only protection is
-    the security group in front of it.
-
+  check:
+    attribute: publicly_accessible
+    operator: equals
+    value: false
+  remediation: publicly_accessible = false
+  explanation: The production database has a public endpoint, so its only protection
+    is the security group in front of it.
 - id: CIS-CLOUD-012
   title: RDS storage is not encrypted
   applies_to: rds_instance
-  cis_control: "CIS AWS 2.3.1 - Ensure RDS instances have encryption at rest enabled"
+  cis_control: CIS AWS 2.3.1 - Ensure RDS instances have encryption at rest enabled
   severity: high
-  check: { attribute: storage_encrypted, operator: equals, value: true }
-  remediation: |-
-    storage_encrypted = true
-    kms_key_id        = aws_kms_key.app_key.arn
-  explanation: >-
-    Volumes and automated snapshots are unencrypted, and this cannot be fixed
-    in place — it needs a snapshot, an encrypted copy and a restore.
+  check:
+    attribute: storage_encrypted
+    operator: equals
+    value: true
+  remediation: 'storage_encrypted = true
 
+    kms_key_id        = aws_kms_key.app_key.arn'
+  explanation: "Volumes and automated snapshots are unencrypted, and this cannot be\
+    \ fixed in place \u2014 it needs a snapshot, an encrypted copy and a restore."
 - id: CIS-CLOUD-014
   title: RDS backup retention below policy minimum
   applies_to: rds_instance
-  cis_control: "CIS AWS 2.3.2 - Ensure adequate RDS backup retention"
+  cis_control: CIS AWS 2.3.2 - Ensure adequate RDS backup retention
   severity: low
-  check: { attribute: backup_retention_days, operator: gte, value: 7 }
-  remediation: "backup_retention_period = 7"
-  explanation: >-
-    A single day of automated backups means a problem found on Monday morning
+  check:
+    attribute: backup_retention_days
+    operator: gte
+    value: 7
+  remediation: backup_retention_period = 7
+  explanation: A single day of automated backups means a problem found on Monday morning
     may already be unrecoverable.
-
-# --------------------------------------------------------------------- KEYS
 - id: CIS-CLOUD-013
   title: KMS key rotation disabled
   applies_to: kms_key
-  cis_control: "CIS AWS 3.6 - Ensure rotation for customer-created KMS keys is enabled"
+  cis_control: CIS AWS 3.6 - Ensure rotation for customer-created KMS keys is enabled
   severity: medium
-  check: { attribute: key_rotation, operator: equals, value: true }
-  remediation: "enable_key_rotation = true"
-  explanation: >-
-    Key material never changes, so a key compromised at any point stays useful
-    indefinitely. Rotation is automatic and needs no application change.
-
-# =============================================================================
-# The three below PASS against samples/main.tf. Keep rules like these in the
-# set — a score computed only from failing rules is always zero and tells a
-# judge nothing.
-# =============================================================================
-
+  check:
+    attribute: key_rotation
+    operator: equals
+    value: true
+  remediation: enable_key_rotation = true
+  explanation: Key material never changes, so a key compromised at any point stays
+    useful indefinitely. Rotation is automatic and needs no application change.
 - id: CIS-CLOUD-016
   title: CloudTrail is not configured
   applies_to: cloudtrail
-  cis_control: "CIS AWS 3.1 - Ensure CloudTrail is enabled"
+  cis_control: CIS AWS 3.1 - Ensure CloudTrail is enabled
   severity: high
-  check: { attribute: exists, operator: equals, value: true }
-  remediation: 'resource "aws_cloudtrail" "main" { ... }'
-  explanation: >-
-    With no trail there is no record of API activity in the account at all.
-
+  check:
+    attribute: exists
+    operator: equals
+    value: true
+  remediation: resource "aws_cloudtrail" "main" { ... }
+  explanation: With no trail there is no record of API activity in the account at
+    all.
 - id: CIS-CLOUD-017
   title: RDS deletion protection disabled
   applies_to: rds_instance
-  cis_control: "CIS AWS 2.3.4 - Enable deletion protection on production databases"
+  cis_control: CIS AWS 2.3.4 - Enable deletion protection on production databases
   severity: medium
-  check: { attribute: deletion_protection, operator: equals, value: true }
-  remediation: "deletion_protection = true"
-  explanation: >-
-    Without deletion protection a single misapplied plan can destroy the
+  check:
+    attribute: deletion_protection
+    operator: equals
+    value: true
+  remediation: deletion_protection = true
+  explanation: Without deletion protection a single misapplied plan can destroy the
     production database.
-
 - id: CIS-CLOUD-018
   title: RDS automatic minor version upgrades disabled
   applies_to: rds_instance
-  cis_control: "CIS AWS 2.3.5 - Keep database engines patched"
+  cis_control: CIS AWS 2.3.5 - Keep database engines patched
   severity: medium
-  check: { attribute: auto_minor_version_upgrade, operator: equals, value: true }
-  remediation: "auto_minor_version_upgrade = true"
-  explanation: >-
-    Engine security patches are not applied automatically, so known
-    vulnerabilities persist until someone schedules a manual upgrade.
+  check:
+    attribute: auto_minor_version_upgrade
+    operator: equals
+    value: true
+  remediation: auto_minor_version_upgrade = true
+  explanation: Engine security patches are not applied automatically, so known vulnerabilities
+    persist until someone schedules a manual upgrade.
+- id: AWS-LOG-001
+  title: Ensure CloudTrail is enabled in all regions
+  applies_to: cloudtrail
+  cis_control: CIS AWS Foundations 3.4.1
+  severity: critical
+  check:
+    attribute: is_enabled
+    operator: equals
+    value: true
+  remediation: Enable CloudTrail in all regions via the AWS Console or CLI.
+  explanation: CloudTrail provides the primary audit log for all API calls in the
+    account; without it, forensic analysis of security incidents is impossible.
+- id: AWS-LOG-002
+  title: Ensure CloudTrail log file validation is enabled
+  applies_to: cloudtrail
+  cis_control: CIS AWS Foundations 3.4.2
+  severity: medium
+  check:
+    attribute: log_file_validation_enabled
+    operator: equals
+    value: true
+  remediation: Enable log file validation in the CloudTrail settings.
+  explanation: Log file validation ensures that logs have not been modified, deleted,
+    or forged after CloudTrail delivered them.
+- id: AWS-LOG-004
+  title: Ensure S3 Server Access Logging is enabled for critical buckets
+  applies_to: s3_bucket
+  cis_control: CIS AWS Foundations 3.1.5
+  severity: medium
+  check:
+    attribute: access_logging_enabled
+    operator: equals
+    value: true
+  remediation: Configure the S3 bucket to send access logs to a dedicated logging
+    bucket.
+  explanation: Server access logs provide detailed records for the requests that are
+    made to a bucket, useful for detecting unauthorized access attempts.
