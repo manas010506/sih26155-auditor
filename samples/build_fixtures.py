@@ -178,43 +178,13 @@ _RULES = _load_rules('engine/rules/cisco_rules.yaml')
 _ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 F = sorted(_evaluate(normalized, _RULES), key=lambda f: (_ORDER[f["severity"]], f["rule_id"]))
 
-# --------------------------------------------------------------- attack paths
-PATHS = [
-    {
-        "chain_id": "CHAIN-NET-MGMT-TAKEOVER",
-        "name": "Cleartext management plane to privileged takeover",
-        "severity": "critical",
-        "contributing_findings": ["CIS-NET-004", "CIS-NET-001", "CIS-NET-006", "CIS-NET-011"],
-        "narrative": "The management plane is reachable from any routable network because no access-class is applied, and it accepts Telnet. An attacker on the path captures credentials in cleartext, and the enable password stored in the configuration grants privileged EXEC. With no syslog host, the entire sequence leaves no off-box record.",
-        "break_chain": {
-            "fix_rule": "CIS-NET-004",
-            "why": "Applying an access-class removes reachability for every management protocol at once, so the Telnet and credential weaknesses become unreachable while they are being fixed.",
-        },
-    },
-    {
-        "chain_id": "CHAIN-NET-SNMP-CONTROL",
-        "name": "SNMP reconnaissance to device control",
-        "severity": "critical",
-        "contributing_findings": ["CIS-NET-008", "CIS-NET-009", "CIS-NET-011"],
-        "narrative": "The default read-only community exposes the full running configuration, which reveals the read-write community. That second string permits configuration writes over UDP with no session and no authentication beyond the string itself. Neither step is logged remotely.",
-        "break_chain": {
-            "fix_rule": "CIS-NET-009",
-            "why": "Removing the read-write community reduces the worst case from device control to information disclosure, which is the difference between an incident and an outage.",
-        },
-    },
-    {
-        "chain_id": "CHAIN-NET-CRED-EXPOSURE",
-        "name": "Configuration read to credential reuse",
-        "severity": "high",
-        "contributing_findings": ["CIS-NET-005", "CIS-NET-006", "CIS-NET-007", "CIS-NET-003"],
-        "narrative": "Every credential on this device is recoverable from the configuration text: password encryption is off, the enable password is plaintext, and both privilege-15 accounts use type 0 passwords. Anyone who obtains a config backup obtains administrative access, and disabled session timeouts widen the window for reuse.",
-        "break_chain": {
-            "fix_rule": "CIS-NET-006",
-            "why": "Moving to enable secret replaces a readable password with an irreversible hash, so reading the configuration no longer yields privileged access.",
-        },
-    },
-]
+# Attack paths come from the correlator, not a hardcoded list. If a chain
+# definition is missing from attack_chains.yaml, this drops to 0 and the gap
+# is visible instead of being papered over by the fixture.
+from engine.correlation.correlator import correlate as _correlate
+PATHS = _correlate(F, "engine/correlation/attack_chains.yaml")
 
+# --------------------------------------------------------------- attack paths
 # ---------------------------------------------------------------------- score
 # The rules YAML is the SINGLE SOURCE OF TRUTH for a finding's text. We compute
 # only rule_id / resource_id / raw_ref here; everything else is copied from the

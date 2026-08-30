@@ -186,44 +186,13 @@ _RULES = _load_rules('engine/rules/aws_rules.yaml')
 _ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 F = sorted(_evaluate(normalized, _RULES), key=lambda f: (_ORDER[f["severity"]], f["rule_id"]))
 
+# Attack paths come from the correlator, not a hardcoded list. If a chain
+# definition is missing from attack_chains.yaml, this drops to 0 and the gap
+# is visible instead of being papered over by the fixture.
+from engine.correlation.correlator import correlate as _correlate
+PATHS = _correlate(F, "engine/correlation/attack_chains.yaml")
+
 # --------------------------------------------------------------- attack paths
-PATHS = [
-    {
-        "chain_id": "CHAIN-CLOUD-PRIVESC",
-        "name": "Internet-to-admin privilege escalation",
-        "severity": "critical",
-        "contributing_findings": ["CIS-CLOUD-001", "CIS-CLOUD-003", "CIS-CLOUD-009"],
-        "narrative": "The security group exposes SSH and every other TCP port to the internet, so an instance in this group is reachable and brute-forceable from anywhere. Any workload on that instance carries an IAM policy granting Action \"*\" on Resource \"*\", so a single foothold becomes full account administration rather than one compromised host.",
-        "break_chain": {
-            "fix_rule": "CIS-CLOUD-009",
-            "why": "Scoping the IAM policy to the actions the application needs caps the blast radius at one instance, so the exposed ports become a host problem rather than an account takeover.",
-        },
-    },
-    {
-        "chain_id": "CHAIN-CLOUD-DATA-EXPOSURE",
-        "name": "Anonymous read to undetected data loss",
-        "severity": "critical",
-        "contributing_findings": ["CIS-CLOUD-004", "CIS-CLOUD-005", "CIS-CLOUD-006", "CIS-CLOUD-008"],
-        "narrative": "The bucket carries a public-read ACL and has no public access block to override it, so its objects are readable anonymously. Those objects are stored unencrypted, and with access logging disabled there is no record of who read them. The exposure, the loss and the absence of evidence all land together.",
-        "break_chain": {
-            "fix_rule": "CIS-CLOUD-005",
-            "why": "A bucket-level public access block overrides the ACL immediately and keeps overriding it, so the exposure closes now and cannot be reopened by a later policy change.",
-        },
-    },
-    {
-        "chain_id": "CHAIN-CLOUD-DB-EXPOSURE",
-        "name": "Public database with unencrypted storage",
-        "severity": "critical",
-        "contributing_findings": ["CIS-CLOUD-011", "CIS-CLOUD-003", "CIS-CLOUD-012"],
-        "narrative": "The production database has a public endpoint and sits behind a security group that permits every TCP port from the internet, so its only remaining defence is database authentication. Storage and snapshots are unencrypted, so anything obtained is immediately readable.",
-        "break_chain": {
-            "fix_rule": "CIS-CLOUD-011",
-            "why": "Removing the public endpoint takes the database off the internet in one change, which is far faster than re-encrypting storage or untangling the security group.",
-        },
-    },
-]
-
-
 # ---------------------------------------------------------------------- rules
 # The rules YAML is the SINGLE SOURCE OF TRUTH for a finding's text. We only
 # compute rule_id / resource_id / raw_ref here; everything else is copied from
