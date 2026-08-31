@@ -36,7 +36,7 @@ class CiscoIOSParser(Parser):
         doc["resources"].append(self._ssh_settings(cfg))
         doc["resources"].append(self._logging(cfg))
         doc["resources"].append(self._ntp(cfg))
-
+        doc["_unparsed"] = self._unparsed_lines(config_text, cfg)
         return doc
 
     # ---------------------------------------------------------------- helpers
@@ -54,6 +54,152 @@ class CiscoIOSParser(Parser):
         """Return the first matching object, or None."""
         matches = cfg.find_objects(pattern)
         return matches[0] if matches else None
+
+    @staticmethod
+    def _unparsed_lines(config_text: str, cfg):
+        """Return config lines that are not handled by the parser."""
+        recognized = set()
+
+        # ---------------------------------------------------------
+        # Global commands handled by the parser
+        # ---------------------------------------------------------
+        global_patterns = [
+            r"^version ",
+            r"^hostname ",
+            r"^(?:no )?service password-encryption$",
+            r"^(?:no )?aaa new-model$",
+            r"^(?:no )?ip http server$",
+            r"^(?:no )?ip http secure-server$",
+            r"^(?:no )?cdp run$",
+            r"^banner login",
+            r"^banner motd",
+            r"^(?:no )?ip source-route$",
+            r"^aaa authentication login ",
+            r"^aaa authentication enable ",
+            r"^aaa accounting commands ",
+            r"^aaa accounting connection ",
+            r"^aaa accounting exec ",
+            r"^aaa accounting network ",
+            r"^aaa accounting system ",
+            r"^enable secret ",
+            r"^enable password ",
+
+            # Other global configuration
+            r"^service timestamps ",
+            r"^boot-start-marker$",
+            r"^boot-end-marker$",
+            r"^clock timezone ",
+            r"^ip cef$",
+            r"^no ip domain-lookup$",
+            r"^ip domain-name ",
+            r"^ip forward-protocol ",
+            r"^ip route ",
+            r"^access-list ",
+        ]
+
+        # ---------------------------------------------------------
+        # Resources handled by the parser
+        # ---------------------------------------------------------
+        resource_patterns = [
+            # Local users
+            r"^username ",
+
+            # SNMP
+            r"^snmp-server community ",
+            r"^snmp-server group .* v3",
+            r"^snmp-server user .* v3",
+            r"^snmp-server enable traps",
+            r"^snmp-server location ",
+            r"^snmp-server contact ",
+
+            # Lines
+            r"^line vty ",
+            r"^line con ",
+            r"^line aux ",
+
+            # SSH
+            r"^ip ssh version ",
+            r"^ip ssh time-out ",
+            r"^ip ssh authentication-retries ",
+            r"^crypto key generate rsa",
+
+            # Logging
+            r"^logging host ",
+            r"^logging buffered ",
+            r"^logging trap ",
+            r"^login on-success log",
+
+            # NTP
+            r"^ntp server ",
+            r"^ntp authenticate",
+
+            # Interface configuration
+            r"^interface ",
+            r"^description ",
+            r"^ip address ",
+            r"^duplex ",
+            r"^speed ",
+            r"^no ip address$",
+            r"^shutdown$",
+
+            # End of configuration
+            r"^end$",
+        ]
+
+        # ---------------------------------------------------------
+        # Child commands handled inside line blocks
+        # ---------------------------------------------------------
+        child_patterns = [
+            r"^exec-timeout ",
+            r"^password ",
+            r"^login$",
+            r"^login authentication ",
+            r"^no login$",
+            r"^transport input ",
+            r"^access-class ",
+            r"^privilege level ",
+        ]
+
+        import re
+
+        # ---------------------------------------------------------
+        # Mark every recognized line
+        # ---------------------------------------------------------
+        all_patterns = (
+            global_patterns
+            + resource_patterns
+            + child_patterns
+        )
+
+        for obj in cfg.objs:
+            text = obj.text.strip()
+
+            if not text or text.startswith("!"):
+                continue
+
+            for pattern in all_patterns:
+                if re.match(pattern, text):
+                    recognized.add(obj.linenum)
+                    break
+
+        # ---------------------------------------------------------
+        # Return anything genuinely unrecognized
+        # ---------------------------------------------------------
+        unparsed = []
+
+        for linenum, line in enumerate(config_text.splitlines()):
+            text = line.strip()
+
+            if not text or text.startswith("!"):
+                continue
+
+            if linenum not in recognized:
+                unparsed.append({
+                    "line": linenum + 1,
+                    "text": text,
+                })
+
+        return unparsed
 
     # ------------------------------------------------------------- GLOBAL
 
@@ -82,12 +228,52 @@ class CiscoIOSParser(Parser):
         login_banner = self._find_line(cfg, r"^banner login")
         motd_banner = self._find_line(cfg, r"^banner motd")
 
+        source_routing = self._find_line(
+            cfg, r"^(?:no )?ip source-route$"
+        )
+
+        aaa_auth_login = self._find_line(
+            cfg, r"^aaa authentication login "
+        )
+
+        aaa_auth_enable = self._find_line(
+            cfg, r"^aaa authentication enable "
+        )
+
+        aaa_accounting_commands = self._find_line(
+            cfg, r"^aaa accounting commands "
+        )
+
+        aaa_accounting_connection = self._find_line(
+            cfg, r"^aaa accounting connection "
+        )
+
+        aaa_accounting_exec = self._find_line(
+            cfg, r"^aaa accounting exec "
+        )
+
+        aaa_accounting_network = self._find_line(
+            cfg, r"^aaa accounting network "
+        )
+
+        aaa_accounting_system = self._find_line(
+            cfg, r"^aaa accounting system "
+        )
+
         # Defaults are intentionally absence-based.
         password_encryption = False
         aaa_new_model = False
         http_server = True
         https_server = False
         cdp_enabled = True
+        source_routing_enabled = True
+        aaa_auth_login_enabled = False
+        aaa_auth_enable_enabled = False
+        aaa_accounting_commands_enabled = False
+        aaa_accounting_connection_enabled = False
+        aaa_accounting_exec_enabled = False
+        aaa_accounting_network_enabled = False
+        aaa_accounting_system_enabled = False
 
         refs = {}
 
@@ -113,6 +299,40 @@ class CiscoIOSParser(Parser):
         if cdp:
             cdp_enabled = cdp.text.strip() == "cdp run"
             refs["cdp_enabled"] = self._ref(cdp)
+
+        if source_routing:
+            source_routing_enabled = (
+                source_routing.text.strip() == "ip source-route"
+            )
+            refs["source_routing"] = self._ref(source_routing)
+
+        if aaa_auth_login:
+            aaa_auth_login_enabled = True
+            refs["aaa_auth_login"] = self._ref(aaa_auth_login)
+
+        if aaa_auth_enable:
+            aaa_auth_enable_enabled = True
+            refs["aaa_auth_enable"] = self._ref(aaa_auth_enable)
+
+        if aaa_accounting_commands:
+            aaa_accounting_commands_enabled = True
+            refs["aaa_accounting_commands"] = self._ref(aaa_accounting_commands)
+
+        if aaa_accounting_connection:
+            aaa_accounting_connection_enabled = True
+            refs["aaa_accounting_connection"] = self._ref(aaa_accounting_connection)
+
+        if aaa_accounting_exec:
+            aaa_accounting_exec_enabled = True
+            refs["aaa_accounting_exec"] = self._ref(aaa_accounting_exec)
+
+        if aaa_accounting_network:
+            aaa_accounting_network_enabled = True
+            refs["aaa_accounting_network"] = self._ref(aaa_accounting_network)
+
+        if aaa_accounting_system:
+            aaa_accounting_system_enabled = True
+            refs["aaa_accounting_system"] = self._ref(aaa_accounting_system)
 
         return {
             "id": "global",
@@ -140,6 +360,14 @@ class CiscoIOSParser(Parser):
                 "enable_password_type": self._enable_password_type(cfg),
                 "login_banner": None if login_banner is None else login_banner.text.strip(),
                 "motd_banner": None if motd_banner is None else motd_banner.text.strip(),
+                "source_routing": source_routing_enabled,
+                "aaa_auth_login": aaa_auth_login_enabled,
+                "aaa_auth_enable": aaa_auth_enable_enabled,
+                "aaa_accounting_commands": aaa_accounting_commands_enabled,
+                "aaa_accounting_connection": aaa_accounting_connection_enabled,
+                "aaa_accounting_exec": aaa_accounting_exec_enabled,
+                "aaa_accounting_network": aaa_accounting_network_enabled,
+                "aaa_accounting_system": aaa_accounting_system_enabled,
             },
             "attribute_refs": refs,
             "raw_ref": None,
@@ -161,6 +389,8 @@ class CiscoIOSParser(Parser):
         return 0
 
     def _enable_secret(self, cfg):
+
+
         obj = self._find_line(cfg, r"^enable password ")
 
         if obj:

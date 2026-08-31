@@ -20,7 +20,15 @@
           "enable_password_present": true,
           "enable_password_type": 0,
           "login_banner": null,
-          "motd_banner": null
+          "motd_banner": null,
+          "source_routing": true,
+          "aaa_auth_login": false,
+          "aaa_auth_enable": false,
+          "aaa_accounting_commands": false,
+          "aaa_accounting_connection": false,
+          "aaa_accounting_exec": false,
+          "aaa_accounting_network": false,
+          "aaa_accounting_system": false
         },
         "attribute_refs": {
           "hostname": {
