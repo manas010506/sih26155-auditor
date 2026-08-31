@@ -267,13 +267,13 @@ class CiscoIOSParser(Parser):
         https_server = False
         cdp_enabled = True
         source_routing_enabled = True
-        aaa_auth_login_enabled = False
-        aaa_auth_enable_enabled = False
-        aaa_accounting_commands_enabled = False
-        aaa_accounting_connection_enabled = False
-        aaa_accounting_exec_enabled = False
-        aaa_accounting_network_enabled = False
-        aaa_accounting_system_enabled = False
+        aaa_auth_login_value = None
+        aaa_auth_enable_value = None
+        aaa_accounting_commands_value = None
+        aaa_accounting_connection_value = None
+        aaa_accounting_exec_value = None
+        aaa_accounting_network_value = None
+        aaa_accounting_system_value = None
 
         refs = {}
 
@@ -307,31 +307,31 @@ class CiscoIOSParser(Parser):
             refs["source_routing"] = self._ref(source_routing)
 
         if aaa_auth_login:
-            aaa_auth_login_enabled = True
+            aaa_auth_login_value = aaa_auth_login.text.strip().split(None, 3)[-1]
             refs["aaa_auth_login"] = self._ref(aaa_auth_login)
 
         if aaa_auth_enable:
-            aaa_auth_enable_enabled = True
+            aaa_auth_enable_value = aaa_auth_enable.text.strip().split(None, 3)[-1]
             refs["aaa_auth_enable"] = self._ref(aaa_auth_enable)
 
         if aaa_accounting_commands:
-            aaa_accounting_commands_enabled = True
+            aaa_accounting_commands_value = aaa_accounting_commands.text.strip().split(None, 3)[-1]
             refs["aaa_accounting_commands"] = self._ref(aaa_accounting_commands)
 
         if aaa_accounting_connection:
-            aaa_accounting_connection_enabled = True
+            aaa_accounting_connection_value = aaa_accounting_connection.text.strip().split(None, 3)[-1]
             refs["aaa_accounting_connection"] = self._ref(aaa_accounting_connection)
 
         if aaa_accounting_exec:
-            aaa_accounting_exec_enabled = True
+            aaa_accounting_exec_value = aaa_accounting_exec.text.strip().split(None, 3)[-1]
             refs["aaa_accounting_exec"] = self._ref(aaa_accounting_exec)
 
         if aaa_accounting_network:
-            aaa_accounting_network_enabled = True
+            aaa_accounting_network_value = aaa_accounting_network.text.strip().split(None, 3)[-1]
             refs["aaa_accounting_network"] = self._ref(aaa_accounting_network)
 
         if aaa_accounting_system:
-            aaa_accounting_system_enabled = True
+            aaa_accounting_system_value = aaa_accounting_system.text.strip().split(None, 3)[-1]
             refs["aaa_accounting_system"] = self._ref(aaa_accounting_system)
 
         return {
@@ -361,13 +361,13 @@ class CiscoIOSParser(Parser):
                 "login_banner": None if login_banner is None else login_banner.text.strip(),
                 "motd_banner": None if motd_banner is None else motd_banner.text.strip(),
                 "source_routing": source_routing_enabled,
-                "aaa_auth_login": aaa_auth_login_enabled,
-                "aaa_auth_enable": aaa_auth_enable_enabled,
-                "aaa_accounting_commands": aaa_accounting_commands_enabled,
-                "aaa_accounting_connection": aaa_accounting_connection_enabled,
-                "aaa_accounting_exec": aaa_accounting_exec_enabled,
-                "aaa_accounting_network": aaa_accounting_network_enabled,
-                "aaa_accounting_system": aaa_accounting_system_enabled,
+                "aaa_auth_login": aaa_auth_login_value,
+                "aaa_auth_enable": aaa_auth_enable_value,
+                "aaa_accounting_commands": aaa_accounting_commands_value,
+                "aaa_accounting_connection": aaa_accounting_connection_value,
+                "aaa_accounting_exec": aaa_accounting_exec_value,
+                "aaa_accounting_network": aaa_accounting_network_value,
+                "aaa_accounting_system": aaa_accounting_system_value,
             },
             "attribute_refs": refs,
             "raw_ref": None,
@@ -522,14 +522,11 @@ class CiscoIOSParser(Parser):
                 "secret",
             }
 
-            refs = {
-                "is_default_string": self._ref(obj)
-            }
-
-            if community.lower() == "private":
-                refs = {
-                    "access": self._ref(obj)
-                }
+            refs = (
+                {"access": self._ref(obj)}
+                if access.upper() == "RW"
+                else {"is_default_string": self._ref(obj)}
+            )
 
             out.append({
                 "id": f"snmp-{community}",
