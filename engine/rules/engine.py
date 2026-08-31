@@ -13,11 +13,12 @@ The flow, end to end:
 No check logic lives in this file. Every condition comes from YAML, which is
 what makes the ruleset extensible without a code change.
 """
+import difflib
 import re
 
 import yaml
 
-from engine.schema.schema import RESOURCE_TYPES, resolve_ref
+from engine.schema.schema import RESOURCE_TYPES, known_attributes, resolve_ref
 
 SEVERITY_WEIGHT = {"critical": 20, "high": 10, "medium": 5, "low": 2}
 
@@ -94,6 +95,18 @@ def load_rules(path: str) -> list[dict]:
         check = rule["check"]
         if not isinstance(check, dict) or "attribute" not in check or "operator" not in check:
             raise RuleError(f"{path}: {where} check needs both attribute and operator")
+        # A rule against an attribute no parser emits reads None, fails every
+        # positive operator, and fires on EVERY input - including a hardened
+        # config. It looks like coverage and is the opposite.
+        attrs = known_attributes().get(rule["applies_to"])
+        if attrs and check["attribute"] not in attrs:
+            near = difflib.get_close_matches(check["attribute"], sorted(attrs), n=1, cutoff=0.5)
+            hint = f" Did you mean {near[0]!r}?" if near else ""
+            raise RuleError(
+                f"{path}: {where} checks {check['attribute']!r} on "
+                f"{rule['applies_to']}, which no parser emits.{hint} "
+                f"Known attributes: {sorted(attrs)}")
+
         if check["operator"] not in OPS:
             raise RuleError(f"{path}: {where} uses unknown operator "
                             f"{check['operator']!r}; expected one of {sorted(OPS)}")
