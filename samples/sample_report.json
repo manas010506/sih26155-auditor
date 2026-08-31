@@ -10,7 +10,7 @@
     "version": "15.2",
     "role": "router"
   },
-  "compliance_score": 15,
+  "compliance_score": 20,
   "score_breakdown": {
     "formula": "100 * (1 - failed_weight / total_weight)",
     "severity_weights": {
@@ -19,10 +19,10 @@
       "medium": 5,
       "low": 2
     },
-    "rules_evaluated": 32,
-    "rules_failed": 27,
-    "failed_weight": 218,
-    "total_weight": 257
+    "rules_evaluated": 24,
+    "rules_failed": 19,
+    "failed_weight": 160,
+    "total_weight": 199
   },
   "findings": [
     {
@@ -63,26 +63,6 @@
       "cis_control": "CIS Cisco IOS 2.2.2 - Do not use default or read-write SNMP community strings",
       "remediation_template": "no snmp-server community private RW",
       "explanation": "A read-write community is a guessable credential that permits configuration changes over UDP with no logging and no session. This is remote device control, not monitoring."
-    },
-    {
-      "rule_id": "CIS-NET-027",
-      "title": "AAA login authentication not configured",
-      "severity": "critical",
-      "resource_id": "global",
-      "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.2 - Enable 'aaa authentication login'\\\"",
-      "remediation_template": "\\\"aaa authentication login default group tacacs+ local\\\"",
-      "explanation": "Without AAA login authentication, the device may fall back to insecure local passwords or no authentication at all."
-    },
-    {
-      "rule_id": "CIS-NET-028",
-      "title": "AAA enable authentication not configured",
-      "severity": "critical",
-      "resource_id": "global",
-      "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.3 - Enable 'aaa authentication enable default'\\\"",
-      "remediation_template": "\\\"aaa authentication enable default group tacacs+ enable\\\"",
-      "explanation": "Privileged EXEC mode must be protected by AAA to ensure that only authorized administrators can enter enable mode."
     },
     {
       "rule_id": "CIS-NET-002",
@@ -150,11 +130,8 @@
       "rule_id": "CIS-NET-022",
       "title": "SNMP v1/v2c community strings in use",
       "severity": "high",
-      "resource_id": "snmp-public",
-      "raw_ref": {
-        "line": 54,
-        "snippet": "snmp-server community public RO"
-      },
+      "resource_id": "snmp",
+      "raw_ref": null,
       "cis_control": "\\\"CIS Cisco IOS 2.2.0 - Use SNMPv3\\\"",
       "remediation_template": "\\\"Configure snmp-server group with v3 auth and priv\\\"",
       "explanation": "SNMP v1 and v2c transmit community strings in plaintext. An attacker capturing traffic can gain full read or write access to the device configuration."
@@ -222,26 +199,6 @@
       "explanation": "With no explicit version the device may negotiate SSHv1, which has known integrity weaknesses and is downgradeable by an on-path attacker."
     },
     {
-      "rule_id": "CIS-NET-024",
-      "title": "IP source routing enabled",
-      "severity": "medium",
-      "resource_id": "global",
-      "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.6.1 - Disable IP source routing\\\"",
-      "remediation_template": "\\\"no ip source-route\\\"",
-      "explanation": "Source routing allows a sender to specify the path a packet takes. This can be used by attackers to bypass security controls or map internal network topology."
-    },
-    {
-      "rule_id": "CIS-NET-029",
-      "title": "AAA command accounting disabled",
-      "severity": "medium",
-      "resource_id": "global",
-      "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.6 - Set 'aaa accounting' to log all privileged use commands\\\"",
-      "remediation_template": "\\\"aaa accounting commands 15 default start-stop group tacacs+\\\"",
-      "explanation": "Accounting for privilege 15 commands is essential for forensic audits to see exactly what changes were made by which administrator."
-    },
-    {
       "rule_id": "CIS-NET-012",
       "title": "NTP configured without authentication",
       "severity": "low",
@@ -296,46 +253,6 @@
       "cis_control": "\\\"CIS Cisco IOS 1.4.2 - Configure a Message of the Day (MOTD) banner\\\"",
       "remediation_template": "\\\"banner motd ^C Authorized Access Only ^C\\\"",
       "explanation": "A MOTD banner provides a legal warning to unauthorized users. Without it, it is harder to prosecute unauthorized access in many legal jurisdictions."
-    },
-    {
-      "rule_id": "CIS-NET-030",
-      "title": "AAA connection accounting disabled",
-      "severity": "low",
-      "resource_id": "global",
-      "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.7 - Set 'aaa accounting connection'\\\"",
-      "remediation_template": "\\\"aaa accounting connection default start-stop group tacacs+\\\"",
-      "explanation": "Connection accounting tracks the start and end of sessions, helping to identify session hijacking or unusual login patterns."
-    },
-    {
-      "rule_id": "CIS-NET-031",
-      "title": "AAA exec accounting disabled",
-      "severity": "low",
-      "resource_id": "global",
-      "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.8 - Set 'aaa accounting exec'\\\"",
-      "remediation_template": "\\\"aaa accounting exec default start-stop group tacacs+\\\"",
-      "explanation": "Exec accounting logs the start and end of the shell session itself."
-    },
-    {
-      "rule_id": "CIS-NET-032",
-      "title": "AAA network accounting disabled",
-      "severity": "low",
-      "resource_id": "global",
-      "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.9 - Set 'aaa accounting network'\\\"",
-      "remediation_template": "\\\"aaa accounting network default start-stop group tacacs+\\\"",
-      "explanation": "Network accounting tracks network-related service requests."
-    },
-    {
-      "rule_id": "CIS-NET-033",
-      "title": "AAA system accounting disabled",
-      "severity": "low",
-      "resource_id": "global",
-      "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.10 - Set 'aaa accounting system'\\\"",
-      "remediation_template": "\\\"aaa accounting system default start-stop group tacacs+\\\"",
-      "explanation": "System accounting logs events not associated with users, such as system reloads."
     }
   ],
   "attack_paths": [
