@@ -1,253 +1,689 @@
+/* =========================================================
+   ATTACK GRAPH
+   ========================================================= */
+
 .attack-graph {
   width: 100%;
   min-height: 100%;
-  padding: var(--sp-6);
-  box-sizing: border-box;
-  background: var(--bg-0);
-  color: var(--fg-0);
-  font-family: var(--font-ui);
+  display: flex;
+  flex-direction: column;
+  background: var(--substrate);
 }
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
 
 .attack-graph-header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--sp-6);
-  margin-bottom: var(--sp-4);
+  gap: 24px;
+
+  padding: 24px 24px 20px;
+
+  background: var(--panel);
+  border-bottom: 1px solid var(--wire);
+}
+
+.attack-graph-heading {
+  min-width: 0;
+  flex: 1;
 }
 
 .eyebrow {
+  margin-bottom: 8px;
+
+  color: var(--trace);
+
+  font-family: var(--font-mono);
   font-size: var(--fs-xs);
   font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--fg-1);
+
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .attack-graph-header h1 {
-  margin: var(--sp-1) 0 var(--sp-2);
-  font-size: var(--fs-lg);
-  font-weight: 600;
-  color: var(--fg-0);
+  margin: 0 0 8px;
+
+  color: var(--ink);
+
+  font-family: var(--font-ui);
+  font-size: 22px;
+  font-weight: 700;
+
+  line-height: 1.25;
 }
 
 .attack-graph-header p {
-  max-width: 800px;
+  max-width: 1000px;
+
   margin: 0;
-  color: var(--fg-1);
-  font-size: var(--fs-md);
-  line-height: 1.5;
+
+  color: var(--ink-dim);
+
+  font-family: var(--font-ui);
+  font-size: 13px;
+
+  line-height: 1.6;
 }
 
+
+/* =========================================================
+   HEADER ACTIONS
+   ========================================================= */
+
+.attack-graph-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   LOCK BUTTON
+   ========================================================= */
+
+.graph-lock-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  height: 30px;
+
+  padding: 0 11px;
+
+  border: 1px solid var(--wire);
+
+  background: var(--panel);
+
+  color: var(--ink-dim);
+
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 0.1em;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.graph-lock-button:hover {
+  border-color: var(--trace);
+  color: var(--trace);
+}
+
+.graph-lock-button.locked {
+  border-color: var(--trace);
+
+  background: var(--accent-dim);
+
+  color: var(--trace);
+}
+
+.graph-lock-button.unlocked {
+  border-color: var(--wire);
+
+  background: var(--panel-raised);
+
+  color: var(--ink);
+}
+
+.graph-lock-button.unlocked:hover {
+  border-color: var(--trace);
+  color: var(--trace);
+}
+
+.graph-lock-button svg {
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   PATH SEVERITY
+   ========================================================= */
+
 .path-severity {
-  align-self: flex-start;
-  padding: var(--sp-1) var(--sp-2);
+  min-width: 72px;
+
+  padding: 7px 10px;
+
   border: 1px solid var(--sev-critical);
-  border-radius: var(--radius);
-  background: var(--sev-critical-bg);
+
   color: var(--sev-critical);
+
+  font-family: var(--font-mono);
   font-size: var(--fs-xs);
-  font-weight: 800;
+  font-weight: 700;
+
+  letter-spacing: 0.08em;
+  text-align: center;
+
   text-transform: uppercase;
 }
 
-/* Attack path selector */
+
+/* =========================================================
+   ATTACK PATH SELECTOR
+   ========================================================= */
 
 .attack-path-selector {
   display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  margin-bottom: var(--sp-4);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+
+  width: 100%;
+
+  overflow-x: auto;
+
+  background: var(--panel);
+
+  border-bottom: 1px solid var(--wire);
+
+  scrollbar-width: thin;
 }
 
-.attack-path-tab {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--sp-2);
+.attack-path-selector::-webkit-scrollbar {
+  height: 6px;
+}
 
-  padding: var(--sp-2) var(--sp-3);
+.attack-path-selector::-webkit-scrollbar-track {
+  background: var(--substrate);
+}
+
+.attack-path-selector::-webkit-scrollbar-thumb {
+  background: var(--wire);
+}
+
+
+/* Individual path tab */
+
+.attack-path-tab {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  min-width: 300px;
+
+  min-height: 58px;
+
+  padding: 10px 16px;
+
+  gap: 10px;
 
   border: 0;
-  border-left: 2px solid transparent;
-  border-radius: 0;
+  border-right: 1px solid var(--wire);
 
   background: transparent;
-  color: var(--fg-1);
+
+  color: var(--ink-dim);
 
   font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  text-align: left;
 
   cursor: pointer;
+
+  text-align: left;
+
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .attack-path-tab:hover {
-  background: var(--bg-1);
-  color: var(--fg-0);
+  background: var(--panel-raised);
+  color: var(--ink);
 }
 
 .attack-path-tab.active {
-  border-left-color: var(--accent);
-  background: var(--bg-2);
-  color: var(--fg-0);
+  background: var(--panel-raised);
+  color: var(--ink);
 }
 
+
+/* Active bottom trace */
+
+.attack-path-tab.active::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 2px;
+
+  background: var(--trace);
+}
+
+
+/* Number */
+
 .attack-path-number {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 20px;
+  height: 20px;
+
+  flex-shrink: 0;
+
+  border: 1px solid var(--wire);
+
+  color: var(--ink-dim);
+
   font-family: var(--font-mono);
-  font-size: var(--fs-xs);
-  color: var(--fg-2);
+  font-size: 9px;
 }
 
 .attack-path-tab.active .attack-path-number {
-  color: var(--accent);
+  border-color: var(--trace);
+  color: var(--trace);
 }
+
+
+/* Path name */
 
 .attack-path-name {
+  flex: 1;
+
   overflow: hidden;
-  text-overflow: ellipsis;
+
+  color: inherit;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  line-height: 1.3;
+
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
+
+/* Path severity */
+
 .attack-path-severity {
+  flex-shrink: 0;
+
   font-family: var(--font-mono);
-  font-size: var(--fs-xs);
+  font-size: 9px;
   font-weight: 700;
+
   text-transform: uppercase;
 }
 
-/* React Flow canvas */
+.attack-path-tab:nth-child(1) .attack-path-severity,
+.attack-path-tab:nth-child(2) .attack-path-severity {
+  color: var(--sev-critical);
+}
+
+.attack-path-tab:nth-child(3) .attack-path-severity {
+  color: var(--sev-high);
+}
+
+
+/* =========================================================
+   GRAPH CANVAS
+   ========================================================= */
 
 .graph-canvas {
-  width: 100%;
+  position: relative;
+
+  width: calc(100% - 48px);
+
   height: 520px;
 
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  margin: 24px;
 
   overflow: hidden;
 
-  background: var(--bg-1);
+  border: 1px solid var(--wire);
+
+  background: var(--substrate);
 }
 
-/*
- * React Flow defaults are intentionally overridden so the graph
- * follows the shared security-console palette.
- */
+
+/* React Flow itself */
 
 .graph-canvas .react-flow {
-  background: var(--bg-1);
+  background: var(--substrate);
 }
+
+
+/* React Flow background */
 
 .graph-canvas .react-flow__background {
-  background: var(--bg-1);
+  background: var(--substrate);
 }
 
+
+/* React Flow controls */
+
 .graph-canvas .react-flow__controls {
-  border: 1px solid var(--border);
+  left: 14px;
+  bottom: 14px;
+
   box-shadow: none;
+
+  border: 1px solid var(--wire);
 }
 
 .graph-canvas .react-flow__controls-button {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
 
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--wire);
 
-  background: var(--bg-2);
-  color: var(--fg-0);
+  background: var(--panel);
+
+  color: var(--ink);
+
+  fill: var(--ink);
+}
+
+.graph-canvas .react-flow__controls-button:last-child {
+  border-bottom: 0;
 }
 
 .graph-canvas .react-flow__controls-button:hover {
-  background: var(--border);
+  background: var(--panel-raised);
 }
 
 .graph-canvas .react-flow__controls-button svg {
-  fill: currentColor;
+  max-width: 14px;
+  max-height: 14px;
 }
 
+
+/* =========================================================
+   REACT FLOW EDGES
+   ========================================================= */
+
 .graph-canvas .react-flow__edge-path {
-  stroke: var(--fg-2);
+  stroke: var(--trace);
+
+  stroke-width: 1.5;
 }
 
 .graph-canvas .react-flow__edge-text {
-  fill: var(--fg-1);
+  fill: var(--ink-dim);
+
   font-family: var(--font-mono);
-  font-size: var(--fs-xs);
+  font-size: 9px;
 }
 
 .graph-canvas .react-flow__edge-textbg {
-  fill: var(--bg-1);
+  fill: var(--substrate);
 }
+
+
+/* =========================================================
+   LOADING / ERROR
+   ========================================================= */
 
 .graph-loading,
 .graph-error {
-  padding: var(--sp-6);
-  color: var(--fg-1);
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 300px;
+
+  padding: 32px;
+
   font-family: var(--font-mono);
   font-size: var(--fs-sm);
+
+  text-align: center;
 }
 
-/* Attack graph nodes */
+.graph-loading {
+  color: var(--trace);
+}
+
+.graph-error {
+  color: var(--sev-critical);
+}
+
+
+/* =========================================================
+   ATTACK NODES
+   ========================================================= */
 
 .attack-node {
-  width: 190px;
-  min-height: 125px;
-  padding: var(--sp-3);
+  position: relative;
+
+  width: 176px;
+  min-height: 96px;
+
+  padding: 13px 14px;
+
+  background: var(--panel);
+
+  border: 1px solid var(--wire);
+  border-left: 2px solid var(--ink-dim);
 
   box-sizing: border-box;
 
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  font-family: var(--font-ui);
 
-  background: var(--bg-2);
-  color: var(--fg-0);
-
-  box-shadow: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
+
+
+/* Hover */
+
+.attack-node:hover {
+  background: var(--panel-raised);
+  border-color: var(--trace);
+}
+
+
+/* Break-chain node */
 
 .attack-node.break-point {
-  border: 2px solid var(--sev-high);
-  background: var(--sev-high-bg);
+  border-left-color: var(--trace);
 }
+
+.attack-node.break-point:hover {
+  border-color: var(--trace);
+}
+
+
+/* Impact node */
 
 .attack-node.impact-node {
-  border: 2px solid var(--sev-critical);
-  background: var(--sev-critical-bg);
+  border-color: var(--sev-critical);
+
+  border-left-width: 2px;
 }
 
+.attack-node.impact-node:hover {
+  border-color: var(--sev-critical);
+}
+
+
+/* =========================================================
+   NODE CONTENT
+   ========================================================= */
+
 .attack-node-severity {
-  margin-bottom: var(--sp-2);
+  margin-bottom: 5px;
 
   font-family: var(--font-mono);
-  font-size: var(--fs-xs);
-  font-weight: 800;
+  font-size: 8px;
+  font-weight: 700;
+
+  letter-spacing: 0.1em;
+
   text-transform: uppercase;
+
+  color: var(--ink-dim);
 }
 
 .attack-node-rule {
-  margin-bottom: var(--sp-2);
+  margin-bottom: 5px;
+
+  color: var(--trace);
 
   font-family: var(--font-mono);
-  font-size: var(--fs-sm);
+  font-size: 9px;
   font-weight: 700;
-  color: var(--fg-0);
+
+  letter-spacing: 0.04em;
 }
 
 .attack-node-title {
-  font-size: var(--fs-sm);
+  color: var(--ink);
+
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+
   line-height: 1.35;
-  color: var(--fg-1);
 }
 
+
+/* =========================================================
+   BREAK CHAIN LABEL
+   ========================================================= */
+
 .break-chain {
-  margin-top: var(--sp-2);
+  display: inline-block;
+
+  margin-top: 9px;
+
+  padding: 3px 6px;
+
+  border: 1px solid var(--trace);
+
+  color: var(--trace);
 
   font-family: var(--font-mono);
-  font-size: var(--fs-xs);
-  font-weight: 900;
-  letter-spacing: 0.7px;
+  font-size: 7px;
+  font-weight: 700;
 
-  color: var(--sev-high);
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   REACT FLOW HANDLES
+   ========================================================= */
+
+.attack-node .react-flow__handle {
+  width: 6px;
+  height: 6px;
+
+  background: var(--substrate);
+
+  border: 1px solid var(--trace);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .attack-graph-header {
+    flex-direction: column;
+
+    padding: 18px 16px;
+  }
+
+  .attack-graph-actions {
+    width: 100%;
+
+    justify-content: space-between;
+  }
+
+  .attack-graph-header h1 {
+    font-size: 18px;
+  }
+
+  .attack-path-tab {
+    min-width: 280px;
+  }
+
+  .graph-canvas {
+    width: calc(100% - 24px);
+
+    height: 480px;
+
+    margin: 12px;
+  }
+}
+
+
+@media (max-width: 600px) {
+
+  .attack-graph-header {
+    gap: 16px;
+  }
+
+  .attack-graph-actions {
+    align-items: stretch;
+  }
+
+  .graph-lock-button {
+    height: 32px;
+  }
+
+  .path-severity {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+  }
+
+  .attack-path-tab {
+    min-width: 250px;
+
+    padding: 10px 12px;
+  }
+
+  .graph-canvas {
+    height: 420px;
+  }
+}
+
+/* =========================================================
+   LOCKED GRAPH
+   ========================================================= */
+
+.graph-is-locked {
+  cursor: default;
+}
+
+.graph-is-locked .react-flow__pane {
+  cursor: default;
+}
+
+.graph-is-unlocked .react-flow__pane {
+  cursor: grab;
+}
+
+.graph-is-unlocked .react-flow__pane:active {
+  cursor: grabbing;
 }

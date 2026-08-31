@@ -2,12 +2,19 @@ import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconUpload, IconFileText, IconCheck, IconAlertCircle } from '@tabler/icons-react';
+import { audit } from '../api';
 
 /* Detect source type from file extension */
 const detectSourceType = (filename) => {
   const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase();
   if (ext === '.cfg' || ext === '.txt') return { type: 'cisco_ios', label: 'Cisco IOS', ext };
-  if (ext === '.tf') return { type: 'terraform', label: 'Terraform (.tf)', ext };
+  if (ext === '.tf') {
+    return {
+      type: 'terraform_aws',
+      label: 'Terraform (.tf)',
+      ext,
+    };
+  }
   return { type: null, label: null, ext };
 };
 
@@ -23,7 +30,7 @@ const SpinRing = () => (
   }} />
 );
 
-const Upload = () => {
+const Upload = ({ onAuditComplete }) => {
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState('empty'); // empty | detected | loading | success
@@ -50,7 +57,7 @@ const Upload = () => {
     }
 
     setError(null);
-    setDetected({ name: file.name, type, label });
+    setDetected({ file, name: file.name, type, label });
     setStatus('detected');
   };
 
@@ -66,14 +73,31 @@ const Upload = () => {
     if (e.target.files?.[0]) processFile(e.target.files[0]);
   };
 
-  const handleSubmit = () => {
-    if (!detected) return;
+  const handleSubmit = async () => {
+    if (!detected?.file) return;
+
     setStatus('loading');
-    // Simulate parsing — replace with fetch('/api/audit') later
-    setTimeout(() => {
+    setError(null);
+
+    try {
+      const configText = await detected.file.text();
+
+      const report = await audit(
+        configText,
+        detected.type
+      );
+
+      onAuditComplete(report);
+
       setStatus('success');
-      setTimeout(() => navigate('/audit/findings'), 600);
-    }, 1500);
+
+      setTimeout(() => {
+        navigate('/audit/attack-paths');
+      }, 600);
+    } catch (err) {
+      setError(err.message);
+      setStatus('detected');
+    }
   };
 
   const isLoading = status === 'loading' || status === 'success';

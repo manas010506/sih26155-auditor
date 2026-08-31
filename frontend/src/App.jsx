@@ -117,12 +117,19 @@ function App() {
           {/* Dashboard Layout */}
           <Route path="/audit" element={<DashboardLayout reportData={reportData} score={score} />}>
             <Route index element={<Navigate to="/audit/upload" replace />} />
-            <Route path="upload" element={<Upload />} />
+
+            <Route
+              path="upload"
+              element={<Upload onAuditComplete={setReportData} />}
+            />
+
             <Route path="findings" element={<Findings />} />
+
             <Route
               path="attack-paths"
               element={<AttackGraph report={reportData} />}
             />
+
             <Route path="report" element={<ReportView />} />
           </Route>
 
