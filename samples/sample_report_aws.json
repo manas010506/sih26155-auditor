@@ -10,7 +10,7 @@
     "version": "provider ~> 5.0",
     "role": "cloud_account"
   },
-  "compliance_score": 8,
+  "compliance_score": 15,
   "score_breakdown": {
     "formula": "100 * (1 - failed_weight / total_weight)",
     "severity_weights": {
@@ -19,25 +19,12 @@
       "medium": 5,
       "low": 2
     },
-    "rules_evaluated": 26,
-    "rules_failed": 22,
-    "failed_weight": 259,
-    "total_weight": 281
+    "rules_evaluated": 25,
+    "rules_failed": 20,
+    "failed_weight": 229,
+    "total_weight": 271
   },
   "findings": [
-    {
-      "rule_id": "AWS-LOG-001",
-      "title": "Ensure CloudTrail is enabled in all regions",
-      "severity": "critical",
-      "resource_id": "cloudtrail-main",
-      "raw_ref": {
-        "line": 131,
-        "snippet": "is_multi_region_trail         = false"
-      },
-      "cis_control": "CIS AWS Foundations 3.4.1",
-      "remediation_template": "Enable CloudTrail in all regions via the AWS Console or CLI.",
-      "explanation": "CloudTrail provides the primary audit log for all API calls in the account; without it, forensic analysis of security incidents is impossible."
-    },
     {
       "rule_id": "AWS-RDS-003",
       "title": "Ensure that RDS instances are not publicly accessible",
@@ -140,16 +127,6 @@
       "explanation": "Encryption at rest protects the underlying storage from unauthorized physical access or snapshot theft."
     },
     {
-      "rule_id": "AWS-S3-001",
-      "title": "Ensure S3 Bucket Policy is set to deny HTTP requests",
-      "severity": "high",
-      "resource_id": "s3-sensitive_data",
-      "raw_ref": null,
-      "cis_control": "CIS AWS Foundations 3.1.1",
-      "remediation_template": "Add a bucket policy statement that denies any request where 'aws:SecureTransport' is false.",
-      "explanation": "Allowing HTTP requests exposes data in transit to interception and man-in-the-middle attacks."
-    },
-    {
       "rule_id": "CIS-CLOUD-002",
       "title": "Security group exposes RDP to the internet",
       "severity": "high",
@@ -214,8 +191,8 @@
       "severity": "medium",
       "resource_id": "cloudtrail-main",
       "raw_ref": {
-        "line": 131,
-        "snippet": "is_multi_region_trail         = false"
+        "line": 132,
+        "snippet": "enable_log_file_validation    = false"
       },
       "cis_control": "CIS AWS Foundations 3.4.2",
       "remediation_template": "Enable log file validation in the CloudTrail settings.",
