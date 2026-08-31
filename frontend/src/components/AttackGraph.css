@@ -1,0 +1,253 @@
+.attack-graph {
+  width: 100%;
+  min-height: 100%;
+  padding: var(--sp-6);
+  box-sizing: border-box;
+  background: var(--bg-0);
+  color: var(--fg-0);
+  font-family: var(--font-ui);
+}
+
+.attack-graph-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-4);
+}
+
+.eyebrow {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--fg-1);
+}
+
+.attack-graph-header h1 {
+  margin: var(--sp-1) 0 var(--sp-2);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--fg-0);
+}
+
+.attack-graph-header p {
+  max-width: 800px;
+  margin: 0;
+  color: var(--fg-1);
+  font-size: var(--fs-md);
+  line-height: 1.5;
+}
+
+.path-severity {
+  align-self: flex-start;
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--sev-critical);
+  border-radius: var(--radius);
+  background: var(--sev-critical-bg);
+  color: var(--sev-critical);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+/* Attack path selector */
+
+.attack-path-selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-4);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.attack-path-tab {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2);
+
+  padding: var(--sp-2) var(--sp-3);
+
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+
+  background: transparent;
+  color: var(--fg-1);
+
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.attack-path-tab:hover {
+  background: var(--bg-1);
+  color: var(--fg-0);
+}
+
+.attack-path-tab.active {
+  border-left-color: var(--accent);
+  background: var(--bg-2);
+  color: var(--fg-0);
+}
+
+.attack-path-number {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+}
+
+.attack-path-tab.active .attack-path-number {
+  color: var(--accent);
+}
+
+.attack-path-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attack-path-severity {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* React Flow canvas */
+
+.graph-canvas {
+  width: 100%;
+  height: 520px;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  overflow: hidden;
+
+  background: var(--bg-1);
+}
+
+/*
+ * React Flow defaults are intentionally overridden so the graph
+ * follows the shared security-console palette.
+ */
+
+.graph-canvas .react-flow {
+  background: var(--bg-1);
+}
+
+.graph-canvas .react-flow__background {
+  background: var(--bg-1);
+}
+
+.graph-canvas .react-flow__controls {
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.graph-canvas .react-flow__controls-button {
+  width: 28px;
+  height: 28px;
+
+  border-bottom: 1px solid var(--border);
+
+  background: var(--bg-2);
+  color: var(--fg-0);
+}
+
+.graph-canvas .react-flow__controls-button:hover {
+  background: var(--border);
+}
+
+.graph-canvas .react-flow__controls-button svg {
+  fill: currentColor;
+}
+
+.graph-canvas .react-flow__edge-path {
+  stroke: var(--fg-2);
+}
+
+.graph-canvas .react-flow__edge-text {
+  fill: var(--fg-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+
+.graph-canvas .react-flow__edge-textbg {
+  fill: var(--bg-1);
+}
+
+.graph-loading,
+.graph-error {
+  padding: var(--sp-6);
+  color: var(--fg-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
+/* Attack graph nodes */
+
+.attack-node {
+  width: 190px;
+  min-height: 125px;
+  padding: var(--sp-3);
+
+  box-sizing: border-box;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  background: var(--bg-2);
+  color: var(--fg-0);
+
+  box-shadow: none;
+}
+
+.attack-node.break-point {
+  border: 2px solid var(--sev-high);
+  background: var(--sev-high-bg);
+}
+
+.attack-node.impact-node {
+  border: 2px solid var(--sev-critical);
+  background: var(--sev-critical-bg);
+}
+
+.attack-node-severity {
+  margin-bottom: var(--sp-2);
+
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.attack-node-rule {
+  margin-bottom: var(--sp-2);
+
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--fg-0);
+}
+
+.attack-node-title {
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+  color: var(--fg-1);
+}
+
+.break-chain {
+  margin-top: var(--sp-2);
+
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 900;
+  letter-spacing: 0.7px;
+
+  color: var(--sev-high);
+}

@@ -8,6 +8,7 @@ import Findings from './pages/Findings';
 import Landing from './pages/Landing';
 import Upload from './pages/Upload';
 import ReportView from './pages/ReportView';
+import AttackGraph from './components/AttackGraph';
 
 // Title updater (for dashboard routes without Helmet)
 const RouteTitle = ({ title }) => {
@@ -118,7 +119,10 @@ function App() {
             <Route index element={<Navigate to="/audit/upload" replace />} />
             <Route path="upload" element={<Upload />} />
             <Route path="findings" element={<Findings />} />
-            <Route path="attack-paths" element={<AttackPathsPlaceholder />} />
+            <Route
+              path="attack-paths"
+              element={<AttackGraph report={reportData} />}
+            />
             <Route path="report" element={<ReportView />} />
           </Route>
 
