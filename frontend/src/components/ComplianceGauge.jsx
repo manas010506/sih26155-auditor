@@ -31,20 +31,20 @@ const AnimatedScore = ({ target, duration = 1200 }) => {
    A light/passing config (3 findings) scores ~60–80.
    Bands are spaced to actually differentiate real audit outputs. */
 const scoreLabel = (s) => {
-  if (s >= 60) return 'GOOD';
-  if (s >= 35) return 'FAIR';
-  if (s >= 15) return 'POOR';
+  if (s >= 70) return 'GOOD';
+  if (s >= 40) return 'FAIR';
+  if (s >= 20) return 'POOR';
   return 'CRITICAL';
 };
 
 const scoreColor = (s) => {
-  if (s >= 60) return 'var(--trace)';
-  if (s >= 35) return 'var(--severity-low)';
-  if (s >= 15) return 'var(--severity-medium)';
+  if (s >= 70) return 'var(--trace)';
+  if (s >= 40) return 'var(--severity-low)';
+  if (s >= 20) return 'var(--severity-medium)';
   return 'var(--severity-critical)';
 };
 
-const ComplianceGauge = ({ score }) => {
+const ComplianceGauge = ({ score, breakdown }) => {
   const radius = 40;
   const circumference = Math.PI * radius; // semi-circle
   const dashoffset = circumference - (score / 100) * circumference;
@@ -56,6 +56,7 @@ const ComplianceGauge = ({ score }) => {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+      title={breakdown ? `Formula: ${breakdown.formula}\nRules Evaluated: ${breakdown.rules_evaluated}\nRules Failed: ${breakdown.rules_failed}\nFailed Weight: ${breakdown.failed_weight}\nTotal Weight: ${breakdown.total_weight}` : undefined}
     >
       {/* SVG Arc + LED Ticks */}
       <div style={{ position: 'relative', width: '140px', height: '80px', marginBottom: '12px' }}>
@@ -90,11 +91,11 @@ const ComplianceGauge = ({ score }) => {
 
             const isActive = pct <= score;
             const ledColor = isActive
-              ? score >= 60
+              ? score >= 70
                 ? 'var(--trace)'
-                : score >= 35
+                : score >= 40
                 ? 'var(--severity-low)'
-                : score >= 15
+                : score >= 20
                 ? 'var(--severity-medium)'
                 : 'var(--severity-critical)'
               : 'var(--wire)';

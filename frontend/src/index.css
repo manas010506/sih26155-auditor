@@ -284,16 +284,42 @@ button:focus-visible, a:focus-visible {
       0deg,
       transparent 0px,
       transparent 23px,
-      #161b23 23px,
-      #161b23 24px
+      var(--panel) 23px,
+      var(--panel) 24px
     ),
     repeating-linear-gradient(
       90deg,
       transparent 0px,
       transparent 23px,
-      #161b23 23px,
-      #161b23 24px
+      var(--panel) 23px,
+      var(--panel) 24px
     );
+}
+
+/* ─── Bezel Panels ───────────────────────────────────────────────
+   Adds a nested inset border for depth without shadows.           */
+.bezel-panel {
+  position: relative;
+  border: 1px solid var(--wire);
+  background-color: var(--substrate);
+}
+.bezel-panel::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px; right: 3px; bottom: 3px;
+  border: 1px solid var(--panel-raised);
+  pointer-events: none;
+}
+
+/* ─── Zebra Striping ─────────────────────────────────────────────
+   Subtle alternating row colors for dense lists/tables.           */
+.zebra-stripes > *:nth-child(even),
+.zebra-table tbody tr:nth-child(even) {
+  background-color: var(--panel);
+}
+.zebra-stripes > *:nth-child(odd),
+.zebra-table tbody tr:nth-child(odd) {
+  background-color: transparent;
 }
 
 /* ─── Corner registration marks ─────────────────────────────────

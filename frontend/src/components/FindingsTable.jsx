@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { autoAnimate } from '@formkit/auto-animate';
-import { ChevronDown, ChevronRight, ChevronUp, Copy, Check, Info } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronUp, Copy, Check } from 'lucide-react';
 import SeverityLED from './SeverityLED';
+import { useSettings } from '../context/SettingsContext';
 
 const SEVERITY_ORDER = { critical: 4, high: 3, medium: 2, low: 1 };
 
@@ -40,83 +41,6 @@ const SortableHeader = ({ label, field, sortField, sortDir, onSort, style }) => 
   </th>
 );
 
-/* ── Pass/Fail badge ─────────────────────────────────────────── */
-const PassFailBadge = ({ value }) => {
-  const pass = value === 'pass';
-  return (
-    <div className="mono" style={{
-      fontSize: '10px',
-      fontWeight: 600,
-      letterSpacing: '0.08em',
-      textTransform: 'uppercase',
-      color: pass ? 'var(--trace)' : 'var(--severity-critical)',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '5px',
-    }}>
-      <svg width="6" height="6" viewBox="0 0 6 6" style={{ flexShrink: 0 }}>
-        <circle cx="3" cy="3" r="2.5" fill={pass ? 'var(--trace)' : 'var(--severity-critical)'} />
-      </svg>
-      {pass ? 'PASS' : 'FAIL'}
-    </div>
-  );
-};
-
-/* ── Score tooltip ───────────────────────────────────────────── */
-const ScoreCell = ({ finding }) => {
-  const [open, setOpen] = useState(false);
-  const baseScore = finding.score_breakdown?.inputs?.base_severity ?? 'N/A';
-
-  return (
-    <div
-      style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
-      <span className="mono" style={{ fontSize: '12px', color: 'var(--ink)', cursor: 'default' }}>{baseScore}</span>
-      <Info size={12} style={{ color: 'var(--trace)', opacity: 0.7, flexShrink: 0 }} />
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            transition={{ duration: 0.15 }}
-            style={{
-              position: 'absolute',
-              bottom: 'calc(100% + 8px)',
-              right: 0,
-              width: '240px',
-              backgroundColor: 'var(--panel-raised)',
-              border: '1px solid var(--wire)',
-              padding: '10px 12px',
-              zIndex: 50,
-              pointerEvents: 'none',
-            }}
-          >
-            <div className="label" style={{ marginBottom: '6px' }}>Score Breakdown</div>
-            {finding.score_breakdown?.formula && (
-              <div className="mono" style={{ fontSize: '11px', color: 'var(--trace)', marginBottom: '8px', wordBreak: 'break-all' }}>
-                {finding.score_breakdown.formula}
-              </div>
-            )}
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <tbody>
-                {Object.entries(finding.score_breakdown?.inputs || {}).map(([k, v]) => (
-                  <tr key={k}>
-                    <td className="mono" style={{ fontSize: '11px', color: 'var(--ink-dim)', padding: '2px 0' }}>{k}</td>
-                    <td className="mono" style={{ fontSize: '11px', color: 'var(--ink)', padding: '2px 0', textAlign: 'right' }}>{v}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
 
 /* ── Expanded detail panel ───────────────────────────────────── */
 const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
@@ -170,7 +94,18 @@ const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
       {finding.remediation_template && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <div className="label">Remediation CLI</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="label">Remediation CLI</div>
+              <div className="mono" style={{
+                fontSize: '9px', padding: '2px 6px',
+                backgroundColor: 'var(--panel-raised)',
+                border: '1px solid var(--wire)',
+                color: 'var(--trace)',
+                borderRadius: '2px'
+              }}>
+                {useSettings().useLocalModel ? 'LOCAL MODEL' : 'SANITISED API CALL'}
+              </div>
+            </div>
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => onCopy(finding.remediation_template, finding.rule_id)}
@@ -244,12 +179,12 @@ const FindingsTable = ({ findings }) => {
     }
   };
 
-  const categories = ['all', ...new Set(findings.map(f => f.category))];
+  const categories = ['all', ...new Set(findings.map(f => f.cis_control).filter(Boolean))];
   const severities = ['all', 'critical', 'high', 'medium', 'low'];
 
   const filtered = findings.filter(f => {
     if (filterSeverity !== 'all' && f.severity?.toLowerCase() !== filterSeverity) return false;
-    if (filterCategory !== 'all' && f.category !== filterCategory) return false;
+    if (filterCategory !== 'all' && f.cis_control !== filterCategory) return false;
     return true;
   });
 
@@ -257,11 +192,6 @@ const FindingsTable = ({ findings }) => {
     if (sortField === 'severity') {
       const diff = (SEVERITY_ORDER[a.severity?.toLowerCase()] ?? 0) - (SEVERITY_ORDER[b.severity?.toLowerCase()] ?? 0);
       return sortDir === 'asc' ? diff : -diff;
-    }
-    if (sortField === 'score') {
-      const aScore = a.score_breakdown?.inputs?.base_severity ?? 0;
-      const bScore = b.score_breakdown?.inputs?.base_severity ?? 0;
-      return sortDir === 'asc' ? aScore - bScore : bScore - aScore;
     }
     return 0;
   });
@@ -310,7 +240,7 @@ const FindingsTable = ({ findings }) => {
       </div>
 
       {/* Table */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto' }}>
         {findings.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '48px', gap: '12px' }}>
             <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--trace)' }} />
@@ -327,10 +257,9 @@ const FindingsTable = ({ findings }) => {
               <col style={{ width: '36px' }} />
               <col style={{ width: '100px' }} />
               <col style={{ width: '120px' }} />
-              <col /* description */ />
-              <col style={{ width: '130px' }} />
-              <col style={{ width: '70px' }} />
-              <col style={{ width: '72px' }} />
+              <col /* title */ />
+              <col className="hide-on-mobile" style={{ width: '80px' }} />
+              <col className="hide-on-mobile" style={{ width: '160px' }} />
             </colgroup>
             <thead>
               <tr style={{
@@ -339,12 +268,11 @@ const FindingsTable = ({ findings }) => {
                 position: 'sticky', top: 0, zIndex: 10,
               }}>
                 <th style={{ padding: '8px 12px' }} />
-                <SortableHeader label="SEV"    field="severity" sortField={sortField} sortDir={sortDir} onSort={handleSort} style={{ paddingLeft: '12px' }} />
+                <SortableHeader label="SEV" field="severity" sortField={sortField} sortDir={sortDir} onSort={handleSort} style={{ paddingLeft: '12px' }} />
                 <th className="mono" style={{ padding: '8px 0', fontSize: '10px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400 }}>RULE ID</th>
-                <th className="mono" style={{ padding: '8px 0', fontSize: '10px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400 }}>DESCRIPTION</th>
-                <th className="mono" style={{ padding: '8px 0', fontSize: '10px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400 }}>CATEGORY</th>
-                <th className="mono" style={{ padding: '8px 0', fontSize: '10px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400 }}>STATUS</th>
-                <SortableHeader label="SCORE"  field="score"    sortField={sortField} sortDir={sortDir} onSort={handleSort} style={{ paddingRight: '12px', textAlign: 'right' }} />
+                <th className="mono" style={{ padding: '8px 0', fontSize: '10px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400 }}>FINDING</th>
+                <th className="mono hide-on-mobile" style={{ padding: '8px 0', fontSize: '10px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400 }}>RESOURCE</th>
+                <th className="mono hide-on-mobile" style={{ padding: '8px 0 8px 0', fontSize: '10px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400, paddingRight: '12px' }}>CIS CONTROL</th>
               </tr>
             </thead>
             <tbody ref={tbodyRef}>
@@ -394,38 +322,36 @@ const FindingsTable = ({ findings }) => {
                         </span>
                       </td>
 
-                      {/* Description + secondary metadata line */}
+                      {/* Title + explanation preview */}
                       <td style={{ padding: '8px 12px 8px 0' }}>
                         <div style={{ fontSize: '13px', color: 'var(--ink)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', marginBottom: '3px' }}>
-                          {finding.description}
+                          {finding.title}
                         </div>
-                        {/* Secondary metadata: rule_id · category */}
-                        <div className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)', letterSpacing: '0.04em' }}>
-                          {finding.rule_id} · {finding.category}
-                        </div>
+                        {finding.explanation && (
+                          <div style={{ fontSize: '11px', color: 'var(--ink-dim)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>
+                            {finding.explanation}
+                          </div>
+                        )}
                       </td>
 
-                      {/* Category */}
-                      <td style={{ padding: '10px 0' }}>
-                        <span className="mono" style={{ fontSize: '11px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                          {finding.category}
+                      {/* Resource ID */}
+                      <td className="hide-on-mobile" style={{ padding: '10px 0' }}>
+                        <span className="mono" style={{ fontSize: '11px', color: 'var(--ink-dim)', letterSpacing: '0.04em' }}>
+                          {finding.resource_id ?? '—'}
                         </span>
                       </td>
 
-                      {/* Pass/Fail */}
-                      <td style={{ padding: '10px 0' }}>
-                        <PassFailBadge value={finding.pass_fail} />
-                      </td>
-
-                      {/* Score */}
-                      <td style={{ padding: '10px 12px 10px 0', textAlign: 'right' }} onClick={e => e.stopPropagation()}>
-                        <ScoreCell finding={finding} />
+                      {/* CIS Control */}
+                      <td className="hide-on-mobile" style={{ padding: '10px 12px 10px 0' }}>
+                        <span className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)', letterSpacing: '0.03em' }}>
+                          {finding.cis_control}
+                        </span>
                       </td>
                     </motion.tr>
 
                     {/* Expanded detail row */}
                     <tr style={{ backgroundColor: 'var(--substrate)' }}>
-                      <td colSpan={7} style={{ padding: 0, borderBottom: isExpanded ? '1px solid var(--wire)' : 'none' }}>
+                      <td colSpan={6} style={{ padding: 0, borderBottom: isExpanded ? '1px solid var(--wire)' : 'none' }}>
                         <AnimatePresence>
                           {isExpanded && (
                             <ExpandedDetail
