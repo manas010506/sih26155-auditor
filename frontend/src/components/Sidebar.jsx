@@ -6,6 +6,7 @@ import {
   IconTable,
   IconRoute,
   IconFileText,
+  IconBrain,
 } from '@tabler/icons-react';
 import ComplianceGauge from './ComplianceGauge';
 
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
   { id: '02', path: '/audit/findings',     label: 'FINDINGS',     Icon: IconTable    },
   { id: '03', path: '/audit/attack-paths', label: 'ATTACK PATHS', Icon: IconRoute    },
   { id: '04', path: '/audit/report',       label: 'REPORT',       Icon: IconFileText },
+  { id: '05', path: '/audit/training',     label: 'TRAINING',     Icon: IconBrain    },
 ];
 
 /* Sliding accent bar — uses Framer layoutId so it animates between items */
