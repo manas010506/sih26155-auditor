@@ -1,24 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { useOutletContext, Link } from 'react-router-dom';
+import { motion, useInView } from 'framer-motion';
 import { IconPrinter, IconLoader } from '@tabler/icons-react';
 import SeverityLED from '../components/SeverityLED';
 
+/* Custom lightweight CountUp */
+const CountUp = ({ end, duration = 1.4 }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  const [display, setDisplay] = useState('0');
+
+  useEffect(() => {
+    if (!inView) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setDisplay(end.toString());
+      return;
+    }
+    const durationMs = duration * 1000;
+    const start = performance.now();
+    const tick = (now) => {
+      const progress = Math.min((now - start) / durationMs, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = Math.round(eased * end);
+      setDisplay(value.toString());
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [inView, end, duration]);
+
+  return <span ref={ref}>{display}</span>;
+};
+
 const ReportView = () => {
-  const [reportData, setReportData] = useState(null);
+  const { reportData } = useOutletContext();
 
   useEffect(() => {
     document.title = 'Report | Compliance Auditor';
-    import('../sample_report.json')
-      .then(m => setReportData(m.default))
-      .catch(console.error);
   }, []);
 
   if (!reportData) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '10px' }}>
-        <IconLoader size={16} style={{ color: 'var(--ink-dim)', animation: 'spin 0.9s linear infinite' }} />
-        <span className="label">Loading report…</span>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: 'var(--substrate)' }}>
+        <div className="corner-marks" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '48px', border: '1px dashed var(--wire)', backgroundColor: 'var(--panel)', maxWidth: '400px' }}>
+          <svg width="48" height="48" viewBox="0 0 48 48" style={{ color: 'var(--ink-dim)' }}>
+            {/* Dashed Outline box */}
+            <rect x="8" y="8" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 4" />
+            {/* Cross/Cancel inner shape */}
+            <path d="M 18 18 l 12 12 M 30 18 l -12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
+            {/* Tick marks */}
+            <path d="M 8 24 h -4 M 40 24 h 4 M 24 8 v -4 M 24 40 v 4" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+          <div className="mono" style={{ fontSize: '14px', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>No Report Generated</div>
+          <div style={{ fontSize: '13px', color: 'var(--ink-dim)', textAlign: 'center', lineHeight: '1.5' }}>
+            There is no report to view because an audit has not been run. Upload a configuration file to begin.
+          </div>
+          <Link to="/audit/upload" style={{
+            marginTop: '8px',
+            backgroundColor: 'transparent',
+            border: '1px solid var(--wire)',
+            color: 'var(--ink)',
+            padding: '8px 20px',
+            fontFamily: 'IBM Plex Mono, monospace',
+            fontSize: '11px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            textDecoration: 'none',
+            transition: 'border-color 0.2s, color 0.2s'
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--trace)'; e.currentTarget.style.color = 'var(--trace)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--wire)'; e.currentTarget.style.color = 'var(--ink)'; }}
+          >
+            Go to Upload
+          </Link>
+        </div>
       </div>
     );
   }
@@ -81,7 +135,7 @@ const ReportView = () => {
         <div style={{ marginBottom: '40px', paddingBottom: '24px', borderBottom: '1px solid var(--wire)' }}>
           <div className="label" style={{ marginBottom: '8px' }}>SIH-26155 · NTRO AUDIT REPORT</div>
           <div className="heading-lg" style={{ fontSize: '22px', marginBottom: '20px', letterSpacing: '-0.02em' }}>
-            System Auditor Core v2.0
+            COMPLIANCE AUDITOR
           </div>
 
           {/* Device identity grid */}
@@ -114,7 +168,7 @@ const ReportView = () => {
           ].map(({ label, value, color }) => (
             <div key={label} style={{ flex: 1, backgroundColor: 'var(--panel)', padding: '14px 16px', textAlign: 'center' }}>
               <div className="mono" style={{ fontSize: '28px', fontWeight: 700, color, lineHeight: 1, marginBottom: '4px' }}>
-                {value}
+                {typeof value === 'number' ? <CountUp end={value} duration={1.5} /> : value}
               </div>
               <div className="label">{label}</div>
             </div>
@@ -127,7 +181,14 @@ const ReportView = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: 'var(--wire)' }}>
           {findings.length === 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px', backgroundColor: 'var(--panel)', gap: '12px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--trace)' }} />
+              <svg width="32" height="32" viewBox="0 0 32 32" style={{ color: 'var(--trace)' }}>
+                {/* Outer ring */}
+                <circle cx="16" cy="16" r="12" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                {/* Inner dot LED */}
+                <circle cx="16" cy="16" r="4" fill="currentColor" />
+                {/* Tick marks */}
+                <path d="M 16 0 v 4 M 16 32 v -4 M 0 16 h 4 M 32 16 h -4" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
               <div className="mono" style={{ fontSize: '14px', color: 'var(--trace)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Compliant</div>
               <div style={{ fontSize: '13px', color: 'var(--ink-dim)' }}>No security findings detected in this configuration.</div>
             </div>

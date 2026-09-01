@@ -128,14 +128,8 @@ const SeverityDashboard = ({ findings }) => {
       const sev = f.severity?.toLowerCase();
       if (sev in sevMap) sevMap[sev]++;
 
-      // Group by top-level control family (e.g. "CIS Cisco IOS 1")
-      let cat = f.cis_control || 'Uncategorized';
-      const match = cat.match(/^([^0-9]+\d+)/);
-      if (match) {
-        cat = match[1].trim();
-      } else {
-        cat = cat.split(' - ')[0]; // fallback
-      }
+      // Group by resource type (e.g. "vty-0-4")
+      const cat = f.resource_id || 'Uncategorized';
       
       if (!catMap[cat]) catMap[cat] = 0;
       catMap[cat]++;
@@ -170,13 +164,18 @@ const SeverityDashboard = ({ findings }) => {
       <Panel title="Findings by Severity">
         <div style={{ height: '140px', marginTop: '12px' }}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={severityData} margin={{ top: 16, right: 0, left: -28, bottom: 0 }} barCategoryGap="30%">
+            <BarChart 
+              data={[{ name: 'Severity', ...severityData.reduce((acc, curr) => ({...acc, [curr.name]: curr.value}), {}) }]} 
+              margin={{ top: 16, right: 0, left: -28, bottom: 0 }} 
+              barCategoryGap="30%"
+            >
               <XAxis
                 dataKey="name"
                 tick={{ fill: 'var(--ink-dim)', fontSize: 10, fontFamily: 'IBM Plex Mono', letterSpacing: '0.04em' }}
                 axisLine={{ stroke: 'var(--wire)' }}
                 tickLine={false}
                 dy={6}
+                hide={true} /* We can hide it since there is only one category, or show custom tick */
               />
               <YAxis
                 tick={{ fill: 'var(--ink-dim)', fontSize: 10, fontFamily: 'IBM Plex Mono' }}
@@ -187,24 +186,25 @@ const SeverityDashboard = ({ findings }) => {
                 tickCount={4}
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--panel-raised)', opacity: 0.4 }} />
-              <Bar 
-                dataKey="value" 
-                shape={<CustomBarShape />}
-                isAnimationActive={true}
-                animationDuration={1200}
-                animationEasing="ease-out"
-              >
-                {severityData.map((entry, i) => (
-                  <Cell key={i} fill={entry.fill} />
-                ))}
-              </Bar>
+              
+              {severityData.map((entry, index) => (
+                <Bar 
+                  key={entry.name}
+                  dataKey={entry.name} 
+                  shape={<CustomBarShape fill={entry.fill} />}
+                  isAnimationActive={true}
+                  animationBegin={index * 150}
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         </div>
       </Panel>
 
-      {/* Findings by Category — hand-built horizontal bars */}
-      <Panel title="Findings by Category">
+      {/* Findings by Resource — hand-built horizontal bars */}
+      <Panel title="Findings by Resource">
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           {categoryData.map(([name, value], i) => (
             <CategoryRow key={name} name={name} value={value} max={maxCategory} index={i} />

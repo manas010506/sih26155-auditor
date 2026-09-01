@@ -35,7 +35,7 @@ const ActiveBar = () => (
   />
 );
 
-const Sidebar = ({ score, findings, isCollapsed, setIsCollapsed }) => {
+const Sidebar = ({ score, breakdown, findings, isCollapsed, setIsCollapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -239,7 +239,7 @@ const Sidebar = ({ score, findings, isCollapsed, setIsCollapsed }) => {
 
       {/* Compliance gauge pinned at bottom (hidden when collapsed) */}
       <AnimatePresence>
-        {!isCollapsed && score !== null && score !== undefined && (
+        {!isCollapsed && (
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -250,7 +250,18 @@ const Sidebar = ({ score, findings, isCollapsed, setIsCollapsed }) => {
               <div className="label" style={{ textAlign: 'center', marginBottom: '10px' }}>
                 Compliance Score
               </div>
-              <ComplianceGauge score={score} />
+              {score !== null && score !== undefined ? (
+                <ComplianceGauge score={score} breakdown={breakdown} />
+              ) : (
+                <div style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-dim)', opacity: 0.6 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '8px' }}>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="9" y1="15" x2="15" y2="15" />
+                  </svg>
+                  <span className="mono" style={{ fontSize: '10px', letterSpacing: '1px' }}>NO FILE LOADED</span>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

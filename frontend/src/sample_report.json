@@ -20,6 +20,7 @@
       "low": 2
     },
     "rules_evaluated": 32,
+    "rules_passed": 5,
     "rules_failed": 27,
     "failed_weight": 218,
     "total_weight": 257

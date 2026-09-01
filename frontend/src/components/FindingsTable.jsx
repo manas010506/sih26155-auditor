@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { autoAnimate } from '@formkit/auto-animate';
 import { ChevronDown, ChevronRight, ChevronUp, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import SeverityLED from './SeverityLED';
 import { useSettings } from '../context/SettingsContext';
 
@@ -167,6 +168,7 @@ const FindingsTable = ({ findings }) => {
   const copyToClipboard = (text, ruleId) => {
     navigator.clipboard.writeText(text).catch(() => {});
     setCopiedRuleId(ruleId);
+    toast.success('Copied to clipboard');
     setTimeout(() => setCopiedRuleId(null), 2000);
   };
 

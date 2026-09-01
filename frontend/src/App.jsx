@@ -13,7 +13,9 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import NotFound from './pages/NotFound';
 import SettingsModal from './components/SettingsModal';
+import CommandPalette from './components/CommandPalette';
 import { SettingsProvider } from './context/SettingsContext';
+import { Toaster } from 'sonner';
 
 // Title updater (for dashboard routes without Helmet)
 const RouteTitle = ({ title }) => {
@@ -34,7 +36,7 @@ const AttackPathsPlaceholder = () => (
   </div>
 );
 
-const DashboardLayout = ({ reportData, score }) => {
+const DashboardLayout = ({ reportData, setReportData, score }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -58,7 +60,7 @@ const DashboardLayout = ({ reportData, score }) => {
         onClick={() => setMobileMenuOpen(false)} // close on nav
       >
         <div onClick={e => e.stopPropagation()} className="h-full">
-          <Sidebar score={score} findings={reportData?.findings} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+          <Sidebar score={score} breakdown={reportData?.score_breakdown} findings={reportData?.findings} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
         </div>
       </div>
 
@@ -66,17 +68,17 @@ const DashboardLayout = ({ reportData, score }) => {
       <div className="flex flex-col flex-1 md-content" style={{ width: `calc(100% - ${isCollapsed ? '72px' : '240px'})`, transition: 'width 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         <TopBar device={reportData?.device} source={reportData?.source} onSettingsClick={() => setSettingsOpen(true)} />
         
-        <main className="flex-1 overflow-auto bg-substrate relative">
+        <main className="flex-1 overflow-auto bg-grid relative">
           <AnimatePresence mode="wait">
             <motion.div
               key={useLocation().pathname}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               style={{ height: '100%' }}
             >
-              <Outlet />
+              <Outlet context={{ reportData, setReportData }} />
             </motion.div>
           </AnimatePresence>
         </main>
@@ -88,16 +90,12 @@ const DashboardLayout = ({ reportData, score }) => {
   );
 };
 
-function App() {
-  const [reportData, setReportData] = useState(null);
+import sampleReport from './sample_report.json';
 
-  useEffect(() => {
-    import('./sample_report.json')
-      .then(module => {
-        setReportData(module.default);
-      })
-      .catch(console.error);
-  }, []);
+function App() {
+  const [reportData, setReportData] = useState(sampleReport);
+
+  // Data ingestion happens via Upload.jsx, which sets the reportData.
 
   const score = reportData?.compliance_score ?? null;
 
@@ -105,6 +103,8 @@ function App() {
     <HelmetProvider>
       <SettingsProvider>
         <Router>
+          <Toaster theme="dark" toastOptions={{ style: { backgroundColor: 'var(--panel-raised)', border: '1px solid var(--trace)', color: 'var(--trace)', fontFamily: 'IBM Plex Mono, monospace', fontSize: '13px' } }} />
+          <CommandPalette />
           <Routes>
             {/* Public Landing Page */}
             <Route path="/" element={<Navigate to="/login" replace />} />
@@ -112,7 +112,7 @@ function App() {
             <Route path="/signup" element={<><RouteTitle title="Create Account" /><Signup /></>} />
 
             {/* Dashboard Layout */}
-            <Route path="/audit" element={<DashboardLayout reportData={reportData} score={score} />}>
+            <Route path="/audit" element={<DashboardLayout reportData={reportData} setReportData={setReportData} score={score} />}>
               <Route index element={<Navigate to="/audit/upload" replace />} />
               <Route path="upload" element={<><RouteTitle title="Upload Config" /><Upload /></>} />
               <Route path="findings" element={<><RouteTitle title="Findings" /><Findings /></>} />

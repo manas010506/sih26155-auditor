@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Settings, User, Server, Shield, LogOut } from 'lucide-react';
+import TactileButton from './TactileButton';
 
 /* Pulsing LIVE dot */
 const LiveDot = () => (
@@ -168,11 +169,11 @@ const TopBar = ({ device, source, onSettingsClick }) => {
         
         {/* Notifications */}
         <div style={{ position: 'relative' }}>
-          <button
+          <TactileButton
             className="bezel-panel"
             style={{ 
               width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--ink-dim)', transition: 'color 0.2s, border-color 0.2s', borderRadius: '2px'
+              color: 'var(--ink-dim)', transition: 'color 0.2s, border-color 0.2s', borderRadius: '2px', padding: 0
             }}
             onMouseEnter={(e) => handleBtnHover(e, true)}
             onMouseLeave={(e) => handleBtnHover(e, false)}
@@ -181,14 +182,19 @@ const TopBar = ({ device, source, onSettingsClick }) => {
           >
             <div style={{ position: 'relative', zIndex: 10 }}>
               <Bell size={18} />
-              {/* Notification badge */}
-              <div style={{
-                position: 'absolute', top: '-2px', right: '-2px',
-                width: '8px', height: '8px', borderRadius: '50%',
-                backgroundColor: 'var(--severity-critical)', border: '2px solid var(--substrate)'
-              }} />
+              {/* Notification badge - pulsing */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: [1, 1.4, 1] }}
+                transition={{ repeat: 3, duration: 0.8, delay: 1 }}
+                style={{
+                  position: 'absolute', top: '-2px', right: '-2px',
+                  width: '8px', height: '8px', borderRadius: '50%',
+                  backgroundColor: 'var(--severity-critical)', border: '2px solid var(--substrate)'
+                }} 
+              />
             </div>
-          </button>
+          </TactileButton>
           
           <DropdownMenu isOpen={notifDropdownOpen} onClose={() => setNotifDropdownOpen(false)} style={{ top: 'calc(100% + 8px)', right: 0, minWidth: '240px' }}>
             <div className="label" style={{ padding: '8px 12px', borderBottom: '1px solid var(--wire)', marginBottom: '4px' }}>Notifications</div>
@@ -206,11 +212,11 @@ const TopBar = ({ device, source, onSettingsClick }) => {
         </div>
 
         {/* Settings */}
-        <button
+        <TactileButton
           className="bezel-panel"
           style={{ 
             width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--ink-dim)', transition: 'color 0.2s, border-color 0.2s', borderRadius: '2px'
+            color: 'var(--ink-dim)', transition: 'color 0.2s, border-color 0.2s', borderRadius: '2px', padding: 0
           }}
           onMouseEnter={(e) => handleBtnHover(e, true)}
           onMouseLeave={(e) => handleBtnHover(e, false)}
@@ -220,16 +226,16 @@ const TopBar = ({ device, source, onSettingsClick }) => {
           <div style={{ position: 'relative', zIndex: 10 }}>
             <Settings size={18} />
           </div>
-        </button>
+        </TactileButton>
 
         {/* User Profile */}
         <div style={{ position: 'relative', marginLeft: '4px' }}>
-          <button
+          <TactileButton
             className="bezel-panel"
             onClick={() => setUserDropdownOpen(!userDropdownOpen)}
             style={{
               width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--trace)', transition: 'color 0.2s, border-color 0.2s', borderRadius: '2px',
+              color: 'var(--trace)', transition: 'color 0.2s, border-color 0.2s', borderRadius: '2px', padding: 0,
               borderColor: userDropdownOpen ? 'var(--trace)' : 'var(--wire)'
             }}
             onMouseEnter={(e) => handleBtnHover(e, true)}
@@ -238,7 +244,7 @@ const TopBar = ({ device, source, onSettingsClick }) => {
             <div style={{ position: 'relative', zIndex: 10 }}>
               <User size={18} />
             </div>
-          </button>
+          </TactileButton>
           
           <DropdownMenu isOpen={userDropdownOpen} onClose={() => setUserDropdownOpen(false)} style={{ top: 'calc(100% + 8px)', right: 0 }}>
             <div style={{ padding: '12px', borderBottom: '1px solid var(--wire)', marginBottom: '4px' }}>

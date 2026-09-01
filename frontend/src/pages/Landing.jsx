@@ -16,9 +16,9 @@ const Landing = () => (
   <ReactLenis root>
     <div style={{ background: '#000', color: '#fff', overflowX: 'hidden', fontFamily: 'inherit' }}>
       <Helmet>
-        <title>Compliance Auditor | System Auditor Core v2.0</title>
+        <title>Compliance Auditor</title>
         <meta name="description" content="Multi-vendor network and cloud compliance auditing. Ingest raw configurations, correlate scattered findings, and sever attack paths in seconds." />
-        <meta property="og:title" content="Compliance Auditor | System Auditor Core v2.0" />
+        <meta property="og:title" content="Compliance Auditor" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="/favicon.svg" />
       </Helmet>

@@ -15,7 +15,7 @@ import pathlib
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-# STAGE 2: from engine.audit import run_audit
+from engine.audit import run_audit
 
 app = Flask(__name__)
 CORS(app)
@@ -44,9 +44,7 @@ def audit():
         return jsonify(error=f"source_type must be one of {sorted(VALID_TYPES)}"), 400
 
     try:
-        # STAGE 1:
-        return jsonify(json.loads(SAMPLE.read_text()))
-        # STAGE 2: return jsonify(run_audit(config_text, source_type))
+        return jsonify(run_audit(config_text, source_type))
     except Exception as exc:                      # never leak a stack trace
         app.logger.exception("audit failed")
         return jsonify(error=f"audit failed: {type(exc).__name__}"), 500

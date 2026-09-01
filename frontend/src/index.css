@@ -34,6 +34,27 @@
 
 body {
   background-color: var(--substrate);
+  /* 1. SVG Noise 3%
+     2. Radial gradient (lighter center, darker edges)
+     3. Grid lines */
+  background-image: 
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 50% 0%, #151a22 0%, #0c0f13 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 23px,
+      rgba(74, 85, 99, 0.05) 23px,
+      rgba(74, 85, 99, 0.05) 24px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 23px,
+      rgba(74, 85, 99, 0.05) 23px,
+      rgba(74, 85, 99, 0.05) 24px
+    );
+  background-attachment: fixed;
   color: var(--ink);
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
@@ -61,13 +82,14 @@ h3 { font-size: 16px; }
   font-size: 13px;
 }
 
-.border-wire { border: 1px solid var(--wire); }
+.border-wire { border: 1px solid var(--wire); border-top-color: #5c697a; } /* Default bezel */
 .border-b-wire { border-bottom: 1px solid var(--wire); }
 .border-t-wire { border-top: 1px solid var(--wire); }
 .border-l-wire { border-left: 1px solid var(--wire); }
-.bg-panel { background-color: var(--substrate); }
+.bg-panel { background-color: var(--panel); transition: background-color 0.2s ease, border-color 0.2s ease; }
+.bg-panel:hover { background-color: var(--panel-raised); border-top-color: #728092; }
 .bg-panel-raised { background-color: var(--panel-raised); }
-.bg-substrate { background-color: var(--substrate); }
+.bg-substrate { background-color: transparent; } /* Reverted to transparent so grid shows */
 
 /* --- Tactical Utilities --- */
 .tactical-border {
@@ -277,38 +299,37 @@ button:focus-visible, a:focus-visible {
 
 /* ─── Grid texture ───────────────────────────────────────────────
    Hard color stops only — no smooth gradient blend.
-   Use .bg-grid on any large panel background.                     */
+   Use .bg-grid on the substrate layer.                            */
 .bg-grid {
   background-image:
     repeating-linear-gradient(
       0deg,
       transparent 0px,
       transparent 23px,
-      var(--panel) 23px,
-      var(--panel) 24px
+      rgba(74, 85, 99, 0.08) 23px,
+      rgba(74, 85, 99, 0.08) 24px
     ),
     repeating-linear-gradient(
       90deg,
       transparent 0px,
       transparent 23px,
-      var(--panel) 23px,
-      var(--panel) 24px
+      rgba(74, 85, 99, 0.08) 23px,
+      rgba(74, 85, 99, 0.08) 24px
     );
 }
 
 /* ─── Bezel Panels ───────────────────────────────────────────────
-   Adds a nested inset border for depth without shadows.           */
+   Edge-highlight border for depth without shadows.                */
 .bezel-panel {
   position: relative;
   border: 1px solid var(--wire);
-  background-color: var(--substrate);
+  border-top-color: #5c697a; /* lighter top edge simulating overhead light */
+  background-color: var(--panel);
+  transition: background-color 0.2s var(--ease-engineered), border-top-color 0.2s var(--ease-engineered);
 }
-.bezel-panel::after {
-  content: '';
-  position: absolute;
-  top: 3px; left: 3px; right: 3px; bottom: 3px;
-  border: 1px solid var(--panel-raised);
-  pointer-events: none;
+.bezel-panel:hover {
+  background-color: var(--panel-raised);
+  border-top-color: #728092; /* brighten top edge on hover */
 }
 
 /* ─── Zebra Striping ─────────────────────────────────────────────

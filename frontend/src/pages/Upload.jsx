@@ -1,13 +1,15 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconUpload, IconFileText, IconCheck, IconAlertCircle } from '@tabler/icons-react';
+import { audit } from '../api';
+import TactileButton from '../components/TactileButton';
 
 /* Detect source type from file extension */
 const detectSourceType = (filename) => {
   const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase();
   if (ext === '.cfg' || ext === '.txt') return { type: 'cisco_ios', label: 'Cisco IOS', ext };
-  if (ext === '.tf') return { type: 'terraform', label: 'Terraform (.tf)', ext };
+  if (ext === '.tf') return { type: 'terraform_aws', label: 'Terraform (.tf)', ext };
   return { type: null, label: null, ext };
 };
 
@@ -107,9 +109,10 @@ const Upload = () => {
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState('empty'); // empty | detected | loading | success
-  const [detected, setDetected] = useState(null); // { name, type, label }
+  const [detected, setDetected] = useState(null); // { name, type, label, file }
   const inputRef = useRef(null);
   const navigate = useNavigate();
+  const { setReportData } = useOutletContext();
 
   const handleDrag = useCallback((e) => {
     e.preventDefault();
@@ -130,7 +133,7 @@ const Upload = () => {
     }
 
     setError(null);
-    setDetected({ name: file.name, type, label });
+    setDetected({ name: file.name, type, label, file });
     setStatus('detected');
   };
 
@@ -146,14 +149,23 @@ const Upload = () => {
     if (e.target.files?.[0]) processFile(e.target.files[0]);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!detected) return;
     setStatus('loading');
-    // Simulate parsing — replace with fetch('/api/audit') later
-    setTimeout(() => {
+    
+    try {
+      const text = await detected.file.text();
+      const result = await audit(text, detected.type);
+      setReportData(result);
+      
       setStatus('success');
       setTimeout(() => navigate('/audit/findings'), 800);
-    }, 3500);
+    } catch (err) {
+      console.error('Audit failed:', err);
+      setError(err.message || 'Failed to process configuration.');
+      setStatus('empty');
+      setDetected(null);
+    }
   };
 
   const isLoading = status === 'loading' || status === 'success';
@@ -297,7 +309,7 @@ const Upload = () => {
                   </div>
 
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
+                    <TactileButton
                       onClick={handleSubmit}
                       style={{
                         backgroundColor: 'var(--trace)',
@@ -313,8 +325,8 @@ const Upload = () => {
                       }}
                     >
                       Run Audit
-                    </button>
-                    <button
+                    </TactileButton>
+                    <TactileButton
                       onClick={() => { setStatus('empty'); setDetected(null); }}
                       style={{
                         backgroundColor: 'transparent',
@@ -329,7 +341,7 @@ const Upload = () => {
                       }}
                     >
                       Cancel
-                    </button>
+                    </TactileButton>
                   </div>
                 </motion.div>
               )}
@@ -340,7 +352,14 @@ const Upload = () => {
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}
                 >
-                  <IconUpload size={36} style={{ color: 'var(--ink-dim)' }} />
+                  <svg width="48" height="48" viewBox="0 0 48 48" style={{ color: 'var(--ink-dim)', marginBottom: '4px' }}>
+                    {/* Dashed Outline box */}
+                    <rect x="8" y="8" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 4" />
+                    {/* Tick marks for depth/instrument feel */}
+                    <path d="M 8 16 h -4 M 8 32 h -4 M 40 16 h 4 M 40 32 h 4 M 16 8 v -4 M 32 8 v -4 M 16 40 v 4 M 32 40 v 4" stroke="currentColor" strokeWidth="1.5" />
+                    {/* Center cross/arrow */}
+                    <path d="M 24 30 v -12 M 18 24 l 6 -6 l 6 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
+                  </svg>
                   <div style={{ textAlign: 'center' }}>
                     <div className="heading-sm" style={{ marginBottom: '6px' }}>Drop configuration file here</div>
                     <div style={{ fontSize: '12px', color: 'var(--ink-dim)', marginBottom: '20px' }}>
@@ -353,7 +372,7 @@ const Upload = () => {
                       onChange={handleChange}
                       style={{ display: 'none' }}
                     />
-                    <button
+                    <TactileButton
                       onClick={() => inputRef.current?.click()}
                       style={{
                         backgroundColor: 'transparent',
@@ -371,7 +390,7 @@ const Upload = () => {
                       onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--wire)'; e.currentTarget.style.color = 'var(--ink)'; }}
                     >
                       Select File
-                    </button>
+                    </TactileButton>
                   </div>
                 </motion.div>
               )}
