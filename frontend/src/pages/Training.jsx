@@ -38,29 +38,18 @@ const ATTRIBUTES = [
   'value',
 ];
 
-const DEMO_UNPARSED = [
-  {
-    line: 42,
-    text: 'ip flow-export destination 10.0.0.5 9996',
-  },
-  {
-    line: 57,
-    text: 'ip tcp path-mtu-discovery',
-  },
-  {
-    line: 71,
-    text: 'service sequence-numbers',
-  },
-];
 
-const Training = ({ unparsed = DEMO_UNPARSED }) => {
+
+const Training = ({ reportData }) => {
   const [selectedLine, setSelectedLine] = useState(null);
   const [resourceType, setResourceType] = useState('');
   const [attribute, setAttribute] = useState('');
   const [value, setValue] = useState('');
   const [saved, setSaved] = useState(false);
 
-  const lines = Array.isArray(unparsed) ? unparsed : [];
+    const lines = Array.isArray(reportData?.unparsed)
+    ? reportData.unparsed
+    : [];
 
   const selectLine = (item) => {
     setSelectedLine(item);

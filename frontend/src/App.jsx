@@ -109,7 +109,15 @@ function App() {
               <Route path="findings" element={<><RouteTitle title="Findings" /><Findings /></>} />
               <Route path="attack-paths" element={<><RouteTitle title="Attack Paths" /><AttackGraph /></>} />
               <Route path="report" element={<><RouteTitle title="Compliance Report" /><ReportView /></>} />
-              <Route path="training" element={<><RouteTitle title="Training" /><Training /></>} />
+              <Route
+                path="training"
+                element={
+                  <>
+                    <RouteTitle title="Training" />
+                    <Training reportData={reportData} />
+                  </>
+                }
+              />
             </Route>
 
             {/* 404 */}
