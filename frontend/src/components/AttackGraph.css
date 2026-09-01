@@ -1,20 +1,12 @@
-html,
-body,
-#root {
-  margin: 0;
-  width: 100%;
-  min-height: 100%;
-}
-
 .attack-graph {
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
 
   padding: 32px;
 
   box-sizing: border-box;
 
-  background: #f8fafc;
+  background: var(--substrate);
 }
 
 .attack-graph-header {
@@ -36,7 +28,7 @@ body,
 
   letter-spacing: 1px;
 
-  color: #667085;
+  color: var(--ink-dim);
 }
 
 .attack-graph-header h1 {
@@ -64,9 +56,9 @@ body,
 
   border-radius: 8px;
 
-  background: #fee4e2;
+  background: var(--panel-raised);
 
-  color: #b42318;
+  color: var(--severity-critical);
 
   font-size: 12px;
 
@@ -80,13 +72,13 @@ body,
 
   height: 520px;
 
-  border: 1px solid #d0d5dd;
+  border: 1px solid var(--wire);
 
   border-radius: 16px;
 
   overflow: hidden;
 
-  background: white;
+  background: var(--panel);
 }
 
 .attack-node {
@@ -98,27 +90,27 @@ body,
 
   box-sizing: border-box;
 
-  border: 2px solid #98a2b3;
+border: 2px solid var(--wire);
 
   border-radius: 12px;
 
-  background: white;
+  background: var(--panel);
 
   box-shadow:
     0 4px 12px rgba(16, 24, 40, 0.08);
 }
 
 .attack-node.break-point {
-  border: 3px solid #f79009;
+  border: 3px solid var(--trace);
 
   box-shadow:
     0 0 0 4px rgba(247, 144, 9, 0.15);
 }
 
 .attack-node.impact-node {
-  border: 3px solid #b42318;
+  border: 3px solid var(--severity-critical);
 
-  background: #fff5f5;
+  background: var(--panel-raised);
 }
 
 .attack-node-severity {
@@ -162,4 +154,15 @@ body,
   padding: 32px;
 
   font-family: Arial, sans-serif;
+}
+
+.react-flow__background {
+  background: var(--substrate);
+}
+
+.react-flow__controls button {
+  background: var(--panel);
+  border-bottom: 1px solid var(--wire);
+  color: var(--ink);
+  fill: var(--ink);
 }
