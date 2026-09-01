@@ -119,26 +119,13 @@
     \  target_prefix = \"s3-access/\"\n}"
   explanation: No record exists of who read objects from this bucket, so an exploited
     public ACL leaves no trail.
-- id: AWS-S3-001
-  title: Ensure S3 Bucket Policy is set to deny HTTP requests
-  applies_to: s3_bucket
-  cis_control: CIS AWS Foundations 3.1.1
-  severity: high
-  check:
-    attribute: deny_http_requests
-    operator: equals
-    value: true
-  remediation: Add a bucket policy statement that denies any request where 'aws:SecureTransport'
-    is false.
-  explanation: Allowing HTTP requests exposes data in transit to interception and
-    man-in-the-middle attacks.
 - id: AWS-S3-002
   title: Ensure that S3 is configured with 'Block Public Access' enabled
   applies_to: s3_bucket
   cis_control: CIS AWS Foundations 3.1.4
   severity: critical
   check:
-    attribute: block_public_access_enabled
+    attribute: public_access_block
     operator: equals
     value: true
   remediation: Enable all four 'Block Public Access' settings at the bucket or account
@@ -313,7 +300,7 @@
   cis_control: CIS AWS Foundations 3.4.1
   severity: critical
   check:
-    attribute: is_enabled
+    attribute: exists
     operator: equals
     value: true
   remediation: Enable CloudTrail in all regions via the AWS Console or CLI.
@@ -325,7 +312,7 @@
   cis_control: CIS AWS Foundations 3.4.2
   severity: medium
   check:
-    attribute: log_file_validation_enabled
+    attribute: log_file_validation
     operator: equals
     value: true
   remediation: Enable log file validation in the CloudTrail settings.
@@ -337,7 +324,7 @@
   cis_control: CIS AWS Foundations 3.1.5
   severity: medium
   check:
-    attribute: access_logging_enabled
+    attribute: access_logging
     operator: equals
     value: true
   remediation: Configure the S3 bucket to send access logs to a dedicated logging

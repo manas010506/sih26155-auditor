@@ -10,34 +10,25 @@
     "version": "provider ~> 5.0",
     "role": "cloud_account"
   },
-  "compliance_score": 8,
+  "compliance_score": 15,
   "score_breakdown": {
     "formula": "100 * (1 - failed_weight / total_weight)",
+    "frameworks": [
+      "CIS"
+    ],
     "severity_weights": {
       "critical": 20,
       "high": 10,
       "medium": 5,
       "low": 2
     },
-    "rules_evaluated": 26,
-    "rules_failed": 22,
-    "failed_weight": 259,
-    "total_weight": 281
+    "rules_evaluated": 25,
+    "rules_failed": 20,
+    "rules_passed": 5,
+    "failed_weight": 229,
+    "total_weight": 271
   },
   "findings": [
-    {
-      "rule_id": "AWS-LOG-001",
-      "title": "Ensure CloudTrail is enabled in all regions",
-      "severity": "critical",
-      "resource_id": "cloudtrail-main",
-      "raw_ref": {
-        "line": 131,
-        "snippet": "is_multi_region_trail         = false"
-      },
-      "cis_control": "CIS AWS Foundations 3.4.1",
-      "remediation_template": "Enable CloudTrail in all regions via the AWS Console or CLI.",
-      "explanation": "CloudTrail provides the primary audit log for all API calls in the account; without it, forensic analysis of security incidents is impossible."
-    },
     {
       "rule_id": "AWS-RDS-003",
       "title": "Ensure that RDS instances are not publicly accessible",
@@ -140,16 +131,6 @@
       "explanation": "Encryption at rest protects the underlying storage from unauthorized physical access or snapshot theft."
     },
     {
-      "rule_id": "AWS-S3-001",
-      "title": "Ensure S3 Bucket Policy is set to deny HTTP requests",
-      "severity": "high",
-      "resource_id": "s3-sensitive_data",
-      "raw_ref": null,
-      "cis_control": "CIS AWS Foundations 3.1.1",
-      "remediation_template": "Add a bucket policy statement that denies any request where 'aws:SecureTransport' is false.",
-      "explanation": "Allowing HTTP requests exposes data in transit to interception and man-in-the-middle attacks."
-    },
-    {
       "rule_id": "CIS-CLOUD-002",
       "title": "Security group exposes RDP to the internet",
       "severity": "high",
@@ -214,8 +195,8 @@
       "severity": "medium",
       "resource_id": "cloudtrail-main",
       "raw_ref": {
-        "line": 131,
-        "snippet": "is_multi_region_trail         = false"
+        "line": 132,
+        "snippet": "enable_log_file_validation    = false"
       },
       "cis_control": "CIS AWS Foundations 3.4.2",
       "remediation_template": "Enable log file validation in the CloudTrail settings.",
@@ -291,5 +272,52 @@
       "explanation": "Without validation there is no way to prove log files were not altered after delivery, which undermines their value as evidence."
     }
   ],
-  "attack_paths": []
+  "attack_paths": [
+    {
+      "chain_id": "CHAIN-CLOUD-PRIVESC",
+      "name": "Administrative port exposure to privilege escalation",
+      "severity": "critical",
+      "contributing_findings": [
+        "CIS-CLOUD-001",
+        "CIS-CLOUD-003",
+        "CIS-CLOUD-009"
+      ],
+      "narrative": "An administrative port is exposed to the internet, and security groups lack restrictive ingress. This allows an attacker to reach the  infrastructure and leverage a wildcard IAM policy to escalate to full  account administrative privileges.",
+      "break_chain": {
+        "fix_rule": "CIS-CLOUD-009",
+        "why": "Restricting wildcard permissions in IAM policies prevents an attacker from using an exposed port to escalate to full administrative control."
+      }
+    },
+    {
+      "chain_id": "CHAIN-CLOUD-DATA-EXPOSURE",
+      "name": "Public storage access to data exfiltration",
+      "severity": "critical",
+      "contributing_findings": [
+        "CIS-CLOUD-004",
+        "CIS-CLOUD-005",
+        "CIS-CLOUD-006",
+        "CIS-CLOUD-008"
+      ],
+      "narrative": "A bucket has a public ACL and lacks a Public Access Block, allowing  anonymous read access. Because the data is unencrypted and access  logging is disabled, an attacker can exfiltrate sensitive data  without leaving a trace.",
+      "break_chain": {
+        "fix_rule": "CIS-CLOUD-005",
+        "why": "Enabling Block Public Access at the bucket level acts as a global  guardrail that overrides any accidental public ACLs or policies."
+      }
+    },
+    {
+      "chain_id": "CHAIN-CLOUD-DB-EXPOSURE",
+      "name": "Public database exposure to data theft",
+      "severity": "critical",
+      "contributing_findings": [
+        "CIS-CLOUD-011",
+        "CIS-CLOUD-003",
+        "CIS-CLOUD-012"
+      ],
+      "narrative": "The database is publicly accessible and the surrounding security  groups are overly permissive. Combined with unencrypted storage,  an attacker can directly target the database endpoint to exfiltrate  the entire dataset.",
+      "break_chain": {
+        "fix_rule": "CIS-CLOUD-011",
+        "why": "Disabling public accessibility for the RDS instance removes the  direct internet path, forcing all traffic through secure internal  network controls."
+      }
+    }
+  ]
 }

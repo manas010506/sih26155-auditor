@@ -19,6 +19,47 @@ RESOURCE_TYPES = {
 }
 
 
+_ATTRS_CACHE: dict[str, set[str]] | None = None
+
+
+def known_attributes() -> dict[str, set[str]]:
+    """Which attributes each resource type actually carries.
+
+    Derived from samples/normalized_examples.json, which is the project's
+    contract - "samples/ is the shared truth". Cached after the first read.
+
+    Used by load_rules() to reject a rule checking an attribute no parser
+    emits. Such a rule reads None, fails every positive operator, and fires
+    against every input including a perfectly hardened config.
+
+    Returns an empty dict if the fixture is missing, which disables the check
+    rather than breaking the engine.
+    """
+    global _ATTRS_CACHE
+    if _ATTRS_CACHE is not None:
+        return _ATTRS_CACHE
+
+    import json
+    import pathlib
+
+    root = pathlib.Path(__file__).resolve().parent.parent.parent
+    fixture = root / "samples" / "normalized_examples.json"
+
+    attrs: dict[str, set[str]] = {}
+    try:
+        doc = json.loads(fixture.read_text(encoding="utf-8"))
+    except Exception:
+        _ATTRS_CACHE = {}
+        return _ATTRS_CACHE
+
+    for example in doc.values():
+        for r in example.get("resources", []):
+            attrs.setdefault(r["type"], set()).update(r.get("attributes", {}))
+
+    _ATTRS_CACHE = attrs
+    return attrs
+
+
 def resolve_ref(resource: dict, attribute: str):
     """The line a finding should point at.
 

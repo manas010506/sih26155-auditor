@@ -16,6 +16,9 @@ import SettingsModal from './components/SettingsModal';
 import CommandPalette from './components/CommandPalette';
 import { SettingsProvider } from './context/SettingsContext';
 import { Toaster } from 'sonner';
+import AttackGraph from './components/AttackGraph';
+import Training from './pages/Training';
+
 
 // Title updater (for dashboard routes without Helmet)
 const RouteTitle = ({ title }) => {
@@ -24,17 +27,6 @@ const RouteTitle = ({ title }) => {
   }, [title]);
   return null;
 };
-
-// Placeholder Pages
-// Placeholder Pages
-
-// AttackPaths not required in this brief
-const AttackPathsPlaceholder = () => (
-  <div className="flex items-center justify-center h-full w-full p-6">
-    <RouteTitle title="Attack Paths" />
-    <div className="text-ink-dim mono text-center">Attack Path Graph placeholder...</div>
-  </div>
-);
 
 const DashboardLayout = ({ reportData, setReportData, score }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -116,8 +108,9 @@ function App() {
               <Route index element={<Navigate to="/audit/upload" replace />} />
               <Route path="upload" element={<><RouteTitle title="Upload Config" /><Upload /></>} />
               <Route path="findings" element={<><RouteTitle title="Findings" /><Findings /></>} />
-              <Route path="attack-paths" element={<AttackPathsPlaceholder />} />
+              <Route path="attack-paths" element={<><RouteTitle title="Attack Paths" /><AttackGraph /></>} />
               <Route path="report" element={<><RouteTitle title="Compliance Report" /><ReportView /></>} />
+              <Route path="training" element={<><RouteTitle title="Training" /><Training /></>} />
             </Route>
 
             {/* 404 */}

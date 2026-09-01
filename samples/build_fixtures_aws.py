@@ -22,156 +22,30 @@ def ref(needle, occurrence=1):
 
 
 # ---------------------------------------------------------------- normalized
-normalized = {
-    "source": {"type": "terraform_aws", "filename": "main.tf"},
-    "resources": [
-        {
-            "id": "s3-sensitive_data",
-            "type": "s3_bucket",
-            "attributes": {
-                "name": "corp-sensitive-data-prod",
-                "acl": "public-read",
-                "public_access_block": False,
-                "encrypted": False,
-                "sse_algorithm": None,
-                "versioning": False,
-                "access_logging": False,
-            },
-            # raw_ref is null: the absence findings (no public access block, no
-            # encryption, no versioning, no logging) must resolve to null, and
-            # only `acl` has a line of its own.
-            "attribute_refs": {"acl": ref('acl    = "public-read"')},
-            "raw_ref": None,
-        },
-        {
-            "id": "s3-app_logs",
-            "type": "s3_bucket",
-            "attributes": {
-                "name": "corp-app-logs-prod",
-                "acl": None,
-                "public_access_block": False,
-                "encrypted": True,
-                "sse_algorithm": "AES256",
-                "versioning": True,
-                "access_logging": False,
-            },
-            "attribute_refs": {
-                "name": ref('bucket = "corp-app-logs-prod"'),
-                "sse_algorithm": ref('sse_algorithm = "AES256"'),
-            },
-            "raw_ref": None,
-        },
-        {
-            "id": "sg-web-ingress-22",
-            "type": "security_group_rule",
-            "attributes": {
-                "group": "web-tier-sg",
-                "direction": "ingress",
-                "protocol": "tcp",
-                "from_port": 22,
-                "to_port": 22,
-                "cidr_blocks": ["0.0.0.0/0"],
-                "open_to_internet": True,
-                "is_wide_range": False,
-            },
-            "raw_ref": ref('description = "SSH from anywhere"'),
-        },
-        {
-            "id": "sg-web-ingress-3389",
-            "type": "security_group_rule",
-            "attributes": {
-                "group": "web-tier-sg",
-                "direction": "ingress",
-                "protocol": "tcp",
-                "from_port": 3389,
-                "to_port": 3389,
-                "cidr_blocks": ["0.0.0.0/0"],
-                "open_to_internet": True,
-                "is_wide_range": False,
-            },
-            "raw_ref": ref('description = "RDP from anywhere"'),
-        },
-        {
-            "id": "sg-web-ingress-0-65535",
-            "type": "security_group_rule",
-            "attributes": {
-                "group": "web-tier-sg",
-                "direction": "ingress",
-                "protocol": "tcp",
-                "from_port": 0,
-                "to_port": 65535,
-                "cidr_blocks": ["0.0.0.0/0"],
-                "open_to_internet": True,
-                "is_wide_range": True,
-            },
-            "raw_ref": ref('description = "Temporary debug access"'),
-        },
-        {
-            "id": "iam-app_policy",
-            "type": "iam_policy",
-            "attributes": {
-                "name": "app-runtime-policy",
-                "wildcard_action": True,
-                "wildcard_resource": True,
-                "wildcard_principal": False,
-                "statement_count": 1,
-            },
-            "attribute_refs": {
-                "wildcard_action": ref('Action   = "*"'),
-                "wildcard_resource": ref('Resource = "*"'),
-            },
-            "raw_ref": ref('Action   = "*"'),
-        },
-        {
-            "id": "rds-app_db",
-            "type": "rds_instance",
-            "attributes": {
-                "identifier": "app-db-prod",
-                "engine": "postgres",
-                "publicly_accessible": True,
-                "storage_encrypted": False,
-                "backup_retention_days": 1,
-                "deletion_protection": True,
-                "auto_minor_version_upgrade": True,
-            },
-            "attribute_refs": {
-                "publicly_accessible": ref("publicly_accessible        = true"),
-                "storage_encrypted": ref("storage_encrypted          = false"),
-                "backup_retention_days": ref("backup_retention_period    = 1"),
-                "deletion_protection": ref("deletion_protection        = true"),
-                "auto_minor_version_upgrade": ref("auto_minor_version_upgrade = true"),
-            },
-            "raw_ref": ref("publicly_accessible        = true"),
-        },
-        {
-            "id": "kms-app_key",
-            "type": "kms_key",
-            "attributes": {"description": "Application data key", "key_rotation": False},
-            "attribute_refs": {"key_rotation": ref("enable_key_rotation = false")},
-            "raw_ref": ref("enable_key_rotation = false"),
-        },
-        {
-            "id": "cloudtrail-main",
-            "type": "cloudtrail",
-            "attributes": {
-                "name": "corp-trail",
-                "exists": True,
-                "multi_region": False,
-                "log_file_validation": False,
-                "global_service_events": True,
-            },
-            # two rules read two different attributes of the same resource -
-            # this is exactly the case attribute_refs exists for.
-            "attribute_refs": {
-                "exists": ref('name                          = "corp-trail"'),
-                "multi_region": ref("is_multi_region_trail         = false"),
-                "log_file_validation": ref("enable_log_file_validation    = false"),
-            },
-            "raw_ref": ref("is_multi_region_trail         = false"),
-        },
-    ],
-    "_unparsed": [],
-}
+# The normalized document is produced BY THE PARSER, not hand-written. Add an
+# attribute to the parser and the fixture follows on the next run.
+# verify.py independently checks every raw_ref line number against the raw
+# config text, so this is a regression fixture, not a circular one.
+import sys as _sys
+_sys.path.insert(0, ".")
+from engine.parsers.terraform_aws import TerraformAWSParser as _Parser
+
+normalized = _Parser().parse(
+    pathlib.Path('samples/main.tf').read_text(encoding="utf-8"), 'main.tf')
+
+# The fixture follows the parser, so guard against a parser that silently stops
+# emitting something. If this fires, the parser regressed - do not "fix" it by
+# editing the list.
+_EXPECTED_IDS = {"s3-sensitive_data", "s3-app_logs",
+                "sg-web-ingress-22", "sg-web-ingress-3389", "sg-web-ingress-0-65535",
+                "iam-app_policy", "rds-app_db", "kms-app_key", "cloudtrail-main"}
+_got_ids = {r["id"] for r in normalized["resources"]}
+if _got_ids != _EXPECTED_IDS:
+    raise SystemExit(
+        f"parser produced the wrong resource set.\n"
+        f"  missing: {sorted(_EXPECTED_IDS - _got_ids) or 'none'}\n"
+        f"  extra  : {sorted(_got_ids - _EXPECTED_IDS) or 'none'}")
+
 
 # ------------------------------------------------------------------ findings
 # Findings are produced BY THE ENGINE, not hand-listed. The fixture is therefore

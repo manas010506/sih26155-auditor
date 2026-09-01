@@ -41,14 +41,14 @@ print(r['compliance_score'], len(r['findings']), 'findings,', len(r['attack_path
 Or dump the whole report:
 
 ```bash
-python engine/audit.py samples/sample_cisco_ios.cfg cisco_ios
+python -m engine.audit samples/sample_cisco_ios.cfg cisco_ios
 ```
 
 Regenerate the labelled test corpus and measure detection accuracy:
 
 ```bash
 python tests/generate_corpus.py   # 36 labelled configs + ground truth
-python tests/metrics.py           # detection rate + false positives
+python -m tests.metrics        # detection rate + false positives
 ```
 
 Run the API and the UI:
@@ -121,7 +121,7 @@ thin wrapper over `run_audit()`.
   tell the group — never diverge quietly.
 - Changed a rule or a sample config? Re-run `python samples/build_fixtures.py`
   and `python samples/build_fixtures_aws.py` so the fixtures follow.
-- `python verify.py` before every push. `python diagnose.py` if it complains.
+- `python verify.py` before every push.
 - Any Python file reading a repo file needs `encoding="utf-8"` explicitly —
   Windows defaults to cp1252 and corrupts non-ASCII silently rather than
   erroring.
