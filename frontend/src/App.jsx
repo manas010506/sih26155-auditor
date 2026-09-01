@@ -15,6 +15,7 @@ import NotFound from './pages/NotFound';
 import SettingsModal from './components/SettingsModal';
 import { SettingsProvider } from './context/SettingsContext';
 import AttackGraph from './components/AttackGraph';
+import Training from './pages/Training';
 
 // Title updater (for dashboard routes without Helmet)
 const RouteTitle = ({ title }) => {
@@ -108,6 +109,7 @@ function App() {
               <Route path="findings" element={<><RouteTitle title="Findings" /><Findings /></>} />
               <Route path="attack-paths" element={<><RouteTitle title="Attack Paths" /><AttackGraph /></>} />
               <Route path="report" element={<><RouteTitle title="Compliance Report" /><ReportView /></>} />
+              <Route path="training" element={<><RouteTitle title="Training" /><Training /></>} />
             </Route>
 
             {/* 404 */}
