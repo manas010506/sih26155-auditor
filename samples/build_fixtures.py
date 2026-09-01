@@ -19,151 +19,30 @@ def ref(needle, occurrence=1):
 
 
 # ---------------------------------------------------------------- normalized
-normalized = {
-    "source": {"type": "cisco_ios", "filename": "sample_cisco_ios.cfg"},
-    "resources": [
-        {
-            "id": "global",
-            "type": "global_settings",
-            "attributes": {
-                "hostname": "EDGE-RTR-01",
-                "os_version": "15.2",
-                "password_encryption": False,
-                "aaa_new_model": False,
-                "http_server": True,
-                "https_server": True,
-                "cdp_enabled": True,
-                "enable_secret_present": False,
-                "enable_password_present": True,
-                "enable_password_type": 0,
-                "login_banner": None,
-                "motd_banner": None,
-            },
-            # raw_ref is null: this resource is a bag of settings with no single
-            # anchor line. Per-attribute lines live in attribute_refs, and an
-            # attribute absent from that map (login_banner) falls through to
-            # null - which is exactly what an absence-based finding needs.
-            "attribute_refs": {
-                "hostname": ref("hostname EDGE-RTR-01"),
-                "password_encryption": ref("no service password-encryption"),
-                "aaa_new_model": ref("no aaa new-model"),
-                "http_server": ref("ip http server"),
-                "https_server": ref("ip http secure-server"),
-                "cdp_enabled": ref("cdp run"),
-            },
-            "raw_ref": None,
-        },
-        {
-            "id": "enable-password",
-            "type": "enable_secret",
-            "attributes": {"uses_secret": False, "encryption_type": 0, "encrypted": False},
-            "attribute_refs": {"uses_secret": ref("enable password cisco123")},
-            "raw_ref": ref("enable password cisco123"),
-        },
-        {
-            "id": "user-admin",
-            "type": "local_user",
-            "attributes": {"name": "admin", "privilege": 15, "encryption_type": 0, "encrypted": False},
-            "attribute_refs": {"encrypted": ref("username admin privilege 15 password 0 admin123")},
-            "raw_ref": ref("username admin privilege 15 password 0 admin123"),
-        },
-        {
-            "id": "user-netops",
-            "type": "local_user",
-            "attributes": {"name": "netops", "privilege": 15, "encryption_type": 0, "encrypted": False},
-            "attribute_refs": {"encrypted": ref("username netops privilege 15 password 0 N3top2024")},
-            "raw_ref": ref("username netops privilege 15 password 0 N3top2024"),
-        },
-        {
-            "id": "snmp-public",
-            "type": "snmp_community",
-            "attributes": {"community": "public", "access": "RO", "acl": None, "is_default_string": True},
-            "attribute_refs": {"is_default_string": ref("snmp-server community public RO")},
-            "raw_ref": ref("snmp-server community public RO"),
-        },
-        {
-            "id": "snmp-private",
-            "type": "snmp_community",
-            "attributes": {"community": "private", "access": "RW", "acl": None, "is_default_string": True},
-            "attribute_refs": {"access": ref("snmp-server community private RW")},
-            "raw_ref": ref("snmp-server community private RW"),
-        },
-        {
-            "id": "snmp",
-            "type": "snmp_settings",
-            "attributes": {"v3_configured": False, "versions_in_use": ["v1", "v2c"], "traps_enabled": False},
-            "raw_ref": None,
-        },
-        {
-            "id": "vty-0-4",
-            "type": "vty_line",
-            "attributes": {
-                "range": "0 4",
-                "transport_input": ["telnet", "ssh"],
-                "exec_timeout_minutes": 0,
-                "access_class": None,
-                "login_method": "password",
-                "privilege_level": None,
-            },
-            # access_class is deliberately absent from attribute_refs: the
-            # sub-command is missing but the block exists, so it falls through
-            # to the block header line.
-            "attribute_refs": {
-                "transport_input": ref("transport input telnet ssh", 1),
-                "exec_timeout_minutes": ref("exec-timeout 0 0", 2),
-            },
-            "raw_ref": ref("line vty 0 4"),
-        },
-        {
-            "id": "vty-5-15",
-            "type": "vty_line",
-            "attributes": {
-                "range": "5 15",
-                "transport_input": ["telnet", "ssh"],
-                "exec_timeout_minutes": 0,
-                "access_class": None,
-                "login_method": "password",
-                "privilege_level": None,
-            },
-            "attribute_refs": {
-                "transport_input": ref("transport input telnet ssh", 2),
-                "exec_timeout_minutes": ref("exec-timeout 0 0", 3),
-            },
-            "raw_ref": ref("line vty 5 15"),
-        },
-        {
-            "id": "con-0",
-            "type": "console_line",
-            "attributes": {"exec_timeout_minutes": 0, "login_method": "none", "privilege_level": 15},
-            "attribute_refs": {
-                "exec_timeout_minutes": ref("exec-timeout 0 0", 1),
-                "privilege_level": ref("privilege level 15"),
-                "login_method": ref("no login"),
-            },
-            "raw_ref": ref("line con 0"),
-        },
-        {
-            "id": "ssh",
-            "type": "ssh_settings",
-            "attributes": {"version": None, "timeout_seconds": None, "auth_retries": None, "key_bits": None},
-            "raw_ref": None,
-        },
-        {
-            "id": "logging",
-            "type": "logging",
-            "attributes": {"hosts": [], "buffered": False, "trap_level": None, "logs_admin_access": False},
-            "raw_ref": None,
-        },
-        {
-            "id": "ntp",
-            "type": "ntp",
-            "attributes": {"servers": ["10.10.0.250"], "authenticated": False},
-            "attribute_refs": {"servers": ref("ntp server 10.10.0.250")},
-            "raw_ref": ref("ntp server 10.10.0.250"),
-        },
-    ],
-    "_unparsed": [],
-}
+# The normalized document is produced BY THE PARSER, not hand-written. Add an
+# attribute to the parser and the fixture follows on the next run.
+# verify.py independently checks every raw_ref line number against the raw
+# config text, so this is a regression fixture, not a circular one.
+import sys as _sys
+_sys.path.insert(0, ".")
+from engine.parsers.cisco_ios import CiscoIOSParser as _Parser
+
+normalized = _Parser().parse(
+    pathlib.Path('samples/sample_cisco_ios.cfg').read_text(encoding="utf-8"), 'sample_cisco_ios.cfg')
+
+# The fixture follows the parser, so guard against a parser that silently stops
+# emitting something. If this fires, the parser regressed - do not "fix" it by
+# editing the list.
+_EXPECTED_IDS = {"global", "enable-password", "user-admin", "user-netops",
+                "snmp-public", "snmp-private", "snmp", "vty-0-4", "vty-5-15",
+                "con-0", "ssh", "logging", "ntp"}
+_got_ids = {r["id"] for r in normalized["resources"]}
+if _got_ids != _EXPECTED_IDS:
+    raise SystemExit(
+        f"parser produced the wrong resource set.\n"
+        f"  missing: {sorted(_EXPECTED_IDS - _got_ids) or 'none'}\n"
+        f"  extra  : {sorted(_got_ids - _EXPECTED_IDS) or 'none'}")
+
 
 # ------------------------------------------------------------------ findings
 # Findings are produced BY THE ENGINE, not hand-listed. The fixture is therefore

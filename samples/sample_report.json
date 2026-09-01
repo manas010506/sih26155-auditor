@@ -150,13 +150,10 @@
       "rule_id": "CIS-NET-022",
       "title": "SNMP v1/v2c community strings in use",
       "severity": "high",
-      "resource_id": "snmp-public",
-      "raw_ref": {
-        "line": 54,
-        "snippet": "snmp-server community public RO"
-      },
-      "cis_control": "\\\"CIS Cisco IOS 2.2.0 - Use SNMPv3\\\"",
-      "remediation_template": "\\\"Configure snmp-server group with v3 auth and priv\\\"",
+      "resource_id": "snmp",
+      "raw_ref": null,
+      "cis_control": "CIS Cisco IOS 2.2.0 - Use SNMPv3",
+      "remediation_template": "Configure snmp-server group with v3 auth and priv",
       "explanation": "SNMP v1 and v2c transmit community strings in plaintext. An attacker capturing traffic can gain full read or write access to the device configuration."
     },
     {

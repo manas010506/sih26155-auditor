@@ -268,14 +268,14 @@
     determine it cannot assess patch exposure.
 - id: CIS-NET-022
   title: SNMP v1/v2c community strings in use
-  applies_to: snmp_community
-  cis_control: \"CIS Cisco IOS 2.2.0 - Use SNMPv3\"
+  applies_to: snmp_settings
+  cis_control: "CIS Cisco IOS 2.2.0 - Use SNMPv3"
   severity: high
   check:
-    attribute: version
-    operator: equals
-    value: 3
-  remediation: \"Configure snmp-server group with v3 auth and priv\"
+    attribute: versions_in_use
+    operator: not_contains
+    value: v1
+  remediation: "Configure snmp-server group with v3 auth and priv"
   explanation: SNMP v1 and v2c transmit community strings in plaintext. An attacker
     capturing traffic can gain full read or write access to the device configuration.
 - id: CIS-NET-023
