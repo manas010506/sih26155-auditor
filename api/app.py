@@ -9,6 +9,8 @@ STAGE 2 (Tue 1 Sep): uncomment the run_audit import and swap ONE line.
 Run:  pip install flask flask-cors
       flask --app api/app.py run --port 5000
 """
+import json
+import pathlib
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -18,6 +20,7 @@ from engine.audit import run_audit
 app = Flask(__name__)
 CORS(app)
 
+SAMPLE = pathlib.Path("samples/sample_report.json")
 MAX_BYTES = 2 * 1024 * 1024
 VALID_TYPES = {"cisco_ios", "terraform_aws"}
 
@@ -35,23 +38,16 @@ def audit():
 
     if not config_text:
         return jsonify(error="config_text is required"), 400
-
     if len(config_text.encode()) > MAX_BYTES:
         return jsonify(error="config file too large (2MB limit)"), 413
-
     if source_type not in VALID_TYPES:
-        return jsonify(
-            error=f"source_type must be one of {sorted(VALID_TYPES)}"
-        ), 400
+        return jsonify(error=f"source_type must be one of {sorted(VALID_TYPES)}"), 400
 
     try:
         return jsonify(run_audit(config_text, source_type))
-
-    except Exception as exc:
+    except Exception as exc:                      # never leak a stack trace
         app.logger.exception("audit failed")
-        return jsonify(
-            error=f"audit failed: {type(exc).__name__}"
-        ), 500
+        return jsonify(error=f"audit failed: {type(exc).__name__}"), 500
 
 
 if __name__ == "__main__":

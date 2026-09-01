@@ -1,50 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef, useState, useEffect } from 'react';
+import { motion, useInView } from 'framer-motion';
 
-/* Animates a number from 0 to target when the component mounts */
-const AnimatedScore = ({ target, duration = 1200 }) => {
+/* Custom lightweight CountUp */
+const CountUp = ({ end, duration = 1.4 }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
   const [display, setDisplay] = useState('0');
 
   useEffect(() => {
+    if (!inView) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setDisplay(target.toString());
+      setDisplay(end.toString());
       return;
     }
+    const durationMs = duration * 1000;
     const start = performance.now();
     const tick = (now) => {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      // ease out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.floor(eased * target).toString());
+      const progress = Math.min((now - start) / durationMs, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // cubic ease out
+      const value = Math.round(eased * end);
+      setDisplay(value.toString());
       if (progress < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
-  }, [target, duration]);
+  }, [inView, end, duration]);
 
-  return <span>{display}</span>;
+  return <span ref={ref}>{display}</span>;
 };
 
-/* Score bands calibrated against the real penalty engine:
-   penalty = critical×20 + high×10 + medium×5 + low×2
-   A 15-finding config with mixed severity typically scores 0–40.
-   A light/passing config (3 findings) scores ~60–80.
-   Bands are spaced to actually differentiate real audit outputs. */
+/* Score bands calibrated against the real penalty engine */
 const scoreLabel = (s) => {
-  if (s >= 60) return 'GOOD';
-  if (s >= 35) return 'FAIR';
-  if (s >= 15) return 'POOR';
+  if (s >= 25) return 'GOOD';
+  if (s >= 15) return 'FAIR';
+  if (s >= 8) return 'POOR';
   return 'CRITICAL';
 };
 
 const scoreColor = (s) => {
-  if (s >= 60) return 'var(--trace)';
-  if (s >= 35) return 'var(--severity-low)';
-  if (s >= 15) return 'var(--severity-medium)';
+  if (s >= 25) return 'var(--trace)';
+  if (s >= 15) return 'var(--severity-low)';
+  if (s >= 8) return 'var(--severity-medium)';
   return 'var(--severity-critical)';
 };
 
-const ComplianceGauge = ({ score }) => {
+const ComplianceGauge = ({ score, breakdown }) => {
+  if (score === undefined || score === null) return null;
+
   const radius = 40;
   const circumference = Math.PI * radius; // semi-circle
   const dashoffset = circumference - (score / 100) * circumference;
@@ -56,6 +57,7 @@ const ComplianceGauge = ({ score }) => {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+      title={breakdown ? `Formula: ${breakdown.formula}\nRules Evaluated: ${breakdown.rules_evaluated}\nRules Failed: ${breakdown.rules_failed}\nFailed Weight: ${breakdown.failed_weight}\nTotal Weight: ${breakdown.total_weight}` : undefined}
     >
       {/* SVG Arc + LED Ticks */}
       <div style={{ position: 'relative', width: '140px', height: '80px', marginBottom: '12px' }}>
@@ -79,7 +81,37 @@ const ComplianceGauge = ({ score }) => {
             strokeDasharray={circumference}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset: dashoffset }}
-            transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          />
+
+          {/* Inner highlight arc for physical gauge lighting effect */}
+          <motion.path
+            d="M 11 59.5 A 39.5 39.5 0 0 1 109 59.5"
+            transform="translate(0, -1)"
+            fill="none"
+            stroke="#ffffff"
+            strokeOpacity="0.3"
+            strokeWidth="1"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: dashoffset }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          />
+
+          {/* Additional bottom shadow for depth */}
+          <motion.path
+            d="M 10.5 60.5 A 40.5 40.5 0 0 1 109.5 60.5"
+            transform="translate(0, 1)"
+            fill="none"
+            stroke="#000000"
+            strokeOpacity="0.4"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: dashoffset }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           />
 
           {/* LED tick marks around the arc — 5 ticks at 0%, 25%, 50%, 75%, 100% */}
@@ -90,11 +122,11 @@ const ComplianceGauge = ({ score }) => {
 
             const isActive = pct <= score;
             const ledColor = isActive
-              ? score >= 60
+              ? score >= 25
                 ? 'var(--trace)'
-                : score >= 35
-                ? 'var(--severity-low)'
                 : score >= 15
+                ? 'var(--severity-low)'
+                : score >= 8
                 ? 'var(--severity-medium)'
                 : 'var(--severity-critical)'
               : 'var(--wire)';
@@ -109,8 +141,9 @@ const ComplianceGauge = ({ score }) => {
                     r="5"
                     fill={ledColor}
                     opacity="0.2"
-                    animate={{ r: [4.5, 6.5, 4.5], opacity: [0.25, 0.1, 0.25] }}
+                    animate={{ scale: [0.9, 1.3, 0.9], opacity: [0.25, 0.1, 0.25] }}
                     transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' }}
+                    style={{ transformOrigin: `${x}px ${y}px` }}
                   />
                 )}
                 {/* Inner LED dot */}
@@ -131,7 +164,7 @@ const ComplianceGauge = ({ score }) => {
         {/* Score display centered below arc */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, textAlign: 'center' }}>
           <div className="mono" style={{ fontSize: '32px', fontWeight: 700, color: 'var(--ink)', lineHeight: '1', letterSpacing: '-0.02em' }}>
-            <AnimatedScore target={score} duration={1200} />
+            <CountUp end={score} duration={0.8} />
           </div>
         </div>
       </div>
@@ -152,8 +185,13 @@ const ComplianceGauge = ({ score }) => {
           {scoreLabel(score)}
         </div>
         <div className="mono" style={{ fontSize: '9px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          [ {score}/100 ]
+          [ <CountUp end={score} duration={0.8} />/100 ]
         </div>
+        {breakdown && (
+          <div className="mono" style={{ fontSize: '9px', color: 'var(--ink-dim)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            {breakdown.rules_evaluated} checks &middot; {breakdown.rules_passed} passed &middot; {breakdown.rules_failed} failed
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );

@@ -1,31 +1,84 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { useOutletContext, Link } from 'react-router-dom';
+import { motion, useInView } from 'framer-motion';
 import { IconPrinter, IconLoader } from '@tabler/icons-react';
 import SeverityLED from '../components/SeverityLED';
 
+/* Custom lightweight CountUp */
+const CountUp = ({ end, duration = 1.4 }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  const [display, setDisplay] = useState('0');
+
+  useEffect(() => {
+    if (!inView) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setDisplay(end.toString());
+      return;
+    }
+    const durationMs = duration * 1000;
+    const start = performance.now();
+    const tick = (now) => {
+      const progress = Math.min((now - start) / durationMs, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = Math.round(eased * end);
+      setDisplay(value.toString());
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [inView, end, duration]);
+
+  return <span ref={ref}>{display}</span>;
+};
+
 const ReportView = () => {
-  const [reportData, setReportData] = useState(null);
+  const { reportData } = useOutletContext();
 
   useEffect(() => {
     document.title = 'Report | Compliance Auditor';
-    import('../sample_report.json')
-      .then(m => setReportData(m.default))
-      .catch(console.error);
   }, []);
 
   if (!reportData) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '10px' }}>
-        <IconLoader size={16} style={{ color: 'var(--ink-dim)', animation: 'spin 0.9s linear infinite' }} />
-        <span className="label">Loading report…</span>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: 'var(--substrate)' }}>
+        <div className="corner-marks" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '48px', border: '1px dashed var(--wire)', backgroundColor: 'var(--panel)', maxWidth: '400px' }}>
+          <svg width="48" height="48" viewBox="0 0 48 48" style={{ color: 'var(--ink-dim)' }}>
+            {/* Dashed Outline box */}
+            <rect x="8" y="8" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 4" />
+            {/* Cross/Cancel inner shape */}
+            <path d="M 18 18 l 12 12 M 30 18 l -12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
+            {/* Tick marks */}
+            <path d="M 8 24 h -4 M 40 24 h 4 M 24 8 v -4 M 24 40 v 4" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+          <div className="mono" style={{ fontSize: '14px', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>No Report Generated</div>
+          <div style={{ fontSize: '13px', color: 'var(--ink-dim)', textAlign: 'center', lineHeight: '1.5' }}>
+            There is no report to view because an audit has not been run. Upload a configuration file to begin.
+          </div>
+          <Link to="/audit/upload" style={{
+            marginTop: '8px',
+            backgroundColor: 'transparent',
+            border: '1px solid var(--wire)',
+            color: 'var(--ink)',
+            padding: '8px 20px',
+            fontFamily: 'IBM Plex Mono, monospace',
+            fontSize: '11px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            textDecoration: 'none',
+            transition: 'border-color 0.2s, color 0.2s'
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--trace)'; e.currentTarget.style.color = 'var(--trace)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--wire)'; e.currentTarget.style.color = 'var(--ink)'; }}
+          >
+            Go to Upload
+          </Link>
+        </div>
       </div>
     );
   }
 
   const { device, findings } = reportData;
-  const failCount = findings.filter(f => f.pass_fail === 'fail').length;
-  const passCount = findings.length - failCount;
+  const totalFindings = findings.length; // every finding is a failure by definition
 
   return (
     <>
@@ -42,7 +95,7 @@ const ReportView = () => {
         <div>
           <div className="heading-sm">Compliance Report</div>
           <div className="label" style={{ marginTop: '2px' }}>
-            {findings.length} findings · {passCount} passed · {failCount} failed
+            {totalFindings} findings · compliance score: {reportData.compliance_score ?? 'N/A'}
           </div>
         </div>
         <motion.button
@@ -82,7 +135,7 @@ const ReportView = () => {
         <div style={{ marginBottom: '40px', paddingBottom: '24px', borderBottom: '1px solid var(--wire)' }}>
           <div className="label" style={{ marginBottom: '8px' }}>SIH-26155 · NTRO AUDIT REPORT</div>
           <div className="heading-lg" style={{ fontSize: '22px', marginBottom: '20px', letterSpacing: '-0.02em' }}>
-            System Auditor Core v2.0
+            COMPLIANCE AUDITOR
           </div>
 
           {/* Device identity grid */}
@@ -94,10 +147,10 @@ const ReportView = () => {
             border: '1px solid var(--wire)',
           }}>
             {[
-              ['Device ID',       device.name],
-              ['Serial Number',   device.serial_number],
-              ['Hardware Model',  device.hardware_model],
-              ['Source Type',     device.source_type],
+              ['Device',      device.hostname],
+              ['Vendor',      device.vendor],
+              ['OS',          device.os],
+              ['Source Type', reportData.source?.type],
             ].map(([label, value]) => (
               <div key={label} style={{ backgroundColor: 'var(--panel)', padding: '10px 14px' }}>
                 <div className="label" style={{ marginBottom: '3px' }}>{label}</div>
@@ -110,13 +163,12 @@ const ReportView = () => {
         {/* Summary row */}
         <div style={{ display: 'flex', gap: '1px', backgroundColor: 'var(--wire)', marginBottom: '32px', border: '1px solid var(--wire)' }}>
           {[
-            { label: 'Total Findings', value: findings.length, color: 'var(--ink)' },
-            { label: 'Passed',         value: passCount,        color: 'var(--trace)' },
-            { label: 'Failed',         value: failCount,        color: 'var(--severity-critical)' },
+            { label: 'Total Findings',    value: totalFindings,                    color: 'var(--severity-critical)' },
+            { label: 'Compliance Score',  value: reportData.compliance_score ?? '—', color: 'var(--ink)' },
           ].map(({ label, value, color }) => (
             <div key={label} style={{ flex: 1, backgroundColor: 'var(--panel)', padding: '14px 16px', textAlign: 'center' }}>
               <div className="mono" style={{ fontSize: '28px', fontWeight: 700, color, lineHeight: 1, marginBottom: '4px' }}>
-                {value}
+                {typeof value === 'number' ? <CountUp end={value} duration={1.5} /> : value}
               </div>
               <div className="label">{label}</div>
             </div>
@@ -127,66 +179,72 @@ const ReportView = () => {
         <div className="heading-sm" style={{ marginBottom: '16px' }}>Audit Findings</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: 'var(--wire)' }}>
-          {findings.map((finding) => (
-            <div
-              key={finding.rule_id}
-              className="print-break-inside-avoid"
-              style={{ backgroundColor: 'var(--panel)' }}
-            >
-              {/* Finding header row */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '10px 16px',
-                borderBottom: '1px solid var(--wire)',
-              }}>
-                {/* LED severity indicator — no filled pill */}
-                <SeverityLED severity={finding.severity} />
-                <span className="mono" style={{ fontSize: '11px', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  {finding.severity}
-                </span>
-                <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--wire)', flexShrink: 0 }} />
-                <span className="mono" style={{ fontSize: '12px', color: 'var(--trace)' }}>{finding.rule_id}</span>
-                <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--wire)', flexShrink: 0 }} />
-                <span className="mono" style={{ fontSize: '11px', color: 'var(--ink-dim)', textTransform: 'uppercase' }}>{finding.category}</span>
-                <div style={{ flex: 1 }} />
-                <span className="mono" style={{
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  color: finding.pass_fail === 'pass' ? 'var(--trace)' : 'var(--severity-critical)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                }}>
-                  {finding.pass_fail?.toUpperCase()}
-                </span>
-              </div>
-
-              {/* Description */}
-              <div style={{ padding: '10px 16px', fontSize: '13px', color: 'var(--ink)', borderBottom: '1px solid var(--wire)' }}>
-                {finding.description}
-              </div>
-
-              {/* Remediation CLI */}
-              {finding.remediation_template && (
-                <div style={{ padding: '10px 16px', backgroundColor: 'var(--substrate)' }}>
-                  <div className="label" style={{ marginBottom: '6px' }}>Remediation CLI</div>
-                  <pre style={{
-                    margin: 0,
-                    fontFamily: 'IBM Plex Mono, monospace',
-                    fontSize: '12px',
-                    color: 'var(--ink)',
-                    lineHeight: '1.6',
-                    overflowX: 'auto',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-all',
-                  }}>
-                    {finding.remediation_template}
-                  </pre>
-                </div>
-              )}
+          {findings.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px', backgroundColor: 'var(--panel)', gap: '12px' }}>
+              <svg width="32" height="32" viewBox="0 0 32 32" style={{ color: 'var(--trace)' }}>
+                {/* Outer ring */}
+                <circle cx="16" cy="16" r="12" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                {/* Inner dot LED */}
+                <circle cx="16" cy="16" r="4" fill="currentColor" />
+                {/* Tick marks */}
+                <path d="M 16 0 v 4 M 16 32 v -4 M 0 16 h 4 M 32 16 h -4" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+              <div className="mono" style={{ fontSize: '14px', color: 'var(--trace)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Compliant</div>
+              <div style={{ fontSize: '13px', color: 'var(--ink-dim)' }}>No security findings detected in this configuration.</div>
             </div>
-          ))}
+          ) : (
+            findings.map((finding) => (
+              <div
+                key={finding.rule_id}
+                className="print-break-inside-avoid"
+                style={{ backgroundColor: 'var(--panel)' }}
+              >
+                {/* Finding header row */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '10px 16px',
+                  borderBottom: '1px solid var(--wire)',
+                }}>
+                  {/* LED severity indicator — no filled pill */}
+                  <SeverityLED severity={finding.severity} />
+                  <span className="mono" style={{ fontSize: '11px', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    {finding.severity}
+                  </span>
+                  <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--wire)', flexShrink: 0 }} />
+                  <span className="mono" style={{ fontSize: '12px', color: 'var(--trace)' }}>{finding.rule_id}</span>
+                  <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--wire)', flexShrink: 0 }} />
+                  <span className="mono" style={{ fontSize: '11px', color: 'var(--ink-dim)', textTransform: 'uppercase' }}>{finding.cis_control}</span>
+                </div>
+  
+                {/* Description */}
+                <div style={{ padding: '10px 16px', fontSize: '13px', color: 'var(--ink)', borderBottom: '1px solid var(--wire)' }}>
+                  <div style={{ fontWeight: 600, marginBottom: '4px' }}>{finding.title}</div>
+                  <div>{finding.explanation}</div>
+                </div>
+  
+                {/* Remediation CLI */}
+                {finding.remediation_template && (
+                  <div style={{ padding: '10px 16px', backgroundColor: 'var(--substrate)' }}>
+                    <div className="label" style={{ marginBottom: '6px' }}>Remediation CLI</div>
+                    <pre style={{
+                      margin: 0,
+                      fontFamily: 'IBM Plex Mono, monospace',
+                      fontSize: '12px',
+                      color: 'var(--ink)',
+                      lineHeight: '1.6',
+                      overflowX: 'auto',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-all',
+                    }}>
+                      {finding.remediation_template}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
 
         {/* Footer */}

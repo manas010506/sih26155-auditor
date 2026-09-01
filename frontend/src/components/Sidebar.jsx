@@ -1,12 +1,14 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconUpload,
   IconTable,
   IconRoute,
   IconFileText,
+  IconLogout,
 } from '@tabler/icons-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ComplianceGauge from './ComplianceGauge';
 
 const NAV_ITEMS = [
@@ -16,7 +18,7 @@ const NAV_ITEMS = [
   { id: '04', path: '/audit/report',       label: 'REPORT',       Icon: IconFileText },
 ];
 
-/* Sliding accent bar — uses Framer layoutId so it animates between items */
+/* Sliding accent bar */
 const ActiveBar = () => (
   <motion.div
     layoutId="sidebar-active-bar"
@@ -33,57 +35,101 @@ const ActiveBar = () => (
   />
 );
 
-const Sidebar = ({ score }) => {
+const Sidebar = ({ score, breakdown, findings, isCollapsed, setIsCollapsed }) => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <motion.div
-      initial={{ x: -16, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       style={{
-        width: '220px',
+        width: '100%',
         height: '100vh',
         backgroundColor: 'var(--panel)',
         borderRight: '1px solid var(--wire)',
         display: 'flex',
         flexDirection: 'column',
-        flexShrink: 0,
         position: 'sticky',
         top: 0,
       }}
     >
-      {/* Product identity */}
+      {/* Product identity & Toggle Button */}
       <div style={{
-        padding: '18px 20px 16px',
+        padding: isCollapsed ? '16px 0' : '18px 20px 16px',
         borderBottom: '1px solid var(--wire)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: isCollapsed ? 'center' : 'space-between',
+        transition: 'padding 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
       }}>
-        <div className="label" style={{ marginBottom: '4px' }}>SIH-26155</div>
-        <div style={{
-          fontSize: '14px',
-          fontWeight: 700,
-          color: 'var(--ink)',
-          fontFamily: 'IBM Plex Sans, sans-serif',
-          letterSpacing: '-0.01em',
-          lineHeight: 1.2,
-        }}>
-          COMPLIANCE<br />AUDITOR
-        </div>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="label" style={{ marginBottom: '4px' }}>SIH-26155</div>
+            <div style={{
+              fontSize: '14px',
+              fontWeight: 700,
+              color: 'var(--ink)',
+              fontFamily: 'IBM Plex Sans, sans-serif',
+              letterSpacing: '-0.01em',
+              lineHeight: 1.2,
+            }}>
+              COMPLIANCE<br />AUDITOR
+            </div>
+          </motion.div>
+        )}
+        
+        {/* Toggle Button */}
+        <motion.button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--ink-dim)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '4px',
+          }}
+        >
+          <motion.div
+            animate={{ rotate: isCollapsed ? 180 : 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+          >
+            <ChevronLeft size={18} />
+          </motion.div>
+        </motion.button>
       </div>
 
-      {/* Nav with connecting line */}
-      <nav style={{ flex: 1, padding: '16px 0', position: 'relative' }}>
-
-        {/* Vertical connecting line behind the step numbers */}
-        <div style={{
-          position: 'absolute',
-          left: '30px',          /* centres on the number column */
-          top: '28px',
-          bottom: '28px',
-          width: '1px',
-          backgroundColor: 'var(--wire)',
-          zIndex: 0,
-        }} />
+      {/* Nav with connecting line - Animated Scrolling Container */}
+      <nav style={{ 
+        padding: '24px 0', 
+        position: 'relative', 
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px'
+      }}>
+        {/* Vertical connecting line (hidden when collapsed) */}
+        <AnimatePresence>
+          {!isCollapsed && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{
+                position: 'absolute',
+                left: '30px',
+                top: '28px',
+                bottom: '28px',
+                width: '1px',
+                backgroundColor: 'var(--wire)',
+                zIndex: 0,
+              }} 
+            />
+          )}
+        </AnimatePresence>
 
         {NAV_ITEMS.map((item, i) => {
           const isActive =
@@ -109,43 +155,51 @@ const Sidebar = ({ score }) => {
                         position: 'relative',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '10px',
-                        padding: '9px 16px',
+                        justifyContent: isCollapsed ? 'center' : 'flex-start',
+                        gap: isCollapsed ? '0' : '10px',
+                        padding: isCollapsed ? '12px 0' : '9px 16px',
                         backgroundColor: active ? 'var(--panel-raised)' : 'transparent',
+                        transition: 'padding 0.3s ease, justify-content 0.3s ease',
                       }}
                     >
                       {active && <ActiveBar />}
 
-                      {/* Step number + filled dot on active — overlays the connecting line */}
-                      <div style={{
-                        width: '22px',
-                        height: '22px',
-                        flexShrink: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'relative',
-                        zIndex: 2,
-                        backgroundColor: active ? 'var(--trace)' : 'var(--panel)',
-                        border: `1px solid ${active ? 'var(--trace)' : 'var(--wire)'}`,
-                        borderRadius: '50%',
-                        transition: 'background-color 0.15s, border-color 0.15s',
-                      }}>
-                        <span className="mono" style={{
-                          fontSize: '9px',
-                          fontWeight: 700,
-                          color: active ? 'var(--substrate)' : 'var(--ink-dim)',
-                          letterSpacing: '0',
-                          lineHeight: 1,
-                          transition: 'color 0.15s',
-                        }}>
-                          {item.id}
-                        </span>
-                      </div>
+                      {/* Step number (hidden when collapsed) */}
+                      <AnimatePresence>
+                        {!isCollapsed && (
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.5, width: 0 }} 
+                            animate={{ opacity: 1, scale: 1, width: '22px' }} 
+                            exit={{ opacity: 0, scale: 0.5, width: 0 }}
+                            style={{
+                              height: '22px',
+                              flexShrink: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              position: 'relative',
+                              zIndex: 2,
+                              backgroundColor: active ? 'var(--trace)' : 'var(--panel)',
+                              border: `1px solid ${active ? 'var(--trace)' : 'var(--wire)'}`,
+                              borderRadius: '50%',
+                              transition: 'background-color 0.15s, border-color 0.15s',
+                              marginRight: '10px'
+                            }}>
+                            <span className="mono" style={{
+                              fontSize: '9px',
+                              fontWeight: 700,
+                              color: active ? 'var(--substrate)' : 'var(--ink-dim)',
+                              lineHeight: 1,
+                            }}>
+                              {item.id}
+                            </span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
                       {/* Tabler icon */}
                       <item.Icon
-                        size={15}
+                        size={18}
                         stroke={1.5}
                         style={{
                           color: active ? 'var(--trace)' : 'var(--ink-dim)',
@@ -154,16 +208,26 @@ const Sidebar = ({ score }) => {
                         }}
                       />
 
-                      {/* Label */}
-                      <span className="mono" style={{
-                        fontSize: '11px',
-                        fontWeight: active ? 600 : 400,
-                        color: active ? 'var(--ink)' : 'var(--ink-dim)',
-                        letterSpacing: '0.06em',
-                        transition: 'color 0.15s',
-                      }}>
-                        {item.label}
-                      </span>
+                      {/* Label (hidden when collapsed) */}
+                      <AnimatePresence>
+                        {!isCollapsed && (
+                          <motion.span 
+                            initial={{ opacity: 0, x: -5 }} 
+                            animate={{ opacity: 1, x: 0 }} 
+                            exit={{ opacity: 0, x: -5 }}
+                            className="mono" 
+                            style={{
+                              fontSize: '11px',
+                              fontWeight: active ? 600 : 400,
+                              color: active ? 'var(--ink)' : 'var(--ink-dim)',
+                              letterSpacing: '0.06em',
+                              marginLeft: '4px',
+                              whiteSpace: 'nowrap'
+                            }}>
+                            {item.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </motion.div>
                   );
                 }}
@@ -173,18 +237,80 @@ const Sidebar = ({ score }) => {
         })}
       </nav>
 
-      {/* Compliance gauge pinned at bottom */}
-      {score !== null && score !== undefined && (
-        <div style={{
-          borderTop: '1px solid var(--wire)',
-          padding: '16px',
-        }}>
-          <div className="label" style={{ textAlign: 'center', marginBottom: '10px' }}>
-            Compliance Score
-          </div>
-          <ComplianceGauge score={score} />
-        </div>
-      )}
+      {/* Compliance gauge pinned at bottom (hidden when collapsed) */}
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{ padding: '0 16px 24px 16px', overflow: 'hidden', marginTop: '16px' }}
+          >
+            <div className="bezel-panel corner-marks" style={{ padding: '16px 12px' }}>
+              <div className="label" style={{ textAlign: 'center', marginBottom: '10px' }}>
+                Compliance Score
+              </div>
+              {score !== null && score !== undefined ? (
+                <ComplianceGauge score={score} breakdown={breakdown} />
+              ) : (
+                <div style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-dim)', opacity: 0.6 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '8px' }}>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="9" y1="15" x2="15" y2="15" />
+                  </svg>
+                  <span className="mono" style={{ fontSize: '10px', letterSpacing: '1px' }}>NO FILE LOADED</span>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Footer: Version and Logout */}
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{
+              padding: '16px 20px',
+              borderTop: '1px solid var(--wire)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: 'auto'
+            }}>
+              <span className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)' }}>v0.1.0</span>
+              <button 
+                onClick={() => navigate('/login')}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--ink-dim)',
+                  fontSize: '11px',
+                  fontFamily: 'IBM Plex Mono, monospace',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'color 0.15s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--severity-critical)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-dim)'}
+              >
+                Logout
+                <IconLogout size={14} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

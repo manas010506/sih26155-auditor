@@ -30,11 +30,35 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-/* Horizontal bar row — hand-built, not Recharts, for the category breakdown.
-   Much cleaner than a Pie at this size. */
+/* Custom shape for Recharts Bar to include LED dot and styled bar */
+const CustomBarShape = (props) => {
+  const { fill, x, y, width, height, value } = props;
+  if (height === 0 || isNaN(height)) return null;
+
+  return (
+    <g>
+      {/* Reduced opacity fill */}
+      <rect x={x} y={y} width={width} height={height} fill={fill} opacity={0.15} />
+      {/* Solid border */}
+      <rect x={x} y={y} width={width} height={height} fill="none" stroke={fill} strokeWidth={1} />
+      
+      {/* LED Dot above the bar (only if there's a value) */}
+      {value > 0 && (
+        <g transform={`translate(${x + width / 2}, ${y - 12})`}>
+          {/* Glow */}
+          <circle cx="0" cy="0" r="5" fill={fill} opacity="0.25" />
+          {/* Solid dot */}
+          <circle cx="0" cy="0" r="3" fill={fill} />
+        </g>
+      )}
+    </g>
+  );
+};
+
+/* Horizontal bar row — hand-built, not Recharts, for the category breakdown. */
 const CategoryRow = ({ name, value, max, index }) => {
-  const CATEGORY_COLORS = ['var(--trace)', 'var(--severity-low)', 'var(--ink-dim)', 'var(--wire)'];
-  const color = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+  const [isHovered, setIsHovered] = React.useState(false);
+  const color = isHovered ? 'var(--trace)' : 'var(--wire)';
   const pct = max > 0 ? (value / max) * 100 : 0;
 
   return (
@@ -42,10 +66,13 @@ const CategoryRow = ({ name, value, max, index }) => {
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.4, delay: index * 0.07, ease: [0.16, 1, 0.3, 1] }}
-      style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      title={name} // Native tooltip for full text
+      style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', cursor: 'default' }}
     >
       {/* Category name */}
-      <div className="mono" style={{ fontSize: '11px', color: 'var(--ink-dim)', width: '120px', flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <div className="mono" style={{ fontSize: '11px', color: isHovered ? 'var(--trace)' : 'var(--ink-dim)', width: '120px', flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', transition: 'color 0.2s' }}>
         {name}
       </div>
       {/* Bar track */}
@@ -60,6 +87,7 @@ const CategoryRow = ({ name, value, max, index }) => {
             top: 0,
             height: '100%',
             backgroundColor: color,
+            transition: 'background-color 0.2s',
           }}
         />
       </div>
@@ -77,9 +105,8 @@ const Panel = ({ title, children }) => (
     initial={{ opacity: 0, y: 12 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+    className="bezel-panel corner-marks"
     style={{
-      backgroundColor: 'var(--panel)',
-      border: '1px solid var(--wire)',
       padding: '20px',
       flex: 1,
       minWidth: 0,
@@ -100,8 +127,12 @@ const SeverityDashboard = ({ findings }) => {
     findings.forEach(f => {
       const sev = f.severity?.toLowerCase();
       if (sev in sevMap) sevMap[sev]++;
-      if (!catMap[f.category]) catMap[f.category] = 0;
-      catMap[f.category]++;
+
+      // Group by resource type (e.g. "vty-0-4")
+      const cat = f.resource_id || 'Uncategorized';
+      
+      if (!catMap[cat]) catMap[cat] = 0;
+      catMap[cat]++;
     });
 
     const severityData = [
@@ -122,45 +153,59 @@ const SeverityDashboard = ({ findings }) => {
   if (!findings?.length) return null;
 
   return (
-    <div style={{
+    <div className="bg-grid" style={{
       display: 'flex',
       gap: '12px',
       padding: '16px 24px',
       borderBottom: '1px solid var(--wire)',
-      backgroundColor: 'var(--substrate)',
       flexWrap: 'wrap',
     }}>
       {/* Findings by Severity — Recharts bar chart, custom styled */}
       <Panel title="Findings by Severity">
-        <div style={{ height: '140px' }}>
+        <div style={{ height: '140px', marginTop: '12px' }}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={severityData} margin={{ top: 0, right: 0, left: -28, bottom: 0 }} barCategoryGap="30%">
+            <BarChart 
+              data={[{ name: 'Severity', ...severityData.reduce((acc, curr) => ({...acc, [curr.name]: curr.value}), {}) }]} 
+              margin={{ top: 16, right: 0, left: -28, bottom: 0 }} 
+              barCategoryGap="30%"
+            >
               <XAxis
                 dataKey="name"
                 tick={{ fill: 'var(--ink-dim)', fontSize: 10, fontFamily: 'IBM Plex Mono', letterSpacing: '0.04em' }}
-                axisLine={false}
+                axisLine={{ stroke: 'var(--wire)' }}
                 tickLine={false}
+                dy={6}
+                hide={true} /* We can hide it since there is only one category, or show custom tick */
               />
               <YAxis
                 tick={{ fill: 'var(--ink-dim)', fontSize: 10, fontFamily: 'IBM Plex Mono' }}
                 axisLine={false}
                 tickLine={false}
                 allowDecimals={false}
+                domain={[0, 'dataMax']}
+                tickCount={4}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(74,85,99,0.15)' }} />
-              <Bar dataKey="value" radius={[1, 1, 0, 0]}>
-                {severityData.map((entry, i) => (
-                  <Cell key={i} fill={entry.fill} />
-                ))}
-              </Bar>
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--panel-raised)', opacity: 0.4 }} />
+              
+              {severityData.map((entry, index) => (
+                <Bar 
+                  key={entry.name}
+                  dataKey={entry.name} 
+                  shape={<CustomBarShape fill={entry.fill} />}
+                  isAnimationActive={true}
+                  animationBegin={index * 150}
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         </div>
       </Panel>
 
-      {/* Findings by Category — hand-built horizontal bars */}
-      <Panel title="Findings by Category">
-        <div>
+      {/* Findings by Resource — hand-built horizontal bars */}
+      <Panel title="Findings by Resource">
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           {categoryData.map(([name, value], i) => (
             <CategoryRow key={name} name={name} value={value} max={maxCategory} index={i} />
           ))}

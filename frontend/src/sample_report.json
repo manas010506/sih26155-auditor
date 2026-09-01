@@ -1,67 +1,390 @@
 {
+  "source": {
+    "type": "cisco_ios",
+    "filename": "sample_cisco_ios.cfg"
+  },
   "device": {
-    "name": "core-switch-nyc",
-    "serial_number": "FTX12345678",
-    "hardware_model": "Cisco Catalyst 9300",
-    "source_type": "cisco_ios",
-    "filename": "nyc_core.cfg"
+    "hostname": "EDGE-RTR-01",
+    "vendor": "cisco",
+    "os": "IOS",
+    "version": "15.2",
+    "role": "router"
+  },
+  "compliance_score": 15,
+  "score_breakdown": {
+    "formula": "100 * (1 - failed_weight / total_weight)",
+    "severity_weights": {
+      "critical": 20,
+      "high": 10,
+      "medium": 5,
+      "low": 2
+    },
+    "rules_evaluated": 32,
+    "rules_passed": 5,
+    "rules_failed": 27,
+    "failed_weight": 218,
+    "total_weight": 257
   },
   "findings": [
     {
-      "rule_id": "CIS-1.4.2",
+      "rule_id": "CIS-NET-001",
+      "title": "VTY lines permit Telnet",
       "severity": "critical",
-      "description": "Password encryption is not enabled. All passwords are in plaintext.",
-      "pass_fail": "fail",
-      "category": "Authentication",
+      "resource_id": "vty-0-4",
       "raw_ref": {
-        "line": 42,
-        "snippet": "enable password cisco\nline vty 0 4\npassword cisco"
+        "line": 71,
+        "snippet": "transport input telnet ssh"
       },
-      "remediation_template": "service password-encryption\nusername admin secret new_strong_password",
-      "score_breakdown": {
-        "formula": "Base(10) * Exploitability(1.0)",
-        "inputs": {
-          "base_severity": 10,
-          "exploit_factor": 1.0,
-          "impact": "High"
-        }
-      }
+      "cis_control": "CIS Cisco IOS 1.1.5 - Set transport input ssh on VTY lines",
+      "remediation_template": "line vty 0 4\n transport input ssh",
+      "explanation": "Telnet carries usernames and passwords in cleartext. Any device on the path between an administrator and this router can read the enable password and take control. Restrict VTY transport to SSH only."
     },
     {
-      "rule_id": "CIS-2.1.1",
-      "severity": "high",
-      "description": "SSH v1 is enabled. This protocol has known vulnerabilities.",
-      "pass_fail": "fail",
-      "category": "Management",
+      "rule_id": "CIS-NET-006",
+      "title": "Enable password stored unencrypted",
+      "severity": "critical",
+      "resource_id": "enable-password",
       "raw_ref": {
-        "line": 15,
-        "snippet": "ip ssh version 1"
+        "line": 14,
+        "snippet": "enable password cisco123"
       },
-      "remediation_template": "ip ssh version 2",
-      "score_breakdown": {
-        "formula": "Base(7) * Exploitability(1.2)",
-        "inputs": {
-          "base_severity": 7,
-          "exploit_factor": 1.2,
-          "impact": "High"
-        }
-      }
+      "cis_control": "CIS Cisco IOS 1.1.1 - Use enable secret instead of enable password",
+      "remediation_template": "no enable password\nenable secret <strong-password>",
+      "explanation": "The privileged-EXEC password is stored in the configuration in plaintext, so anyone who can read a config backup, a TFTP transfer or an SNMP dump holds full administrative control."
     },
     {
-      "rule_id": "CIS-5.1.3",
-      "severity": "medium",
-      "description": "No login banner configured. Legal warning is missing.",
-      "pass_fail": "fail",
-      "category": "Policy",
+      "rule_id": "CIS-NET-009",
+      "title": "SNMP read-write community uses a default string",
+      "severity": "critical",
+      "resource_id": "snmp-private",
+      "raw_ref": {
+        "line": 55,
+        "snippet": "snmp-server community private RW"
+      },
+      "cis_control": "CIS Cisco IOS 2.2.2 - Do not use default or read-write SNMP community strings",
+      "remediation_template": "no snmp-server community private RW",
+      "explanation": "A read-write community is a guessable credential that permits configuration changes over UDP with no logging and no session. This is remote device control, not monitoring."
+    },
+    {
+      "rule_id": "CIS-NET-027",
+      "title": "AAA login authentication not configured",
+      "severity": "critical",
+      "resource_id": "global",
       "raw_ref": null,
-      "remediation_template": "banner login ^C\nWARNING: UNAUTHORIZED ACCESS IS PROHIBITED.\n^C",
-      "score_breakdown": {
-        "formula": "Base(4) * Exploitability(1.0)",
-        "inputs": {
-          "base_severity": 4,
-          "exploit_factor": 1.0,
-          "impact": "Medium"
-        }
+      "cis_control": "\\\"CIS Cisco IOS 1.1.2 - Enable 'aaa authentication login'\\\"",
+      "remediation_template": "\\\"aaa authentication login default group tacacs+ local\\\"",
+      "explanation": "Without AAA login authentication, the device may fall back to insecure local passwords or no authentication at all."
+    },
+    {
+      "rule_id": "CIS-NET-028",
+      "title": "AAA enable authentication not configured",
+      "severity": "critical",
+      "resource_id": "global",
+      "raw_ref": null,
+      "cis_control": "\\\"CIS Cisco IOS 1.1.3 - Enable 'aaa authentication enable default'\\\"",
+      "remediation_template": "\\\"aaa authentication enable default group tacacs+ enable\\\"",
+      "explanation": "Privileged EXEC mode must be protected by AAA to ensure that only authorized administrators can enter enable mode."
+    },
+    {
+      "rule_id": "CIS-NET-002",
+      "title": "HTTP management server enabled",
+      "severity": "high",
+      "resource_id": "global",
+      "raw_ref": {
+        "line": 29,
+        "snippet": "ip http server"
+      },
+      "cis_control": "CIS Cisco IOS 1.2.1 - Disable the HTTP server",
+      "remediation_template": "no ip http server",
+      "explanation": "The unencrypted web management interface is running. Credentials submitted to it travel in cleartext, and the HTTP server has historically been a source of remote code execution vulnerabilities."
+    },
+    {
+      "rule_id": "CIS-NET-004",
+      "title": "VTY lines have no access-class restriction",
+      "severity": "high",
+      "resource_id": "vty-0-4",
+      "raw_ref": {
+        "line": 67,
+        "snippet": "line vty 0 4"
+      },
+      "cis_control": "CIS Cisco IOS 1.1.4 - Apply an access-class to VTY lines",
+      "remediation_template": "ip access-list standard MGMT-HOSTS\n permit 10.10.0.0 0.0.0.255\nline vty 0 4\n access-class MGMT-HOSTS in",
+      "explanation": "No ACL limits who may open a management session, so the management plane is reachable from every network that can route to this device, including the WAN interface."
+    },
+    {
+      "rule_id": "CIS-NET-007",
+      "title": "Privilege-15 local user with unencrypted password",
+      "severity": "high",
+      "resource_id": "user-admin",
+      "raw_ref": {
+        "line": 24,
+        "snippet": "username admin privilege 15 password 0 admin123"
+      },
+      "cis_control": "CIS Cisco IOS 1.1.2 - Store local user passwords using irreversible encryption",
+      "remediation_template": "no username admin\nusername admin privilege 15 secret <strong-password>",
+      "explanation": "This account has full administrative rights and its password is stored as type 0, meaning plaintext. Use the secret keyword so the password is hashed."
+    },
+    {
+      "rule_id": "CIS-NET-008",
+      "title": "Default SNMP read-only community string",
+      "severity": "high",
+      "resource_id": "snmp-public",
+      "raw_ref": {
+        "line": 54,
+        "snippet": "snmp-server community public RO"
+      },
+      "cis_control": "CIS Cisco IOS 2.2.1 - Do not use default SNMP community strings",
+      "remediation_template": "no snmp-server community public RO",
+      "explanation": "The community string 'public' is the first value any scanner tries. It exposes the full running configuration, interface list, routing table and ARP cache to anyone who can reach UDP/161."
+    },
+    {
+      "rule_id": "CIS-NET-011",
+      "title": "No syslog server configured",
+      "severity": "high",
+      "resource_id": "logging",
+      "raw_ref": null,
+      "cis_control": "CIS Cisco IOS 3.1.1 - Configure a remote syslog host",
+      "remediation_template": "logging host 10.10.0.200\nlogging trap informational",
+      "explanation": "Nothing is sent off-box, so administrative logins and configuration changes exist only in a buffer that is cleared on reboot and editable by anyone with privileged access."
+    },
+    {
+      "rule_id": "CIS-NET-022",
+      "title": "SNMP v1/v2c community strings in use",
+      "severity": "high",
+      "resource_id": "snmp-public",
+      "raw_ref": {
+        "line": 54,
+        "snippet": "snmp-server community public RO"
+      },
+      "cis_control": "\\\"CIS Cisco IOS 2.2.0 - Use SNMPv3\\\"",
+      "remediation_template": "\\\"Configure snmp-server group with v3 auth and priv\\\"",
+      "explanation": "SNMP v1 and v2c transmit community strings in plaintext. An attacker capturing traffic can gain full read or write access to the device configuration."
+    },
+    {
+      "rule_id": "CIS-NET-034",
+      "title": "Local users have excessive privileges",
+      "severity": "high",
+      "resource_id": "user-admin",
+      "raw_ref": {
+        "line": 24,
+        "snippet": "username admin privilege 15 password 0 admin123"
+      },
+      "cis_control": "\\\"CIS Cisco IOS 1.2.1 - Set 'privilege 1' for local users\\\"",
+      "remediation_template": "\\\"username <user> privilege 1\\\"",
+      "explanation": "Local accounts should be restricted to privilege 1. Administrative access should be gained via the 'enable' command to ensure a second layer of auth."
+    },
+    {
+      "rule_id": "CIS-NET-003",
+      "title": "VTY session timeout disabled",
+      "severity": "medium",
+      "resource_id": "vty-0-4",
+      "raw_ref": {
+        "line": 68,
+        "snippet": "exec-timeout 0 0"
+      },
+      "cis_control": "CIS Cisco IOS 1.1.6 - Set exec-timeout to 10 minutes or less",
+      "remediation_template": "line vty 0 4\n exec-timeout 10 0",
+      "explanation": "exec-timeout 0 0 disables the idle timer, so an abandoned session stays authenticated indefinitely and can be reused by anyone with access to that terminal."
+    },
+    {
+      "rule_id": "CIS-NET-005",
+      "title": "Password encryption service disabled",
+      "severity": "medium",
+      "resource_id": "global",
+      "raw_ref": {
+        "line": 7,
+        "snippet": "no service password-encryption"
+      },
+      "cis_control": "CIS Cisco IOS 1.1.3 - Enable service password-encryption",
+      "remediation_template": "service password-encryption",
+      "explanation": "Passwords that have no stronger option are written to the configuration in clear text. Type 7 encryption is reversible and is not a substitute for secret hashes, but it removes casual config-backup exposure."
+    },
+    {
+      "rule_id": "CIS-NET-013",
+      "title": "AAA not enabled",
+      "severity": "medium",
+      "resource_id": "global",
+      "raw_ref": {
+        "line": 16,
+        "snippet": "no aaa new-model"
+      },
+      "cis_control": "CIS Cisco IOS 1.3.1 - Enable AAA",
+      "remediation_template": "aaa new-model\naaa authentication login default group tacacs+ local\naaa accounting exec default start-stop group tacacs+",
+      "explanation": "Authentication falls back to shared local passwords, so administrator actions cannot be attributed to an individual and revoking one person's access means changing credentials for everyone."
+    },
+    {
+      "rule_id": "CIS-NET-016",
+      "title": "SSH version 2 not enforced",
+      "severity": "medium",
+      "resource_id": "ssh",
+      "raw_ref": null,
+      "cis_control": "CIS Cisco IOS 1.2.3 - Set ip ssh version 2",
+      "remediation_template": "ip ssh version 2\nip ssh time-out 60\nip ssh authentication-retries 3",
+      "explanation": "With no explicit version the device may negotiate SSHv1, which has known integrity weaknesses and is downgradeable by an on-path attacker."
+    },
+    {
+      "rule_id": "CIS-NET-024",
+      "title": "IP source routing enabled",
+      "severity": "medium",
+      "resource_id": "global",
+      "raw_ref": null,
+      "cis_control": "\\\"CIS Cisco IOS 1.6.1 - Disable IP source routing\\\"",
+      "remediation_template": "\\\"no ip source-route\\\"",
+      "explanation": "Source routing allows a sender to specify the path a packet takes. This can be used by attackers to bypass security controls or map internal network topology."
+    },
+    {
+      "rule_id": "CIS-NET-029",
+      "title": "AAA command accounting disabled",
+      "severity": "medium",
+      "resource_id": "global",
+      "raw_ref": null,
+      "cis_control": "\\\"CIS Cisco IOS 1.1.6 - Set 'aaa accounting' to log all privileged use commands\\\"",
+      "remediation_template": "\\\"aaa accounting commands 15 default start-stop group tacacs+\\\"",
+      "explanation": "Accounting for privilege 15 commands is essential for forensic audits to see exactly what changes were made by which administrator."
+    },
+    {
+      "rule_id": "CIS-NET-012",
+      "title": "NTP configured without authentication",
+      "severity": "low",
+      "resource_id": "ntp",
+      "raw_ref": {
+        "line": 79,
+        "snippet": "ntp server 10.10.0.250"
+      },
+      "cis_control": "CIS Cisco IOS 3.2.1 - Use authenticated NTP",
+      "remediation_template": "ntp authenticate\nntp authentication-key 1 md5 <key>\nntp trusted-key 1\nntp server 10.10.0.250 key 1",
+      "explanation": "Time is accepted from an unauthenticated source. An attacker who can spoof NTP can shift the clock and desynchronise every timestamp used to correlate logs during an investigation."
+    },
+    {
+      "rule_id": "CIS-NET-014",
+      "title": "No login banner configured",
+      "severity": "low",
+      "resource_id": "global",
+      "raw_ref": null,
+      "cis_control": "CIS Cisco IOS 1.4.1 - Configure a login banner",
+      "remediation_template": "banner login ^C\nAuthorised access only. Activity is monitored.\n^C",
+      "explanation": "No warning banner is presented before authentication. Beyond the hardening benchmark, this weakens the legal position when pursuing unauthorised access."
+    },
+    {
+      "rule_id": "CIS-NET-015",
+      "title": "CDP enabled globally",
+      "severity": "low",
+      "resource_id": "global",
+      "raw_ref": {
+        "line": 27,
+        "snippet": "cdp run"
+      },
+      "cis_control": "CIS Cisco IOS 2.1.1 - Disable CDP where not required",
+      "remediation_template": "no cdp run",
+      "explanation": "CDP advertises the model, IOS version, management address and native VLAN to any directly connected device, handing an attacker on the local segment a free inventory."
+    },
+    {
+      "rule_id": "CIS-NET-023",
+      "title": "SSH session timeout too high",
+      "severity": "low",
+      "resource_id": "ssh",
+      "raw_ref": null,
+      "cis_control": "\\\"CIS Cisco IOS 1.2.4 - Set SSH timeout to 60 seconds or less\\\"",
+      "remediation_template": "\\\"ip ssh time-out 60\\\"",
+      "explanation": "Excessively long timeouts leave authenticated sessions open longer than necessary, increasing the risk of session hijacking if a terminal is left unattended."
+    },
+    {
+      "rule_id": "CIS-NET-025",
+      "title": "No MOTD banner configured",
+      "severity": "low",
+      "resource_id": "global",
+      "raw_ref": null,
+      "cis_control": "\\\"CIS Cisco IOS 1.4.2 - Configure a Message of the Day (MOTD) banner\\\"",
+      "remediation_template": "\\\"banner motd ^C Authorized Access Only ^C\\\"",
+      "explanation": "A MOTD banner provides a legal warning to unauthorized users. Without it, it is harder to prosecute unauthorized access in many legal jurisdictions."
+    },
+    {
+      "rule_id": "CIS-NET-030",
+      "title": "AAA connection accounting disabled",
+      "severity": "low",
+      "resource_id": "global",
+      "raw_ref": null,
+      "cis_control": "\\\"CIS Cisco IOS 1.1.7 - Set 'aaa accounting connection'\\\"",
+      "remediation_template": "\\\"aaa accounting connection default start-stop group tacacs+\\\"",
+      "explanation": "Connection accounting tracks the start and end of sessions, helping to identify session hijacking or unusual login patterns."
+    },
+    {
+      "rule_id": "CIS-NET-031",
+      "title": "AAA exec accounting disabled",
+      "severity": "low",
+      "resource_id": "global",
+      "raw_ref": null,
+      "cis_control": "\\\"CIS Cisco IOS 1.1.8 - Set 'aaa accounting exec'\\\"",
+      "remediation_template": "\\\"aaa accounting exec default start-stop group tacacs+\\\"",
+      "explanation": "Exec accounting logs the start and end of the shell session itself."
+    },
+    {
+      "rule_id": "CIS-NET-032",
+      "title": "AAA network accounting disabled",
+      "severity": "low",
+      "resource_id": "global",
+      "raw_ref": null,
+      "cis_control": "\\\"CIS Cisco IOS 1.1.9 - Set 'aaa accounting network'\\\"",
+      "remediation_template": "\\\"aaa accounting network default start-stop group tacacs+\\\"",
+      "explanation": "Network accounting tracks network-related service requests."
+    },
+    {
+      "rule_id": "CIS-NET-033",
+      "title": "AAA system accounting disabled",
+      "severity": "low",
+      "resource_id": "global",
+      "raw_ref": null,
+      "cis_control": "\\\"CIS Cisco IOS 1.1.10 - Set 'aaa accounting system'\\\"",
+      "remediation_template": "\\\"aaa accounting system default start-stop group tacacs+\\\"",
+      "explanation": "System accounting logs events not associated with users, such as system reloads."
+    }
+  ],
+  "attack_paths": [
+    {
+      "chain_id": "CHAIN-NET-MGMT-TAKEOVER",
+      "name": "Cleartext management plane to privileged takeover",
+      "severity": "critical",
+      "contributing_findings": [
+        "CIS-NET-004",
+        "CIS-NET-001",
+        "CIS-NET-006",
+        "CIS-NET-011"
+      ],
+      "narrative": "The management plane is reachable from any routable network because no access-class is applied, and it accepts Telnet. An attacker on the path captures credentials in cleartext, and the enable password stored in the configuration grants privileged EXEC. With no syslog host, the entire sequence leaves no off-box record.",
+      "break_chain": {
+        "fix_rule": "CIS-NET-004",
+        "why": "Applying an access-class removes reachability for every management protocol at once, so the Telnet and credential weaknesses become unreachable while they are being fixed."
+      }
+    },
+    {
+      "chain_id": "CHAIN-NET-SNMP-CONTROL",
+      "name": "SNMP reconnaissance to device control",
+      "severity": "critical",
+      "contributing_findings": [
+        "CIS-NET-008",
+        "CIS-NET-009",
+        "CIS-NET-011"
+      ],
+      "narrative": "The default read-only community exposes the full running configuration, which reveals the read-write community. That second string permits configuration writes over UDP with no session and no authentication beyond the string itself. Neither step is logged remotely.",
+      "break_chain": {
+        "fix_rule": "CIS-NET-009",
+        "why": "Removing the read-write community reduces the worst case from device control to information disclosure, which is the difference between an incident and an outage."
+      }
+    },
+    {
+      "chain_id": "CHAIN-NET-CRED-EXPOSURE",
+      "name": "Configuration read to credential reuse",
+      "severity": "high",
+      "contributing_findings": [
+        "CIS-NET-005",
+        "CIS-NET-006",
+        "CIS-NET-007",
+        "CIS-NET-003"
+      ],
+      "narrative": "Every credential on this device is recoverable from the configuration text: password encryption is off, the enable password is plaintext, and both privilege-15 accounts use type 0 passwords. Anyone who obtains a config backup obtains administrative access, and disabled session timeouts widen the window for reuse.",
+      "break_chain": {
+        "fix_rule": "CIS-NET-006",
+        "why": "Moving to enable secret replaces a readable password with an irreversible hash, so reading the configuration no longer yields privileged access."
       }
     }
   ]
