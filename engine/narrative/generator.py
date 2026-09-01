@@ -73,9 +73,31 @@ def generate_narrative(item: dict, kind: str) -> str:
 
 
 def _call_llm(clean: dict, kind: str) -> str:
-    """TODO Sun 30 Aug.
-    pip install google-genai, key from AI Studio, keep it in .env.
-    CHECK THE CURRENT QUICKSTART - the SDK changed recently and older
-    snippets will not run. Ask for 3-4 sentences, no markdown, no preamble.
-    """
-    raise NotImplementedError("wire Gemini here on Sun 30 Aug")
+    """Generate a plain-English narrative for an attack path using Gemini."""
+    if kind != "attack_path":
+        raise ValueError("Gemini narratives are only enabled for attack paths")
+
+    from google import genai
+
+    client = genai.Client()
+
+    prompt = (
+        "Write a plain-English explanation of this network security attack path. "
+        "Explain how the listed findings chain together and why the break-chain "
+        "fix disrupts the chain. Write exactly 3 to 4 sentences. "
+        "Use plain English. No markdown, no bullets, no headings, and no preamble. "
+        "Return only the explanation.\n\n"
+        f"Attack path:\n{json.dumps(clean, indent=2)}"
+    )
+
+    response = client.models.generate_content(
+        model="gemini-3.6-flash",
+        contents=prompt,
+    )
+
+    text = response.text.strip()
+
+    if not text:
+        raise ValueError("Gemini returned an empty response")
+
+    return text

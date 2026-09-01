@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import { Lock, Unlock } from "lucide-react";
 
 import {
@@ -17,14 +18,14 @@ const nodeTypes = {
   attack: AttackNode,
 };
 
-function AttackGraph({ report }) {
-  const [selectedPathIndex, setSelectedPathIndex] = useState(0);
+function AttackGraph({ report: reportProp }) {
+  const outletContext = useOutletContext();
+  const report = reportProp ?? outletContext?.reportData;
 
-  // Graph is completely locked by default.
+  const [selectedPathIndex, setSelectedPathIndex] = useState(0);
   const [isLocked, setIsLocked] = useState(true);
 
   const paths = report?.attack_paths ?? [];
-
   const selectedPath = paths[selectedPathIndex] ?? null;
 
   const graph = useMemo(() => {
@@ -42,10 +43,6 @@ function AttackGraph({ report }) {
       ])
     );
 
-    /*
-     * Create one node for every finding
-     * contributing to the selected attack path.
-     */
     const nodes = selectedPath.contributing_findings.map(
       (ruleId, index) => {
         const finding = findingsById[ruleId];
@@ -53,47 +50,36 @@ function AttackGraph({ report }) {
         return {
           id: ruleId,
           type: "attack",
-
           position: {
             x: index * 270,
             y: 180,
           },
-
           data: {
             ruleId,
-
             title: finding?.title ?? ruleId,
-
             severity:
               finding?.severity ??
               selectedPath.severity,
-
             isBreakPoint:
               ruleId ===
-              selectedPath.break_chain.fix_rule,
-
+              selectedPath.break_chain?.fix_rule,
             isImpact: false,
           },
         };
       }
     );
 
-    /*
-     * Terminal impact node.
-     */
     const impactId = `impact-${selectedPath.chain_id}`;
 
     nodes.push({
       id: impactId,
       type: "attack",
-
       position: {
         x:
           selectedPath.contributing_findings.length *
           270,
         y: 180,
       },
-
       data: {
         ruleId: "IMPACT",
         title: "Privileged Takeover",
@@ -103,9 +89,6 @@ function AttackGraph({ report }) {
       },
     });
 
-    /*
-     * Connect each finding to the next finding.
-     */
     const edges = [];
 
     for (
@@ -116,23 +99,16 @@ function AttackGraph({ report }) {
     ) {
       edges.push({
         id: `${selectedPath.chain_id}-edge-${i}`,
-
         source:
           selectedPath.contributing_findings[i],
-
         target:
           selectedPath.contributing_findings[i + 1],
-
         markerEnd: {
           type: MarkerType.ArrowClosed,
         },
       });
     }
 
-    /*
-     * Connect the final finding to the
-     * terminal impact node.
-     */
     const lastFinding =
       selectedPath.contributing_findings[
         selectedPath.contributing_findings.length - 1
@@ -141,13 +117,9 @@ function AttackGraph({ report }) {
     if (lastFinding) {
       edges.push({
         id: `${selectedPath.chain_id}-impact-edge`,
-
         source: lastFinding,
-
         target: impactId,
-
         label: "leads to impact",
-
         markerEnd: {
           type: MarkerType.ArrowClosed,
         },
@@ -160,9 +132,6 @@ function AttackGraph({ report }) {
     };
   }, [report, selectedPath]);
 
-  /*
-   * Report is still loading.
-   */
   if (!report) {
     return (
       <section className="attack-graph">
@@ -173,9 +142,6 @@ function AttackGraph({ report }) {
     );
   }
 
-  /*
-   * Report loaded but no attack paths exist.
-   */
   if (!paths.length) {
     return (
       <section className="attack-graph">
@@ -188,15 +154,8 @@ function AttackGraph({ report }) {
 
   return (
     <section className="attack-graph">
-
-      {/* =================================================
-          HEADER
-          ================================================= */}
-
       <div className="attack-graph-header">
-
         <div className="attack-graph-heading">
-
           <div className="eyebrow">
             ATTACK PATHS
           </div>
@@ -208,16 +167,9 @@ function AttackGraph({ report }) {
           <p>
             {selectedPath.narrative}
           </p>
-
         </div>
 
-
-        {/* =================================================
-            GRAPH ACTIONS
-            ================================================= */}
-
         <div className="attack-graph-actions">
-
           <button
             type="button"
             className={`graph-lock-button ${
@@ -239,7 +191,6 @@ function AttackGraph({ report }) {
                 : "Lock graph"
             }
           >
-
             {isLocked ? (
               <Lock size={14} />
             ) : (
@@ -251,27 +202,16 @@ function AttackGraph({ report }) {
                 ? "LOCKED"
                 : "UNLOCKED"}
             </span>
-
           </button>
-
 
           <div className="path-severity">
             {selectedPath.severity}
           </div>
-
         </div>
-
       </div>
 
-
-      {/* =================================================
-          ATTACK PATH SELECTOR
-          ================================================= */}
-
       <div className="attack-path-selector">
-
         {paths.map((path, index) => (
-
           <button
             key={path.chain_id}
             type="button"
@@ -284,7 +224,6 @@ function AttackGraph({ report }) {
               setSelectedPathIndex(index)
             }
           >
-
             <span className="attack-path-number">
               {index + 1}
             </span>
@@ -296,17 +235,9 @@ function AttackGraph({ report }) {
             <span className="attack-path-severity">
               {path.severity}
             </span>
-
           </button>
-
         ))}
-
       </div>
-
-
-      {/* =================================================
-          GRAPH CANVAS
-          ================================================= */}
 
       <div
         className={`graph-canvas ${
@@ -315,107 +246,42 @@ function AttackGraph({ report }) {
             : "graph-is-unlocked"
         }`}
       >
-
         <ReactFlow
           key={selectedPath.chain_id}
-
           nodes={graph.nodes}
           edges={graph.edges}
-
           nodeTypes={nodeTypes}
-
           fitView
-
           fitViewOptions={{
             padding: 0.15,
             minZoom: 0.5,
             maxZoom: 1.2,
           }}
-
-          /*
-           * ===============================================
-           * NODE INTERACTION
-           * ===============================================
-           */
-
           nodesDraggable={!isLocked}
-
           nodesConnectable={!isLocked}
-
           elementsSelectable={!isLocked}
-
           nodesFocusable={!isLocked}
-
           edgesFocusable={!isLocked}
-
-
-          /*
-           * ===============================================
-           * CANVAS MOVEMENT
-           * ===============================================
-           *
-           * These are the important additions.
-           *
-           * When locked:
-           *
-           *   panOnDrag       = false
-           *   panOnScroll     = false
-           *   zoomOnScroll    = false
-           *   zoomOnPinch     = false
-           *   zoomOnDoubleClick = false
-           *
-           * Therefore the entire canvas is frozen.
-           */
-
           panOnDrag={!isLocked}
-
           panOnScroll={!isLocked}
-
           zoomOnScroll={!isLocked}
-
           zoomOnPinch={!isLocked}
-
           zoomOnDoubleClick={!isLocked}
-
-
-          /*
-           * Prevent automatic movement while dragging.
-           */
           autoPanOnNodeDrag={!isLocked}
-
-          /*
-           * Don't allow selection rectangle
-           * when the graph is locked.
-           */
           selectionOnDrag={!isLocked}
-
-          /*
-           * Disable keyboard deletion when locked.
-           */
           deleteKeyCode={
             isLocked
               ? null
               : "Delete"
           }
         >
-
           <Background />
 
-          {/*
-           * Controls are deliberately hidden while
-           * the graph is locked.
-           *
-           * This prevents the + / - buttons from
-           * changing the zoom while locked.
-           */}
           {!isLocked && (
             <Controls showInteractive={false} />
           )}
-
         </ReactFlow>
-
       </div>
-
     </section>
   );
 }

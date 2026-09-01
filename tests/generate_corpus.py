@@ -79,7 +79,7 @@ MUTATIONS = {
     "CIS-NET-005": sub("service password-encryption", "no service password-encryption"),
     "CIS-NET-006": sub("enable secret 9 $9$PLACEHOLDERHASHvalue0",
                        "enable password cisco123"),
-    "CIS-NET-007": sub("username admin privilege 15 secret 9 $9$PLACEHOLDERHASHvalue1",
+    "CIS-NET-007": sub("username admin privilege 1 secret 9 $9$PLACEHOLDERHASHvalue1",
                        "username admin privilege 15 password 0 admin123"),
     "CIS-NET-008": add_after("snmp-server group SECURE v3 priv",
                              "snmp-server community public RO"),

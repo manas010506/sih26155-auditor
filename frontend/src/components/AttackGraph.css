@@ -10,7 +10,6 @@
   background: var(--substrate);
 }
 
-
 /* =========================================================
    HEADER
    ========================================================= */
@@ -70,7 +69,6 @@
   line-height: 1.6;
 }
 
-
 /* =========================================================
    HEADER ACTIONS
    ========================================================= */
@@ -82,7 +80,6 @@
 
   flex-shrink: 0;
 }
-
 
 /* =========================================================
    LOCK BUTTON
@@ -126,17 +123,13 @@
 
 .graph-lock-button.locked {
   border-color: var(--trace);
-
   background: var(--accent-dim);
-
   color: var(--trace);
 }
 
 .graph-lock-button.unlocked {
   border-color: var(--wire);
-
   background: var(--panel-raised);
-
   color: var(--ink);
 }
 
@@ -148,7 +141,6 @@
 .graph-lock-button svg {
   flex-shrink: 0;
 }
-
 
 /* =========================================================
    PATH SEVERITY
@@ -173,20 +165,17 @@
   text-transform: uppercase;
 }
 
-
 /* =========================================================
    ATTACK PATH SELECTOR
    ========================================================= */
 
 .attack-path-selector {
   display: flex;
-
   width: 100%;
 
   overflow-x: auto;
 
   background: var(--panel);
-
   border-bottom: 1px solid var(--wire);
 
   scrollbar-width: thin;
@@ -204,7 +193,6 @@
   background: var(--wire);
 }
 
-
 /* Individual path tab */
 
 .attack-path-tab {
@@ -214,24 +202,20 @@
   align-items: center;
 
   min-width: 300px;
-
   min-height: 58px;
 
   padding: 10px 16px;
-
   gap: 10px;
 
   border: 0;
   border-right: 1px solid var(--wire);
 
   background: transparent;
-
   color: var(--ink-dim);
 
   font-family: var(--font-ui);
 
   cursor: pointer;
-
   text-align: left;
 
   transition:
@@ -249,9 +233,6 @@
   color: var(--ink);
 }
 
-
-/* Active bottom trace */
-
 .attack-path-tab.active::after {
   content: "";
 
@@ -265,7 +246,6 @@
 
   background: var(--trace);
 }
-
 
 /* Number */
 
@@ -293,7 +273,6 @@
   color: var(--trace);
 }
 
-
 /* Path name */
 
 .attack-path-name {
@@ -311,7 +290,6 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
 
 /* Path severity */
 
@@ -334,7 +312,6 @@
   color: var(--sev-high);
 }
 
-
 /* =========================================================
    GRAPH CANVAS
    ========================================================= */
@@ -343,7 +320,6 @@
   position: relative;
 
   width: calc(100% - 48px);
-
   height: 520px;
 
   margin: 24px;
@@ -355,22 +331,17 @@
   background: var(--substrate);
 }
 
-
-/* React Flow itself */
-
 .graph-canvas .react-flow {
   background: var(--substrate);
 }
-
-
-/* React Flow background */
 
 .graph-canvas .react-flow__background {
   background: var(--substrate);
 }
 
-
-/* React Flow controls */
+/* =========================================================
+   REACT FLOW CONTROLS
+   ========================================================= */
 
 .graph-canvas .react-flow__controls {
   left: 14px;
@@ -390,7 +361,6 @@
   background: var(--panel);
 
   color: var(--ink);
-
   fill: var(--ink);
 }
 
@@ -407,14 +377,12 @@
   max-height: 14px;
 }
 
-
 /* =========================================================
    REACT FLOW EDGES
    ========================================================= */
 
 .graph-canvas .react-flow__edge-path {
   stroke: var(--trace);
-
   stroke-width: 1.5;
 }
 
@@ -428,7 +396,6 @@
 .graph-canvas .react-flow__edge-textbg {
   fill: var(--substrate);
 }
-
 
 /* =========================================================
    LOADING / ERROR
@@ -459,7 +426,6 @@
   color: var(--sev-critical);
 }
 
-
 /* =========================================================
    ATTACK NODES
    ========================================================= */
@@ -487,14 +453,10 @@
     box-shadow 0.15s ease;
 }
 
-
-/* Hover */
-
 .attack-node:hover {
   background: var(--panel-raised);
   border-color: var(--trace);
 }
-
 
 /* Break-chain node */
 
@@ -506,19 +468,16 @@
   border-color: var(--trace);
 }
 
-
 /* Impact node */
 
 .attack-node.impact-node {
   border-color: var(--sev-critical);
-
   border-left-width: 2px;
 }
 
 .attack-node.impact-node:hover {
   border-color: var(--sev-critical);
 }
-
 
 /* =========================================================
    NODE CONTENT
@@ -527,6 +486,8 @@
 .attack-node-severity {
   margin-bottom: 5px;
 
+  color: var(--ink-dim);
+
   font-family: var(--font-mono);
   font-size: 8px;
   font-weight: 700;
@@ -534,8 +495,6 @@
   letter-spacing: 0.1em;
 
   text-transform: uppercase;
-
-  color: var(--ink-dim);
 }
 
 .attack-node-rule {
@@ -559,7 +518,6 @@
 
   line-height: 1.35;
 }
-
 
 /* =========================================================
    BREAK CHAIN LABEL
@@ -585,7 +543,6 @@
   text-transform: uppercase;
 }
 
-
 /* =========================================================
    REACT FLOW HANDLES
    ========================================================= */
@@ -599,22 +556,18 @@
   border: 1px solid var(--trace);
 }
 
-
 /* =========================================================
    RESPONSIVE
    ========================================================= */
 
 @media (max-width: 900px) {
-
   .attack-graph-header {
     flex-direction: column;
-
     padding: 18px 16px;
   }
 
   .attack-graph-actions {
     width: 100%;
-
     justify-content: space-between;
   }
 
@@ -628,16 +581,12 @@
 
   .graph-canvas {
     width: calc(100% - 24px);
-
     height: 480px;
-
     margin: 12px;
   }
 }
 
-
 @media (max-width: 600px) {
-
   .attack-graph-header {
     gap: 16px;
   }
@@ -652,14 +601,12 @@
 
   .path-severity {
     display: flex;
-
     align-items: center;
     justify-content: center;
   }
 
   .attack-path-tab {
     min-width: 250px;
-
     padding: 10px 12px;
   }
 

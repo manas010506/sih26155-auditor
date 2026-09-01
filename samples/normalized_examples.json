@@ -20,7 +20,15 @@
           "enable_password_present": true,
           "enable_password_type": 0,
           "login_banner": null,
-          "motd_banner": null
+          "motd_banner": null,
+          "source_routing": true,
+          "aaa_auth_login": null,
+          "aaa_auth_enable": null,
+          "aaa_accounting_commands": null,
+          "aaa_accounting_connection": null,
+          "aaa_accounting_exec": null,
+          "aaa_accounting_network": null,
+          "aaa_accounting_system": null
         },
         "attribute_refs": {
           "hostname": {
@@ -177,13 +185,13 @@
           "privilege_level": null
         },
         "attribute_refs": {
-          "transport_input": {
-            "line": 71,
-            "snippet": "transport input telnet ssh"
-          },
           "exec_timeout_minutes": {
             "line": 68,
             "snippet": "exec-timeout 0 0"
+          },
+          "transport_input": {
+            "line": 71,
+            "snippet": "transport input telnet ssh"
           }
         },
         "raw_ref": {
@@ -206,13 +214,13 @@
           "privilege_level": null
         },
         "attribute_refs": {
-          "transport_input": {
-            "line": 77,
-            "snippet": "transport input telnet ssh"
-          },
           "exec_timeout_minutes": {
             "line": 74,
             "snippet": "exec-timeout 0 0"
+          },
+          "transport_input": {
+            "line": 77,
+            "snippet": "transport input telnet ssh"
           }
         },
         "raw_ref": {
@@ -331,13 +339,13 @@
           "access_logging": false
         },
         "attribute_refs": {
-          "name": {
-            "line": 27,
-            "snippet": "bucket = \"corp-app-logs-prod\""
-          },
           "sse_algorithm": {
             "line": 35,
             "snippet": "sse_algorithm = \"AES256\""
+          },
+          "name": {
+            "line": 27,
+            "snippet": "bucket = \"corp-app-logs-prod\""
           }
         },
         "raw_ref": null

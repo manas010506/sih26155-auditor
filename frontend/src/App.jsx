@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -6,6 +7,7 @@ import {
   Navigate,
   Outlet,
 } from 'react-router-dom';
+
 import { Menu, X } from 'lucide-react';
 import { HelmetProvider } from 'react-helmet-async';
 
@@ -15,10 +17,17 @@ import Findings from './pages/Findings';
 import Landing from './pages/Landing';
 import Upload from './pages/Upload';
 import ReportView from './pages/ReportView';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import NotFound from './pages/NotFound';
+import SettingsModal from './components/SettingsModal';
+import CommandPalette from './components/CommandPalette';
+import { SettingsProvider } from './context/SettingsContext';
+import { Toaster } from 'sonner';
 import AttackGraph from './components/AttackGraph';
+import Training from './pages/Training';
 
 import sampleReport from './sample_report.json';
-
 
 // Title updater
 const RouteTitle = ({ title }) => {
@@ -28,25 +37,6 @@ const RouteTitle = ({ title }) => {
 
   return null;
 };
-
-
-// 404 page
-const NotFound = () => (
-  <div className="flex items-center justify-center h-full w-full p-6">
-    <RouteTitle title="Not Found" />
-
-    <div className="bg-panel border-wire p-6 radius-md text-center max-w-md">
-      <h2 className="text-ink mb-2">
-        404 - Not Found
-      </h2>
-
-      <p className="text-ink-dim text-sm">
-        The route you are looking for does not exist in this console.
-      </p>
-    </div>
-  </div>
-);
-
 
 // Dashboard layout
 const DashboardLayout = ({
@@ -61,7 +51,6 @@ const DashboardLayout = ({
       className="flex w-full md-flex-col"
       style={{ minHeight: '100vh' }}
     >
-
       {/* Mobile Header */}
       <div
         className="md-show bg-panel border-b-wire flex items-center justify-between p-4"
@@ -95,7 +84,6 @@ const DashboardLayout = ({
         </button>
       </div>
 
-
       {/* Sidebar */}
       <div
         className={`flex-shrink-0 ${
@@ -112,12 +100,9 @@ const DashboardLayout = ({
           onClick={(e) => e.stopPropagation()}
           className="h-full"
         >
-          <Sidebar
-            score={score}
-          />
+          <Sidebar score={score} />
         </div>
       </div>
-
 
       {/* Main Content */}
       <div
@@ -126,10 +111,7 @@ const DashboardLayout = ({
           width: 'calc(100% - 240px)',
         }}
       >
-
-        <Header
-          device={reportData?.device}
-        />
+        <Header device={reportData?.device} />
 
         <main
           className="flex-1 overflow-auto bg-substrate relative"
@@ -141,24 +123,18 @@ const DashboardLayout = ({
             }}
           />
         </main>
-
       </div>
-
     </div>
   );
 };
 
-
 function App() {
-
   const [reportData, setReportData] = useState(
     sampleReport
   );
 
-
   // Calculate compliance score
   const calculateScore = () => {
-
     if (!reportData?.findings) {
       return null;
     }
@@ -172,27 +148,17 @@ function App() {
     let penalty = 0;
 
     findings.forEach((finding) => {
-
       if (finding.pass_fail === 'fail') {
-
         if (finding.severity === 'critical') {
           penalty += 20;
-        }
-
-        else if (finding.severity === 'high') {
+        } else if (finding.severity === 'high') {
           penalty += 10;
-        }
-
-        else if (finding.severity === 'medium') {
+        } else if (finding.severity === 'medium') {
           penalty += 5;
-        }
-
-        else if (finding.severity === 'low') {
+        } else if (finding.severity === 'low') {
           penalty += 2;
         }
-
       }
-
     });
 
     return Math.max(
@@ -201,99 +167,138 @@ function App() {
     );
   };
 
-
   const score = calculateScore();
-
 
   return (
     <HelmetProvider>
+      <SettingsProvider>
+        <Router>
+          <Toaster />
 
-      <Router>
+          <Routes>
+            {/* Landing */}
+            <Route
+              path="/"
+              element={<Landing />}
+            />
 
-        <Routes>
+            {/* Login */}
+            <Route
+              path="/login"
+              element={
+                <>
+                  <RouteTitle title="Login" />
+                  <Login />
+                </>
+              }
+            />
 
-          {/* Landing */}
-          <Route
-            path="/"
-            element={<Landing />}
-          />
+            {/* Signup */}
+            <Route
+              path="/signup"
+              element={
+                <>
+                  <RouteTitle title="Sign Up" />
+                  <Signup />
+                </>
+              }
+            />
 
-
-          {/* Dashboard */}
-          <Route
-            path="/audit"
-            element={
-              <DashboardLayout
-                reportData={reportData}
-                setReportData={setReportData}
-                score={score}
+            {/* Dashboard */}
+            <Route
+              path="/audit"
+              element={
+                <DashboardLayout
+                  reportData={reportData}
+                  setReportData={setReportData}
+                  score={score}
+                />
+              }
+            >
+              {/* Default */}
+              <Route
+                index
+                element={
+                  <Navigate
+                    to="/audit/upload"
+                    replace
+                  />
+                }
               />
-            }
-          >
 
-            {/* Default */}
+              {/* Upload */}
+              <Route
+                path="upload"
+                element={
+                  <>
+                    <RouteTitle title="Upload Config" />
+                    <Upload
+                      onAuditComplete={setReportData}
+                    />
+                  </>
+                }
+              />
+
+              {/* Findings */}
+              <Route
+                path="findings"
+                element={
+                  <>
+                    <RouteTitle title="Findings" />
+                    <Findings />
+                  </>
+                }
+              />
+
+              {/* Attack Graph */}
+              <Route
+                path="attack-paths"
+                element={
+                  <>
+                    <RouteTitle title="Attack Paths" />
+                    <AttackGraph
+                      report={reportData}
+                    />
+                  </>
+                }
+              />
+
+              {/* Compliance Report */}
+              <Route
+                path="report"
+                element={
+                  <>
+                    <RouteTitle title="Compliance Report" />
+                    <ReportView />
+                  </>
+                }
+              />
+
+              {/* Training */}
+              <Route
+                path="training"
+                element={
+                  <>
+                    <RouteTitle title="Training" />
+                    <Training />
+                  </>
+                }
+              />
+            </Route>
+
+            {/* 404 */}
             <Route
-              index
-              element={
-                <Navigate
-                  to="/audit/upload"
-                  replace
-                />
-              }
+              path="*"
+              element={<NotFound />}
             />
+          </Routes>
 
-
-            {/* Upload */}
-            <Route
-              path="upload"
-              element={
-                <Upload
-                  onAuditComplete={setReportData}
-                />
-              }
-            />
-
-
-            {/* Findings */}
-            <Route
-              path="findings"
-              element={<Findings />}
-            />
-
-
-            {/* Attack Graph */}
-            <Route
-              path="attack-paths"
-              element={
-                <AttackGraph
-                  report={reportData}
-                />
-              }
-            />
-
-
-            {/* Compliance Report */}
-            <Route
-              path="report"
-              element={<ReportView />}
-            />
-
-          </Route>
-
-
-          {/* 404 */}
-          <Route
-            path="*"
-            element={<NotFound />}
-          />
-
-        </Routes>
-
-      </Router>
-
+          <SettingsModal />
+          <CommandPalette />
+        </Router>
+      </SettingsProvider>
     </HelmetProvider>
   );
 }
-
 
 export default App;

@@ -13,13 +13,19 @@ The flow, end to end:
 No check logic lives in this file. Every condition comes from YAML, which is
 what makes the ruleset extensible without a code change.
 """
+import difflib
 import re
 
 import yaml
 
-from engine.schema.schema import RESOURCE_TYPES, resolve_ref
+from engine.schema.schema import RESOURCE_TYPES, known_attributes, resolve_ref
 
 SEVERITY_WEIGHT = {"critical": 20, "high": 10, "medium": 5, "low": 2}
+
+# Frameworks a rule may declare. A rule with no `framework` field is CIS, so
+# existing rules keep working unchanged.
+FRAMEWORKS = {"CIS", "NIST", "STIG", "ISO27001"}
+DEFAULT_FRAMEWORK = "CIS"
 
 REQUIRED_FIELDS = ("id", "title", "applies_to", "severity",
                    "cis_control", "check", "remediation", "explanation")
@@ -54,8 +60,11 @@ class RuleError(ValueError):
     """A rule file the engine refuses to load."""
 
 
-def load_rules(path: str) -> list[dict]:
+def load_rules(path: str, framework: str | None = None) -> list[dict]:
     """Read a rules YAML file and fail loudly on anything malformed.
+
+    `framework` filters to one benchmark (CIS, NIST, STIG, ISO27001). None
+    loads everything, which is the default and current behaviour.
 
     A rule the engine silently skips is worse than one that crashes: Deep would
     never know it wasn't running, and the metrics would quietly under-count.
@@ -94,12 +103,33 @@ def load_rules(path: str) -> list[dict]:
         check = rule["check"]
         if not isinstance(check, dict) or "attribute" not in check or "operator" not in check:
             raise RuleError(f"{path}: {where} check needs both attribute and operator")
+        # A rule against an attribute no parser emits reads None, fails every
+        # positive operator, and fires on EVERY input - including a hardened
+        # config. It looks like coverage and is the opposite.
+        attrs = known_attributes().get(rule["applies_to"])
+        if attrs and check["attribute"] not in attrs:
+            near = difflib.get_close_matches(check["attribute"], sorted(attrs), n=1, cutoff=0.5)
+            hint = f" Did you mean {near[0]!r}?" if near else ""
+            raise RuleError(
+                f"{path}: {where} checks {check['attribute']!r} on "
+                f"{rule['applies_to']}, which no parser emits.{hint} "
+                f"Known attributes: {sorted(attrs)}")
+
         if check["operator"] not in OPS:
             raise RuleError(f"{path}: {where} uses unknown operator "
                             f"{check['operator']!r}; expected one of {sorted(OPS)}")
 
+        rule_framework = rule.get("framework", DEFAULT_FRAMEWORK)
+        if rule_framework not in FRAMEWORKS:
+            raise RuleError(f"{path}: {where} framework {rule_framework!r}; "
+                            f"expected one of {sorted(FRAMEWORKS)}")
+
         if rule.get("dedupe", "by_rule") not in ("by_rule", "per_resource"):
             raise RuleError(f"{path}: {where} dedupe must be by_rule or per_resource")
+
+    if framework:
+        rules = [r for r in rules
+                 if r.get("framework", DEFAULT_FRAMEWORK) == framework]
 
     return rules
 
@@ -185,13 +215,22 @@ def score(findings: list[dict], rules: list[dict]) -> dict:
     if total_weight == 0:
         raise RuleError("cannot score against an empty ruleset")
 
+    frameworks = sorted({r.get("framework", DEFAULT_FRAMEWORK) for r in rules})
+
     return {
         "compliance_score": round(100 * (1 - failed_weight / total_weight)),
         "score_breakdown": {
             "formula": "100 * (1 - failed_weight / total_weight)",
+            # Which benchmarks this ruleset covers. Inside score_breakdown so it
+            # reaches the report through the existing copy, with no changes to
+            # the builders or run_audit().
+            "frameworks": frameworks,
             "severity_weights": SEVERITY_WEIGHT,
             "rules_evaluated": len(rules),
             "rules_failed": len(findings),
+            # The problem statement asks for clear Pass/Fail results. The engine
+            # only emits failures, so the passing count has to be derived here.
+            "rules_passed": len(rules) - len(findings),
             "failed_weight": failed_weight,
             "total_weight": total_weight,
         },

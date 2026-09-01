@@ -23,3 +23,6 @@ Thumbs.db
 
 # NOTE: engine/narrative/cache.json IS committed on purpose.
 # It is what makes the demo work with the wifi off.
+
+.env
+.env.local

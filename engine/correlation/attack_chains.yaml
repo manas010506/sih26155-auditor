@@ -22,7 +22,7 @@
   name: Cleartext management plane to privileged takeover
   severity: critical
   requires: [CIS-NET-004, CIS-NET-001, CIS-NET-006, CIS-NET-011]
-  min_matches: 3
+  min_matches: 4
   break_chain:
     fix_rule: CIS-NET-004
     why: >-
@@ -40,7 +40,7 @@
   name: SNMP reconnaissance to device control
   severity: critical
   requires: [CIS-NET-008, CIS-NET-009, CIS-NET-011]
-  min_matches: 2
+  min_matches: 3
   break_chain:
     fix_rule: CIS-NET-009
     why: >-
@@ -57,7 +57,7 @@
   name: Configuration read to credential reuse
   severity: high
   requires: [CIS-NET-005, CIS-NET-006, CIS-NET-007, CIS-NET-003]
-  min_matches: 3
+  min_matches: 4
   break_chain:
     fix_rule: CIS-NET-006
     why: >-
@@ -69,3 +69,52 @@
     privilege-15 accounts use type 0 passwords. Anyone who obtains a config
     backup obtains administrative access, and disabled session timeouts widen
     the window for reuse.
+
+- chain_id: CHAIN-CLOUD-PRIVESC
+  name: Administrative port exposure to privilege escalation
+  severity: critical
+  requires: [CIS-CLOUD-001, CIS-CLOUD-003, CIS-CLOUD-009]
+  min_matches: 3
+  break_chain:
+    fix_rule: CIS-CLOUD-009
+    why: >-
+      Restricting wildcard permissions in IAM policies prevents an attacker
+      from using an exposed port to escalate to full administrative control.
+  narrative_template: >-
+    An administrative port is exposed to the internet, and security groups
+    lack restrictive ingress. This allows an attacker to reach the 
+    infrastructure and leverage a wildcard IAM policy to escalate to full 
+    account administrative privileges.
+
+- chain_id: CHAIN-CLOUD-DATA-EXPOSURE
+  name: Public storage access to data exfiltration
+  severity: critical
+  requires: [CIS-CLOUD-004, CIS-CLOUD-005, CIS-CLOUD-006, CIS-CLOUD-008]
+  min_matches: 4
+  break_chain:
+    fix_rule: CIS-CLOUD-005
+    why: >-
+      Enabling Block Public Access at the bucket level acts as a global 
+      guardrail that overrides any accidental public ACLs or policies.
+  narrative_template: >-
+    A bucket has a public ACL and lacks a Public Access Block, allowing 
+    anonymous read access. Because the data is unencrypted and access 
+    logging is disabled, an attacker can exfiltrate sensitive data 
+    without leaving a trace.
+
+- chain_id: CHAIN-CLOUD-DB-EXPOSURE
+  name: Public database exposure to data theft
+  severity: critical
+  requires: [CIS-CLOUD-011, CIS-CLOUD-003, CIS-CLOUD-012]
+  min_matches: 3
+  break_chain:
+    fix_rule: CIS-CLOUD-011
+    why: >-
+      Disabling public accessibility for the RDS instance removes the 
+      direct internet path, forcing all traffic through secure internal 
+      network controls.
+  narrative_template: >-
+    The database is publicly accessible and the surrounding security 
+    groups are overly permissive. Combined with unencrypted storage, 
+    an attacker can directly target the database endpoint to exfiltrate 
+    the entire dataset.
