@@ -74,7 +74,7 @@
       "severity": "critical",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.2 - Enable 'aaa authentication login'\\\"",
+      "cis_control": "\"CIS Cisco IOS 1.1.2 - Enable 'aaa authentication login'\"",
       "remediation_template": "\\\"aaa authentication login default group tacacs+ local\\\"",
       "explanation": "Without AAA login authentication, the device may fall back to insecure local passwords or no authentication at all."
     },
@@ -84,7 +84,7 @@
       "severity": "critical",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.3 - Enable 'aaa authentication enable default'\\\"",
+      "cis_control": "\"CIS Cisco IOS 1.1.3 - Enable 'aaa authentication enable default'\"",
       "remediation_template": "\\\"aaa authentication enable default group tacacs+ enable\\\"",
       "explanation": "Privileged EXEC mode must be protected by AAA to ensure that only authorized administrators can enter enable mode."
     },
@@ -169,7 +169,7 @@
         "line": 24,
         "snippet": "username admin privilege 15 password 0 admin123"
       },
-      "cis_control": "\\\"CIS Cisco IOS 1.2.1 - Set 'privilege 1' for local users\\\"",
+      "cis_control": "\"CIS Cisco IOS 1.2.1 - Set 'privilege 1' for local users\"",
       "remediation_template": "\\\"username <user> privilege 1\\\"",
       "explanation": "Local accounts should be restricted to privilege 1. Administrative access should be gained via the 'enable' command to ensure a second layer of auth."
     },
@@ -228,7 +228,7 @@
       "severity": "medium",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.6.1 - Disable IP source routing\\\"",
+      "cis_control": "\"CIS Cisco IOS 1.6.1 - Disable IP source routing\"",
       "remediation_template": "\\\"no ip source-route\\\"",
       "explanation": "Source routing allows a sender to specify the path a packet takes. This can be used by attackers to bypass security controls or map internal network topology."
     },
@@ -238,7 +238,7 @@
       "severity": "medium",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.6 - Set 'aaa accounting' to log all privileged use commands\\\"",
+      "cis_control": "\"CIS Cisco IOS 1.1.6 - Set 'aaa accounting' to log all privileged use commands\"",
       "remediation_template": "\\\"aaa accounting commands 15 default start-stop group tacacs+\\\"",
       "explanation": "Accounting for privilege 15 commands is essential for forensic audits to see exactly what changes were made by which administrator."
     },
@@ -284,7 +284,7 @@
       "severity": "low",
       "resource_id": "ssh",
       "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.2.4 - Set SSH timeout to 60 seconds or less\\\"",
+      "cis_control": "\"CIS Cisco IOS 1.2.4 - Set SSH timeout to 60 seconds or less\"",
       "remediation_template": "\\\"ip ssh time-out 60\\\"",
       "explanation": "Excessively long timeouts leave authenticated sessions open longer than necessary, increasing the risk of session hijacking if a terminal is left unattended."
     },
@@ -294,7 +294,7 @@
       "severity": "low",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.4.2 - Configure a Message of the Day (MOTD) banner\\\"",
+      "cis_control": "\"CIS Cisco IOS 1.4.2 - Configure a Message of the Day (MOTD) banner\"",
       "remediation_template": "\\\"banner motd ^C Authorized Access Only ^C\\\"",
       "explanation": "A MOTD banner provides a legal warning to unauthorized users. Without it, it is harder to prosecute unauthorized access in many legal jurisdictions."
     },
@@ -304,7 +304,7 @@
       "severity": "low",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.7 - Set 'aaa accounting connection'\\\"",
+      "cis_control": "\"CIS Cisco IOS 1.1.7 - Set 'aaa accounting connection'\"",
       "remediation_template": "\\\"aaa accounting connection default start-stop group tacacs+\\\"",
       "explanation": "Connection accounting tracks the start and end of sessions, helping to identify session hijacking or unusual login patterns."
     },
@@ -314,7 +314,7 @@
       "severity": "low",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.8 - Set 'aaa accounting exec'\\\"",
+      "cis_control": "\"CIS Cisco IOS 1.1.8 - Set 'aaa accounting exec'\"",
       "remediation_template": "\\\"aaa accounting exec default start-stop group tacacs+\\\"",
       "explanation": "Exec accounting logs the start and end of the shell session itself."
     },
@@ -324,7 +324,7 @@
       "severity": "low",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.9 - Set 'aaa accounting network'\\\"",
+      "cis_control": "\"CIS Cisco IOS 1.1.9 - Set 'aaa accounting network'\"",
       "remediation_template": "\\\"aaa accounting network default start-stop group tacacs+\\\"",
       "explanation": "Network accounting tracks network-related service requests."
     },
@@ -334,7 +334,7 @@
       "severity": "low",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "\\\"CIS Cisco IOS 1.1.10 - Set 'aaa accounting system'\\\"",
+      "cis_control": "\"CIS Cisco IOS 1.1.10 - Set 'aaa accounting system'\"",
       "remediation_template": "\\\"aaa accounting system default start-stop group tacacs+\\\"",
       "explanation": "System accounting logs events not associated with users, such as system reloads."
     }

@@ -269,19 +269,19 @@
 - id: CIS-NET-022
   title: SNMP v1/v2c community strings in use
   applies_to: snmp_settings
-  cis_control: "CIS Cisco IOS 2.2.0 - Use SNMPv3"
+  cis_control: CIS Cisco IOS 2.2.0 - Use SNMPv3
   severity: high
   check:
     attribute: versions_in_use
     operator: not_contains
     value: v1
-  remediation: "Configure snmp-server group with v3 auth and priv"
+  remediation: Configure snmp-server group with v3 auth and priv
   explanation: SNMP v1 and v2c transmit community strings in plaintext. An attacker
     capturing traffic can gain full read or write access to the device configuration.
 - id: CIS-NET-023
   title: SSH session timeout too high
   applies_to: ssh_settings
-  cis_control: \"CIS Cisco IOS 1.2.4 - Set SSH timeout to 60 seconds or less\"
+  cis_control: '"CIS Cisco IOS 1.2.4 - Set SSH timeout to 60 seconds or less"'
   severity: low
   check:
     attribute: timeout_seconds
@@ -294,7 +294,7 @@
 - id: CIS-NET-024
   title: IP source routing enabled
   applies_to: global_settings
-  cis_control: \"CIS Cisco IOS 1.6.1 - Disable IP source routing\"
+  cis_control: '"CIS Cisco IOS 1.6.1 - Disable IP source routing"'
   severity: medium
   check:
     attribute: source_routing
@@ -307,7 +307,7 @@
 - id: CIS-NET-025
   title: No MOTD banner configured
   applies_to: global_settings
-  cis_control: \"CIS Cisco IOS 1.4.2 - Configure a Message of the Day (MOTD) banner\"
+  cis_control: '"CIS Cisco IOS 1.4.2 - Configure a Message of the Day (MOTD) banner"'
   severity: low
   check:
     attribute: motd_banner
@@ -315,11 +315,10 @@
   remediation: \"banner motd ^C Authorized Access Only ^C\"
   explanation: A MOTD banner provides a legal warning to unauthorized users. Without
     it, it is harder to prosecute unauthorized access in many legal jurisdictions.
-
 - id: CIS-NET-027
   title: AAA login authentication not configured
   applies_to: global_settings
-  cis_control: \"CIS Cisco IOS 1.1.2 - Enable 'aaa authentication login'\"
+  cis_control: '"CIS Cisco IOS 1.1.2 - Enable ''aaa authentication login''"'
   severity: critical
   check:
     attribute: aaa_auth_login
@@ -330,7 +329,7 @@
 - id: CIS-NET-028
   title: AAA enable authentication not configured
   applies_to: global_settings
-  cis_control: \"CIS Cisco IOS 1.1.3 - Enable 'aaa authentication enable default'\"
+  cis_control: '"CIS Cisco IOS 1.1.3 - Enable ''aaa authentication enable default''"'
   severity: critical
   check:
     attribute: aaa_auth_enable
@@ -341,8 +340,8 @@
 - id: CIS-NET-029
   title: AAA command accounting disabled
   applies_to: global_settings
-  cis_control: \"CIS Cisco IOS 1.1.6 - Set 'aaa accounting' to log all privileged
-    use commands\"
+  cis_control: '"CIS Cisco IOS 1.1.6 - Set ''aaa accounting'' to log all privileged
+    use commands"'
   severity: medium
   check:
     attribute: aaa_accounting_commands
@@ -353,7 +352,7 @@
 - id: CIS-NET-030
   title: AAA connection accounting disabled
   applies_to: global_settings
-  cis_control: \"CIS Cisco IOS 1.1.7 - Set 'aaa accounting connection'\"
+  cis_control: '"CIS Cisco IOS 1.1.7 - Set ''aaa accounting connection''"'
   severity: low
   check:
     attribute: aaa_accounting_connection
@@ -364,7 +363,7 @@
 - id: CIS-NET-031
   title: AAA exec accounting disabled
   applies_to: global_settings
-  cis_control: \"CIS Cisco IOS 1.1.8 - Set 'aaa accounting exec'\"
+  cis_control: '"CIS Cisco IOS 1.1.8 - Set ''aaa accounting exec''"'
   severity: low
   check:
     attribute: aaa_accounting_exec
@@ -374,7 +373,7 @@
 - id: CIS-NET-032
   title: AAA network accounting disabled
   applies_to: global_settings
-  cis_control: \"CIS Cisco IOS 1.1.9 - Set 'aaa accounting network'\"
+  cis_control: '"CIS Cisco IOS 1.1.9 - Set ''aaa accounting network''"'
   severity: low
   check:
     attribute: aaa_accounting_network
@@ -384,7 +383,7 @@
 - id: CIS-NET-033
   title: AAA system accounting disabled
   applies_to: global_settings
-  cis_control: \"CIS Cisco IOS 1.1.10 - Set 'aaa accounting system'\"
+  cis_control: '"CIS Cisco IOS 1.1.10 - Set ''aaa accounting system''"'
   severity: low
   check:
     attribute: aaa_accounting_system
@@ -397,7 +396,7 @@
   applies_to: local_user
   when:
     privilege: 15
-  cis_control: \"CIS Cisco IOS 1.2.1 - Set 'privilege 1' for local users\"
+  cis_control: '"CIS Cisco IOS 1.2.1 - Set ''privilege 1'' for local users"'
   severity: high
   check:
     attribute: privilege
@@ -406,15 +405,15 @@
   remediation: \"username <user> privilege 1\"
   explanation: Local accounts should be restricted to privilege 1. Administrative
     access should be gained via the 'enable' command to ensure a second layer of auth.
-
-
 - id: CIS-NET-017
   title: HTTPS management server not enabled
   applies_to: global_settings
-  cis_control: "CIS Cisco IOS 1.2.2 - Use HTTPS if web management is required"
+  cis_control: CIS Cisco IOS 1.2.2 - Use HTTPS if web management is required
   severity: high
-  check: { attribute: https_server, operator: equals, value: true }
-  remediation: "ip http secure-server"
-  explanation: >-
-    If web management is needed at all it must be encrypted; the plaintext HTTP
-    server is never an acceptable substitute.
+  check:
+    attribute: https_server
+    operator: equals
+    value: true
+  remediation: ip http secure-server
+  explanation: If web management is needed at all it must be encrypted; the plaintext
+    HTTP server is never an acceptable substitute.

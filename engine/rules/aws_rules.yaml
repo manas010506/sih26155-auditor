@@ -119,7 +119,7 @@
     \  target_prefix = \"s3-access/\"\n}"
   explanation: No record exists of who read objects from this bucket, so an exploited
     public ACL leaves no trail.
-- id: AWS-S3-002
+- id: CIS-CLOUD-019
   title: Ensure that S3 is configured with 'Block Public Access' enabled
   applies_to: s3_bucket
   cis_control: CIS AWS Foundations 3.1.4
@@ -132,7 +132,7 @@
     level.
   explanation: Publicly accessible S3 buckets are a leading cause of massive data
     breaches. Block Public Access provides a fail-safe guardrail.
-- id: AWS-RDS-001
+- id: CIS-CLOUD-020
   title: Ensure that encryption-at-rest is enabled for RDS instances
   applies_to: rds_instance
   cis_control: CIS AWS Foundations 3.2.1
@@ -145,7 +145,7 @@
     encryption enabled, and restore from the encrypted snapshot.
   explanation: Encryption at rest protects the underlying storage from unauthorized
     physical access or snapshot theft.
-- id: AWS-RDS-002
+- id: CIS-CLOUD-021
   title: Ensure the Auto Minor Version Upgrade feature is enabled for RDS instances
   applies_to: rds_instance
   cis_control: CIS AWS Foundations 3.2.2
@@ -157,7 +157,7 @@
   remediation: Modify the RDS instance and enable 'Auto minor version upgrade'.
   explanation: Automated minor version upgrades ensure that security patches and bug
     fixes are applied promptly without manual intervention.
-- id: AWS-RDS-003
+- id: CIS-CLOUD-022
   title: Ensure that RDS instances are not publicly accessible
   applies_to: rds_instance
   cis_control: CIS AWS Foundations 3.2.3
@@ -294,7 +294,7 @@
   remediation: auto_minor_version_upgrade = true
   explanation: Engine security patches are not applied automatically, so known vulnerabilities
     persist until someone schedules a manual upgrade.
-- id: AWS-LOG-001
+- id: CIS-CLOUD-023
   title: Ensure CloudTrail is enabled in all regions
   applies_to: cloudtrail
   cis_control: CIS AWS Foundations 3.4.1
@@ -306,7 +306,7 @@
   remediation: Enable CloudTrail in all regions via the AWS Console or CLI.
   explanation: CloudTrail provides the primary audit log for all API calls in the
     account; without it, forensic analysis of security incidents is impossible.
-- id: AWS-LOG-002
+- id: CIS-CLOUD-024
   title: Ensure CloudTrail log file validation is enabled
   applies_to: cloudtrail
   cis_control: CIS AWS Foundations 3.4.2
@@ -318,7 +318,7 @@
   remediation: Enable log file validation in the CloudTrail settings.
   explanation: Log file validation ensures that logs have not been modified, deleted,
     or forged after CloudTrail delivered them.
-- id: AWS-LOG-004
+- id: CIS-CLOUD-025
   title: Ensure S3 Server Access Logging is enabled for critical buckets
   applies_to: s3_bucket
   cis_control: CIS AWS Foundations 3.1.5
