@@ -22,7 +22,7 @@
   name: Cleartext management plane to privileged takeover
   severity: critical
   requires: [CIS-NET-004, CIS-NET-001, CIS-NET-006, CIS-NET-011]
-  min_matches: 3
+  min_matches: 4
   break_chain:
     fix_rule: CIS-NET-004
     why: >-
@@ -40,7 +40,7 @@
   name: SNMP reconnaissance to device control
   severity: critical
   requires: [CIS-NET-008, CIS-NET-009, CIS-NET-011]
-  min_matches: 2
+  min_matches: 3
   break_chain:
     fix_rule: CIS-NET-009
     why: >-
@@ -57,7 +57,7 @@
   name: Configuration read to credential reuse
   severity: high
   requires: [CIS-NET-005, CIS-NET-006, CIS-NET-007, CIS-NET-003]
-  min_matches: 3
+  min_matches: 4
   break_chain:
     fix_rule: CIS-NET-006
     why: >-
@@ -74,7 +74,7 @@
   name: Administrative port exposure to privilege escalation
   severity: critical
   requires: [CIS-CLOUD-001, CIS-CLOUD-003, CIS-CLOUD-009]
-  min_matches: 2
+  min_matches: 3
   break_chain:
     fix_rule: CIS-CLOUD-009
     why: >-
@@ -90,7 +90,7 @@
   name: Public storage access to data exfiltration
   severity: critical
   requires: [CIS-CLOUD-004, CIS-CLOUD-005, CIS-CLOUD-006, CIS-CLOUD-008]
-  min_matches: 3
+  min_matches: 4
   break_chain:
     fix_rule: CIS-CLOUD-005
     why: >-
@@ -106,7 +106,7 @@
   name: Public database exposure to data theft
   severity: critical
   requires: [CIS-CLOUD-011, CIS-CLOUD-003, CIS-CLOUD-012]
-  min_matches: 2
+  min_matches: 3
   break_chain:
     fix_rule: CIS-CLOUD-011
     why: >-

@@ -39,21 +39,6 @@ const ATTRIBUTES = [
   'value',
 ];
 
-const DEMO_UNPARSED = [
-  {
-    line: 42,
-    text: 'ip flow-export destination 10.0.0.5 9996',
-  },
-  {
-    line: 57,
-    text: 'ip tcp path-mtu-discovery',
-  },
-  {
-    line: 71,
-    text: 'service sequence-numbers',
-  },
-];
-
 const Training = () => {
   const { reportData } = useOutletContext();
   const unparsed = reportData?.unparsed ?? [];
