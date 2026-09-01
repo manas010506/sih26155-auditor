@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
 import Sidebar from './components/Sidebar';
-import Header from './components/Header';
+import Header from './components/Header'; // to be removed
+import TopBar from './components/TopBar';
 import Findings from './pages/Findings';
-import Landing from './pages/Landing';
 import Upload from './pages/Upload';
 import ReportView from './pages/ReportView';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import NotFound from './pages/NotFound';
+import SettingsModal from './components/SettingsModal';
+import { SettingsProvider } from './context/SettingsContext';
 
 // Title updater (for dashboard routes without Helmet)
 const RouteTitle = ({ title }) => {
@@ -28,18 +34,10 @@ const AttackPathsPlaceholder = () => (
   </div>
 );
 
-const NotFound = () => (
-  <div className="flex items-center justify-center h-full w-full p-6">
-    <RouteTitle title="Not Found" />
-    <div className="bg-panel border-wire p-6 radius-md text-center max-w-md">
-      <h2 className="text-ink mb-2">404 - Not Found</h2>
-      <p className="text-ink-dim text-sm">The route you are looking for does not exist in this console.</p>
-    </div>
-  </div>
-);
-
 const DashboardLayout = ({ reportData, score }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
     <div className="flex w-full md-flex-col" style={{ minHeight: '100vh' }}>
@@ -56,22 +54,36 @@ const DashboardLayout = ({ reportData, score }) => {
       {/* Sidebar */}
       <div 
         className={`flex-shrink-0 ${mobileMenuOpen ? 'md-sidebar' : 'md-hidden'}`} 
-        style={{ width: '240px' }}
+        style={{ width: isCollapsed ? '72px' : '240px', transition: 'width 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
         onClick={() => setMobileMenuOpen(false)} // close on nav
       >
         <div onClick={e => e.stopPropagation()} className="h-full">
-          <Sidebar score={score} />
+          <Sidebar score={score} findings={reportData?.findings} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-col flex-1 md-content" style={{ width: 'calc(100% - 240px)' }}>
-        <Header device={reportData?.device} />
+      <div className="flex flex-col flex-1 md-content" style={{ width: `calc(100% - ${isCollapsed ? '72px' : '240px'})`, transition: 'width 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        <TopBar device={reportData?.device} source={reportData?.source} onSettingsClick={() => setSettingsOpen(true)} />
         
         <main className="flex-1 overflow-auto bg-substrate relative">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={useLocation().pathname}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              style={{ height: '100%' }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
+      
+      {/* Settings Modal */}
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 };
@@ -87,45 +99,32 @@ function App() {
       .catch(console.error);
   }, []);
 
-  const calculateScore = () => {
-    if (!reportData?.findings) return null;
-    const findings = reportData.findings;
-    if (findings.length === 0) return 100;
-    
-    let penalty = 0;
-    findings.forEach(f => {
-      if (f.pass_fail === 'fail') {
-        if (f.severity === 'critical') penalty += 20;
-        else if (f.severity === 'high') penalty += 10;
-        else if (f.severity === 'medium') penalty += 5;
-        else if (f.severity === 'low') penalty += 2;
-      }
-    });
-    return Math.max(0, 100 - penalty);
-  };
-
-  const score = calculateScore();
+  const score = reportData?.compliance_score ?? null;
 
   return (
     <HelmetProvider>
-      <Router>
-        <Routes>
-          {/* Public Landing Page */}
-          <Route path="/" element={<Landing />} />
+      <SettingsProvider>
+        <Router>
+          <Routes>
+            {/* Public Landing Page */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<><RouteTitle title="Login" /><Login /></>} />
+            <Route path="/signup" element={<><RouteTitle title="Create Account" /><Signup /></>} />
 
-          {/* Dashboard Layout */}
-          <Route path="/audit" element={<DashboardLayout reportData={reportData} score={score} />}>
-            <Route index element={<Navigate to="/audit/upload" replace />} />
-            <Route path="upload" element={<Upload />} />
-            <Route path="findings" element={<Findings />} />
-            <Route path="attack-paths" element={<AttackPathsPlaceholder />} />
-            <Route path="report" element={<ReportView />} />
-          </Route>
+            {/* Dashboard Layout */}
+            <Route path="/audit" element={<DashboardLayout reportData={reportData} score={score} />}>
+              <Route index element={<Navigate to="/audit/upload" replace />} />
+              <Route path="upload" element={<><RouteTitle title="Upload Config" /><Upload /></>} />
+              <Route path="findings" element={<><RouteTitle title="Findings" /><Findings /></>} />
+              <Route path="attack-paths" element={<AttackPathsPlaceholder />} />
+              <Route path="report" element={<><RouteTitle title="Compliance Report" /><ReportView /></>} />
+            </Route>
 
-          {/* 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Router>
+            {/* 404 */}
+            <Route path="*" element={<><RouteTitle title="Not Found" /><NotFound /></>} />
+          </Routes>
+        </Router>
+      </SettingsProvider>
     </HelmetProvider>
   );
 }

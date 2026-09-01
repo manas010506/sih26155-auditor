@@ -24,8 +24,7 @@ const ReportView = () => {
   }
 
   const { device, findings } = reportData;
-  const failCount = findings.filter(f => f.pass_fail === 'fail').length;
-  const passCount = findings.length - failCount;
+  const totalFindings = findings.length; // every finding is a failure by definition
 
   return (
     <>
@@ -42,7 +41,7 @@ const ReportView = () => {
         <div>
           <div className="heading-sm">Compliance Report</div>
           <div className="label" style={{ marginTop: '2px' }}>
-            {findings.length} findings · {passCount} passed · {failCount} failed
+            {totalFindings} findings · compliance score: {reportData.compliance_score ?? 'N/A'}
           </div>
         </div>
         <motion.button
@@ -94,10 +93,10 @@ const ReportView = () => {
             border: '1px solid var(--wire)',
           }}>
             {[
-              ['Device ID',       device.name],
-              ['Serial Number',   device.serial_number],
-              ['Hardware Model',  device.hardware_model],
-              ['Source Type',     device.source_type],
+              ['Device',      device.hostname],
+              ['Vendor',      device.vendor],
+              ['OS',          device.os],
+              ['Source Type', reportData.source?.type],
             ].map(([label, value]) => (
               <div key={label} style={{ backgroundColor: 'var(--panel)', padding: '10px 14px' }}>
                 <div className="label" style={{ marginBottom: '3px' }}>{label}</div>
@@ -110,9 +109,8 @@ const ReportView = () => {
         {/* Summary row */}
         <div style={{ display: 'flex', gap: '1px', backgroundColor: 'var(--wire)', marginBottom: '32px', border: '1px solid var(--wire)' }}>
           {[
-            { label: 'Total Findings', value: findings.length, color: 'var(--ink)' },
-            { label: 'Passed',         value: passCount,        color: 'var(--trace)' },
-            { label: 'Failed',         value: failCount,        color: 'var(--severity-critical)' },
+            { label: 'Total Findings',    value: totalFindings,                    color: 'var(--severity-critical)' },
+            { label: 'Compliance Score',  value: reportData.compliance_score ?? '—', color: 'var(--ink)' },
           ].map(({ label, value, color }) => (
             <div key={label} style={{ flex: 1, backgroundColor: 'var(--panel)', padding: '14px 16px', textAlign: 'center' }}>
               <div className="mono" style={{ fontSize: '28px', fontWeight: 700, color, lineHeight: 1, marginBottom: '4px' }}>
@@ -127,66 +125,65 @@ const ReportView = () => {
         <div className="heading-sm" style={{ marginBottom: '16px' }}>Audit Findings</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: 'var(--wire)' }}>
-          {findings.map((finding) => (
-            <div
-              key={finding.rule_id}
-              className="print-break-inside-avoid"
-              style={{ backgroundColor: 'var(--panel)' }}
-            >
-              {/* Finding header row */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '10px 16px',
-                borderBottom: '1px solid var(--wire)',
-              }}>
-                {/* LED severity indicator — no filled pill */}
-                <SeverityLED severity={finding.severity} />
-                <span className="mono" style={{ fontSize: '11px', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  {finding.severity}
-                </span>
-                <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--wire)', flexShrink: 0 }} />
-                <span className="mono" style={{ fontSize: '12px', color: 'var(--trace)' }}>{finding.rule_id}</span>
-                <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--wire)', flexShrink: 0 }} />
-                <span className="mono" style={{ fontSize: '11px', color: 'var(--ink-dim)', textTransform: 'uppercase' }}>{finding.category}</span>
-                <div style={{ flex: 1 }} />
-                <span className="mono" style={{
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  color: finding.pass_fail === 'pass' ? 'var(--trace)' : 'var(--severity-critical)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                }}>
-                  {finding.pass_fail?.toUpperCase()}
-                </span>
-              </div>
-
-              {/* Description */}
-              <div style={{ padding: '10px 16px', fontSize: '13px', color: 'var(--ink)', borderBottom: '1px solid var(--wire)' }}>
-                {finding.description}
-              </div>
-
-              {/* Remediation CLI */}
-              {finding.remediation_template && (
-                <div style={{ padding: '10px 16px', backgroundColor: 'var(--substrate)' }}>
-                  <div className="label" style={{ marginBottom: '6px' }}>Remediation CLI</div>
-                  <pre style={{
-                    margin: 0,
-                    fontFamily: 'IBM Plex Mono, monospace',
-                    fontSize: '12px',
-                    color: 'var(--ink)',
-                    lineHeight: '1.6',
-                    overflowX: 'auto',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-all',
-                  }}>
-                    {finding.remediation_template}
-                  </pre>
-                </div>
-              )}
+          {findings.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px', backgroundColor: 'var(--panel)', gap: '12px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--trace)' }} />
+              <div className="mono" style={{ fontSize: '14px', color: 'var(--trace)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Compliant</div>
+              <div style={{ fontSize: '13px', color: 'var(--ink-dim)' }}>No security findings detected in this configuration.</div>
             </div>
-          ))}
+          ) : (
+            findings.map((finding) => (
+              <div
+                key={finding.rule_id}
+                className="print-break-inside-avoid"
+                style={{ backgroundColor: 'var(--panel)' }}
+              >
+                {/* Finding header row */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '10px 16px',
+                  borderBottom: '1px solid var(--wire)',
+                }}>
+                  {/* LED severity indicator — no filled pill */}
+                  <SeverityLED severity={finding.severity} />
+                  <span className="mono" style={{ fontSize: '11px', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    {finding.severity}
+                  </span>
+                  <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--wire)', flexShrink: 0 }} />
+                  <span className="mono" style={{ fontSize: '12px', color: 'var(--trace)' }}>{finding.rule_id}</span>
+                  <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--wire)', flexShrink: 0 }} />
+                  <span className="mono" style={{ fontSize: '11px', color: 'var(--ink-dim)', textTransform: 'uppercase' }}>{finding.cis_control}</span>
+                </div>
+  
+                {/* Description */}
+                <div style={{ padding: '10px 16px', fontSize: '13px', color: 'var(--ink)', borderBottom: '1px solid var(--wire)' }}>
+                  <div style={{ fontWeight: 600, marginBottom: '4px' }}>{finding.title}</div>
+                  <div>{finding.explanation}</div>
+                </div>
+  
+                {/* Remediation CLI */}
+                {finding.remediation_template && (
+                  <div style={{ padding: '10px 16px', backgroundColor: 'var(--substrate)' }}>
+                    <div className="label" style={{ marginBottom: '6px' }}>Remediation CLI</div>
+                    <pre style={{
+                      margin: 0,
+                      fontFamily: 'IBM Plex Mono, monospace',
+                      fontSize: '12px',
+                      color: 'var(--ink)',
+                      lineHeight: '1.6',
+                      overflowX: 'auto',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-all',
+                    }}>
+                      {finding.remediation_template}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
 
         {/* Footer */}

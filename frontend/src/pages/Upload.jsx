@@ -23,6 +23,86 @@ const SpinRing = () => (
   }} />
 );
 
+const BOOT_LOGS = [
+  '[SYS] Initializing Audit Engine v0.1.0...',
+  '[SYS] Mounting configuration payload...',
+  '[SYS] Parsing AST structure...',
+  '[AUDIT] Engine booted in LOCAL MODE.',
+  '[AUDIT] Loading CIS Cisco IOS benchmarks (32 rules)...',
+  '[AUDIT] Evaluating access control lists...',
+  '[WARN] Rule match: CIS-NET-001 (VTY lines permit Telnet)',
+  '[WARN] Rule match: CIS-NET-006 (Enable password unencrypted)',
+  '[AUDIT] Evaluating SNMP configuration...',
+  '[WARN] Rule match: CIS-NET-009 (SNMP default string)',
+  '[AUDIT] Evaluating cryptography constraints...',
+  '[SYS] Analysis complete. Aggregating results...',
+];
+
+const TerminalStream = () => {
+  const [lines, setLines] = React.useState([]);
+  
+  React.useEffect(() => {
+    let currentIdx = 0;
+    const interval = setInterval(() => {
+      if (currentIdx < BOOT_LOGS.length) {
+        setLines(prev => [...prev, BOOT_LOGS[currentIdx]]);
+        currentIdx++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 220);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="corner-marks" style={{
+      width: '100%',
+      backgroundColor: 'var(--substrate)',
+      border: '1px solid var(--wire)',
+      padding: '12px 16px',
+      minHeight: '180px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'flex-end',
+      overflow: 'hidden',
+      position: 'relative'
+    }}>
+      {/* Subtle CRT scanline overlay */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03))',
+        backgroundSize: '100% 3px, 3px 100%',
+        zIndex: 10
+      }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 1 }}>
+        {lines.map((line, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.1 }}
+            className="mono"
+            style={{ 
+              fontSize: '11px', 
+              color: line.includes('[WARN]') ? 'var(--severity-high)' : line.includes('[AUDIT]') ? 'var(--trace)' : 'var(--ink-dim)'
+            }}
+          >
+            {line}
+          </motion.div>
+        ))}
+        {/* Blinking cursor */}
+        {lines.length < BOOT_LOGS.length && (
+          <motion.div
+            animate={{ opacity: [1, 0, 1] }}
+            transition={{ repeat: Infinity, duration: 0.8 }}
+            style={{ width: '8px', height: '14px', backgroundColor: 'var(--trace)', marginTop: '4px' }}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Upload = () => {
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState(null);
@@ -72,8 +152,8 @@ const Upload = () => {
     // Simulate parsing — replace with fetch('/api/audit') later
     setTimeout(() => {
       setStatus('success');
-      setTimeout(() => navigate('/audit/findings'), 600);
-    }, 1500);
+      setTimeout(() => navigate('/audit/findings'), 800);
+    }, 3500);
   };
 
   const isLoading = status === 'loading' || status === 'success';
@@ -159,16 +239,16 @@ const Upload = () => {
           >
             <AnimatePresence mode="wait">
 
-              {/* Loading */}
+              {/* Loading Terminal */}
               {status === 'loading' && (
                 <motion.div key="loading"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}
                 >
-                  <SpinRing />
-                  <div className="mono" style={{ fontSize: '12px', color: 'var(--trace)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    Normalizing Syntax...
+                  <div className="mono" style={{ fontSize: '12px', color: 'var(--trace)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>
+                    Engine Analysis Active
                   </div>
+                  <TerminalStream />
                 </motion.div>
               )}
 
