@@ -22,6 +22,11 @@ from engine.schema.schema import RESOURCE_TYPES, known_attributes, resolve_ref
 
 SEVERITY_WEIGHT = {"critical": 20, "high": 10, "medium": 5, "low": 2}
 
+# Frameworks a rule may declare. A rule with no `framework` field is CIS, so
+# existing rules keep working unchanged.
+FRAMEWORKS = {"CIS", "NIST", "STIG", "ISO27001"}
+DEFAULT_FRAMEWORK = "CIS"
+
 REQUIRED_FIELDS = ("id", "title", "applies_to", "severity",
                    "cis_control", "check", "remediation", "explanation")
 
@@ -55,8 +60,11 @@ class RuleError(ValueError):
     """A rule file the engine refuses to load."""
 
 
-def load_rules(path: str) -> list[dict]:
+def load_rules(path: str, framework: str | None = None) -> list[dict]:
     """Read a rules YAML file and fail loudly on anything malformed.
+
+    `framework` filters to one benchmark (CIS, NIST, STIG, ISO27001). None
+    loads everything, which is the default and current behaviour.
 
     A rule the engine silently skips is worse than one that crashes: Deep would
     never know it wasn't running, and the metrics would quietly under-count.
@@ -111,8 +119,17 @@ def load_rules(path: str) -> list[dict]:
             raise RuleError(f"{path}: {where} uses unknown operator "
                             f"{check['operator']!r}; expected one of {sorted(OPS)}")
 
+        rule_framework = rule.get("framework", DEFAULT_FRAMEWORK)
+        if rule_framework not in FRAMEWORKS:
+            raise RuleError(f"{path}: {where} framework {rule_framework!r}; "
+                            f"expected one of {sorted(FRAMEWORKS)}")
+
         if rule.get("dedupe", "by_rule") not in ("by_rule", "per_resource"):
             raise RuleError(f"{path}: {where} dedupe must be by_rule or per_resource")
+
+    if framework:
+        rules = [r for r in rules
+                 if r.get("framework", DEFAULT_FRAMEWORK) == framework]
 
     return rules
 
@@ -198,13 +215,22 @@ def score(findings: list[dict], rules: list[dict]) -> dict:
     if total_weight == 0:
         raise RuleError("cannot score against an empty ruleset")
 
+    frameworks = sorted({r.get("framework", DEFAULT_FRAMEWORK) for r in rules})
+
     return {
         "compliance_score": round(100 * (1 - failed_weight / total_weight)),
         "score_breakdown": {
             "formula": "100 * (1 - failed_weight / total_weight)",
+            # Which benchmarks this ruleset covers. Inside score_breakdown so it
+            # reaches the report through the existing copy, with no changes to
+            # the builders or run_audit().
+            "frameworks": frameworks,
             "severity_weights": SEVERITY_WEIGHT,
             "rules_evaluated": len(rules),
             "rules_failed": len(findings),
+            # The problem statement asks for clear Pass/Fail results. The engine
+            # only emits failures, so the passing count has to be derived here.
+            "rules_passed": len(rules) - len(findings),
             "failed_weight": failed_weight,
             "total_weight": total_weight,
         },

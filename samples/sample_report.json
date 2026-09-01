@@ -13,6 +13,9 @@
   "compliance_score": 15,
   "score_breakdown": {
     "formula": "100 * (1 - failed_weight / total_weight)",
+    "frameworks": [
+      "CIS"
+    ],
     "severity_weights": {
       "critical": 20,
       "high": 10,
@@ -21,6 +24,7 @@
     },
     "rules_evaluated": 32,
     "rules_failed": 27,
+    "rules_passed": 5,
     "failed_weight": 218,
     "total_weight": 257
   },
