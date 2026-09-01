@@ -36,7 +36,9 @@ def audit():
     config_text = body.get("config_text", "")
     source_type = body.get("source_type", "")
 
-    if not config_text:
+    if not isinstance(config_text, str):
+        return jsonify(error="config_text must be a string"), 400
+    if not config_text.strip():
         return jsonify(error="config_text is required"), 400
     if len(config_text.encode()) > MAX_BYTES:
         return jsonify(error="config file too large (2MB limit)"), 413

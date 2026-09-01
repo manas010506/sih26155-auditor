@@ -3,9 +3,8 @@
 Guards the seam between the UI and the engine. Uses Flask's test client, so it
 needs no running server.
 
-Three tests are marked xfail because api/app.py is still STAGE 1 — it returns
-samples/sample_report.json regardless of what you post. When Sanavi wires
-run_audit() they turn to XPASS; remove the markers then.
+Covers the /api/audit contract: correct report per source_type, score
+behaviour, and the malformed input a judge will eventually post at us.
 """
 import pathlib
 
@@ -45,21 +44,17 @@ def test_cisco_returns_the_cisco_report(client):
     assert len(body["attack_paths"]) == 3
 
 
-@pytest.mark.xfail(reason="api/app.py is STAGE 1 - returns the sample file "
-                          "regardless of input. Remove this marker after "
-                          "run_audit() is wired in.")
 def test_terraform_returns_the_terraform_report(client):
-    """Posting main.tf currently returns the CISCO report: 27 findings, not 20."""
     r = post(client, config_text=TERRAFORM, source_type="terraform_aws")
+    assert r.status_code == 200
     body = r.get_json()
     assert body["source"]["type"] == "terraform_aws"
     assert len(body["findings"]) == 20
     assert body["compliance_score"] == 15
+    assert len(body["attack_paths"]) == 3
 
 
-@pytest.mark.xfail(reason="STAGE 1 ignores config_text entirely")
 def test_a_clean_config_scores_higher_than_a_bad_one(client):
-    """The single clearest proof the endpoint reads its input."""
     clean = (ROOT / "tests" / "corpus" / "clean_baseline.cfg").read_text(encoding="utf-8")
     bad = post(client, config_text=CISCO, source_type="cisco_ios").get_json()
     good = post(client, config_text=clean, source_type="cisco_ios").get_json()
@@ -71,11 +66,10 @@ def test_missing_config_text_is_400(client):
     assert post(client, source_type="cisco_ios").status_code == 400
 
 
-@pytest.mark.xfail(reason="STAGE 1 uses `if not config_text`, so whitespace-only "
-                          "input is truthy and returns a full report with a 200. "
-                          "run_audit() checks .strip(), so STAGE 2 fixes this.")
 def test_empty_config_text_is_400(client):
-    assert post(client, config_text="   ", source_type="cisco_ios").status_code == 400
+    """Whitespace-only input must not reach the parser."""
+    r = post(client, config_text="   \n\t  ", source_type="cisco_ios")
+    assert r.status_code == 400
 
 
 def test_unknown_source_type_is_400(client):
@@ -88,9 +82,8 @@ def test_no_body_at_all_is_400(client):
     assert client.post("/api/audit").status_code in (400, 415)
 
 
-@pytest.mark.xfail(reason="config_text is not type-checked - a dict raises "
-                          "AttributeError and returns 500 with a stack trace")
 def test_non_string_config_text_is_400_not_500(client):
+    """A dict must be rejected before .encode() is called on it."""
     r = post(client, config_text={"nested": "object"}, source_type="cisco_ios")
     assert r.status_code == 400
 
