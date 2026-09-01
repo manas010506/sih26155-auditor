@@ -76,6 +76,7 @@
     \ true\n  restrict_public_buckets = true\n}"
   explanation: Nothing prevents a future ACL or bucket policy from making this bucket
     public again. The block is the control that survives human error.
+  nist_mapping: AC-3
 - id: CIS-CLOUD-006
   title: S3 bucket has no server-side encryption
   applies_to: s3_bucket
@@ -91,6 +92,7 @@
     \n      kms_master_key_id = aws_kms_key.app_key.arn\n    }\n  }\n}"
   explanation: Objects are stored unencrypted while another bucket in the same file
     is encrypted, which is drift rather than a deliberate choice.
+  nist_mapping: SC-28
 - id: CIS-CLOUD-007
   title: S3 bucket versioning disabled
   applies_to: s3_bucket
@@ -132,6 +134,7 @@
     level.
   explanation: Publicly accessible S3 buckets are a leading cause of massive data
     breaches. Block Public Access provides a fail-safe guardrail.
+  nist_mapping: AC-3
 - id: AWS-RDS-001
   title: Ensure that encryption-at-rest is enabled for RDS instances
   applies_to: rds_instance
@@ -145,6 +148,7 @@
     encryption enabled, and restore from the encrypted snapshot.
   explanation: Encryption at rest protects the underlying storage from unauthorized
     physical access or snapshot theft.
+  nist_mapping: SC-28
 - id: AWS-RDS-002
   title: Ensure the Auto Minor Version Upgrade feature is enabled for RDS instances
   applies_to: rds_instance
@@ -270,6 +274,7 @@
   remediation: resource "aws_cloudtrail" "main" { ... }
   explanation: With no trail there is no record of API activity in the account at
     all.
+  nist_mapping: AU-2
 - id: CIS-CLOUD-017
   title: RDS deletion protection disabled
   applies_to: rds_instance

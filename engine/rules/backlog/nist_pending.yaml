@@ -1,0 +1,148 @@
+- id: NIST-NET-001
+  title: Unused services/protocols enabled
+  applies_to: global_settings
+  framework: NIST
+  nist_control: CM-7
+  severity: medium
+  check:
+    attribute: unused_services_disabled
+    operator: equals
+    value: true
+  remediation: Disable all unnecessary services (e.g., finger, source-route, http).
+  explanation: Reducing the attack surface by disabling unused services prevents exploitation
+    of legacy protocols.
+  cis_control: NIST 800-53 - CM-7
+- id: NIST-NET-002
+  title: Session timeout not enforced globally
+  applies_to: global_settings
+  framework: NIST
+  nist_control: AC-12
+  severity: medium
+  check:
+    attribute: global_session_timeout
+    operator: lte
+    value: 600
+  remediation: Configure a global session timeout for all administrative access.
+  explanation: Inactive sessions must be terminated to prevent unauthorized access
+    via abandoned terminals.
+  cis_control: NIST 800-53 - AC-12
+- id: NIST-NET-003
+  title: Password complexity requirements not met
+  applies_to: global_settings
+  framework: NIST
+  nist_control: IA-5
+  severity: high
+  check:
+    attribute: password_complexity_enabled
+    operator: equals
+    value: true
+  remediation: Enable password complexity requirements for all local accounts.
+  explanation: Strong passwords prevent brute-force and dictionary attacks.
+  cis_control: NIST 800-53 - IA-5
+- id: NIST-NET-004
+  title: Audit log integrity not protected
+  applies_to: logging
+  framework: NIST
+  nist_control: AU-9
+  severity: high
+  check:
+    attribute: log_integrity_protected
+    operator: equals
+    value: true
+  remediation: Send logs to a write-once read-many (WORM) destination or use cryptographic
+    signing.
+  explanation: Ensuring logs cannot be altered by an attacker is critical for forensic
+    validity.
+  cis_control: NIST 800-53 - AU-9
+- id: NIST-NET-005
+  title: Excessive privileged account usage
+  applies_to: local_user
+  when:
+    privilege: 15
+  framework: NIST
+  nist_control: AC-6
+  severity: medium
+  check:
+    attribute: account_usage_restricted
+    operator: equals
+    value: true
+  remediation: Restrict the number of accounts with privilege 15.
+  explanation: The principle of least privilege dictates that administrative rights
+    should be granted only to necessary personnel.
+  cis_control: NIST 800-53 - AC-6
+- id: NIST-AWS-001
+  title: MFA not enabled for privileged IAM users
+  applies_to: iam_user
+  when:
+    is_privileged: true
+  framework: NIST
+  nist_control: IA-2
+  severity: critical
+  check:
+    attribute: mfa_enabled
+    operator: equals
+    value: true
+  remediation: Enable Multi-Factor Authentication (MFA) for all users with administrative
+    rights.
+  explanation: MFA prevents account takeover even if credentials are leaked.
+  cis_control: NIST 800-53 - IA-2
+- id: NIST-AWS-002
+  title: IAM access keys not rotated
+  applies_to: iam_access_key
+  framework: NIST
+  nist_control: IA-5
+  severity: medium
+  check:
+    attribute: rotation_days
+    operator: lte
+    value: 90
+  remediation: Rotate IAM access keys every 90 days.
+  explanation: Regular rotation limits the window of opportunity for a compromised
+    key to be useful.
+  cis_control: NIST 800-53 - IA-5
+- id: NIST-AWS-003
+  title: S3 bucket versioning disabled for critical data
+  applies_to: s3_bucket
+  when:
+    criticality: high
+  framework: NIST
+  nist_control: CP-9
+  severity: high
+  check:
+    attribute: versioning_enabled
+    operator: equals
+    value: true
+  remediation: Enable versioning on all buckets containing critical system or business
+    data.
+  explanation: Versioning protects against accidental deletion or ransomware encryption.
+  cis_control: NIST 800-53 - CP-9
+- id: NIST-AWS-004
+  title: VPC Flow Logs disabled for production subnets
+  applies_to: vpc_subnet
+  when:
+    environment: production
+  framework: NIST
+  nist_control: AU-12
+  severity: medium
+  check:
+    attribute: flow_logs_enabled
+    operator: equals
+    value: true
+  remediation: Enable VPC Flow Logs for all production subnets.
+  explanation: Network flow logs are essential for detecting lateral movement and
+    data exfiltration.
+  cis_control: NIST 800-53 - AU-12
+- id: NIST-AWS-005
+  title: EBS volumes not encrypted at rest
+  applies_to: ebs_volume
+  framework: NIST
+  nist_control: SC-28
+  severity: high
+  check:
+    attribute: encrypted
+    operator: equals
+    value: true
+  remediation: Enable encryption for all EBS volumes using KMS.
+  explanation: Encryption at rest protects data from physical theft of the storage
+    media.
+  cis_control: NIST 800-53 - SC-28
