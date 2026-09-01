@@ -1,6 +1,19 @@
 import { Handle, Position } from "@xyflow/react";
+import { useNavigate } from "react-router-dom";
 
 function AttackNode({ data }) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (data.isImpact) return;
+
+    navigate("/audit/findings", {
+      state: {
+        selectedRuleId: data.ruleId,
+      },
+    });
+  };
+
   return (
     <div
       className={[
@@ -10,6 +23,10 @@ function AttackNode({ data }) {
       ]
         .filter(Boolean)
         .join(" ")}
+      onClick={handleClick}
+      style={{
+        cursor: data.isImpact ? "default" : "pointer",
+      }}
     >
       <Handle type="target" position={Position.Left} />
 

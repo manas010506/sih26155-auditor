@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { autoAnimate } from '@formkit/auto-animate';
 import { ChevronDown, ChevronRight, ChevronUp, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router-dom';
 import SeverityLED from './SeverityLED';
 import { useSettings } from '../context/SettingsContext';
 
@@ -144,18 +145,52 @@ const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
 
 /* ── Main component ──────────────────────────────────────────── */
 const FindingsTable = ({ findings }) => {
+  const location = useLocation();
+
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [sortField, setSortField] = useState('severity');
   const [sortDir, setSortDir] = useState('desc');
   const [filterSeverity, setFilterSeverity] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
   const [copiedRuleId, setCopiedRuleId] = useState(null);
+  const [highlightedRuleId, setHighlightedRuleId] = useState(null);
+
+  // Stores references to each visible finding row.
+  const findingRefs = useRef({});
 
   // auto-animate on tbody for smooth row reflow on filter change
   const tbodyRef = useRef(null);
+
   useEffect(() => {
     if (tbodyRef.current) autoAnimate(tbodyRef.current, { duration: 180 });
   }, []);
+
+  // When arriving from the Attack Paths page, scroll to and highlight
+  // the finding that corresponds to the clicked attack graph node.
+  useEffect(() => {
+    const selectedRuleId = location.state?.selectedRuleId;
+
+    if (!selectedRuleId) return;
+
+    const timer = setTimeout(() => {
+      const row = findingRefs.current[selectedRuleId];
+
+      if (!row) return;
+
+      row.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+
+      setHighlightedRuleId(selectedRuleId);
+
+      setTimeout(() => {
+        setHighlightedRuleId(null);
+      }, 1800);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [location.state?.selectedRuleId]);
 
   const toggleRow = (id) => {
     setExpandedRows(prev => {
@@ -263,45 +298,140 @@ const FindingsTable = ({ findings }) => {
               <col className="hide-on-mobile" style={{ width: '80px' }} />
               <col className="hide-on-mobile" style={{ width: '160px' }} />
             </colgroup>
+
             <thead>
               <tr style={{
                 backgroundColor: 'var(--panel)',
                 borderBottom: '1px solid var(--wire)',
-                position: 'sticky', top: 0, zIndex: 10,
+                position: 'sticky',
+                top: 0,
+                zIndex: 10,
               }}>
                 <th style={{ padding: '8px 12px' }} />
-                <SortableHeader label="SEV" field="severity" sortField={sortField} sortDir={sortDir} onSort={handleSort} style={{ paddingLeft: '12px' }} />
-                <th className="mono" style={{ padding: '8px 0', fontSize: '10px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400 }}>RULE ID</th>
-                <th className="mono" style={{ padding: '8px 0', fontSize: '10px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400 }}>FINDING</th>
-                <th className="mono hide-on-mobile" style={{ padding: '8px 0', fontSize: '10px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400 }}>RESOURCE</th>
-                <th className="mono hide-on-mobile" style={{ padding: '8px 0 8px 0', fontSize: '10px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400, paddingRight: '12px' }}>CIS CONTROL</th>
+
+                <SortableHeader
+                  label="SEV"
+                  field="severity"
+                  sortField={sortField}
+                  sortDir={sortDir}
+                  onSort={handleSort}
+                  style={{ paddingLeft: '12px' }}
+                />
+
+                <th
+                  className="mono"
+                  style={{
+                    padding: '8px 0',
+                    fontSize: '10px',
+                    color: 'var(--ink-dim)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    fontWeight: 400,
+                  }}
+                >
+                  RULE ID
+                </th>
+
+                <th
+                  className="mono"
+                  style={{
+                    padding: '8px 0',
+                    fontSize: '10px',
+                    color: 'var(--ink-dim)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    fontWeight: 400,
+                  }}
+                >
+                  FINDING
+                </th>
+
+                <th
+                  className="mono hide-on-mobile"
+                  style={{
+                    padding: '8px 0',
+                    fontSize: '10px',
+                    color: 'var(--ink-dim)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    fontWeight: 400,
+                  }}
+                >
+                  RESOURCE
+                </th>
+
+                <th
+                  className="mono hide-on-mobile"
+                  style={{
+                    padding: '8px 0 8px 0',
+                    fontSize: '10px',
+                    color: 'var(--ink-dim)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    fontWeight: 400,
+                    paddingRight: '12px',
+                  }}
+                >
+                  CIS CONTROL
+                </th>
               </tr>
             </thead>
+
             <tbody ref={tbodyRef}>
               {sorted.map((finding, rowIdx) => {
                 const isExpanded = expandedRows.has(finding.rule_id);
+                const isHighlighted = highlightedRuleId === finding.rule_id;
+
                 return (
                   <React.Fragment key={finding.rule_id}>
                     <motion.tr
+                      ref={(element) => {
+                        findingRefs.current[finding.rule_id] = element;
+                      }}
                       initial={{ opacity: 0, x: -4 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.22, delay: Math.min(rowIdx * 0.03, 0.3) }}
+                      animate={{
+                        opacity: 1,
+                        x: 0,
+                        backgroundColor: isHighlighted
+                          ? 'var(--panel-raised)'
+                          : isExpanded
+                            ? 'var(--panel-raised)'
+                            : 'transparent',
+                      }}
+                      transition={{
+                        duration: isHighlighted ? 0.35 : 0.22,
+                        delay: Math.min(rowIdx * 0.03, 0.3),
+                      }}
                       onClick={() => toggleRow(finding.rule_id)}
                       style={{
                         borderBottom: '1px solid var(--wire)',
-                        backgroundColor: isExpanded ? 'var(--panel-raised)' : 'transparent',
                         cursor: 'pointer',
-                        transition: 'background-color 0.12s ease',
+                        transition: 'background-color 0.12s ease, box-shadow 0.2s ease',
+                        boxShadow: isHighlighted
+                          ? 'inset 3px 0 0 var(--trace)'
+                          : 'none',
                       }}
-                      onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.backgroundColor = 'var(--panel)'; }}
-                      onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                      onMouseEnter={e => {
+                        if (!isExpanded && !isHighlighted) {
+                          e.currentTarget.style.backgroundColor = 'var(--panel)';
+                        }
+                      }}
+                      onMouseLeave={e => {
+                        if (!isExpanded && !isHighlighted) {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }
+                      }}
                     >
                       {/* Chevron */}
                       <td style={{ padding: '10px 0 10px 12px' }}>
                         <motion.div
                           animate={{ rotate: isExpanded ? 90 : 0 }}
                           transition={{ duration: 0.18 }}
-                          style={{ display: 'flex', alignItems: 'center', color: 'var(--ink-dim)' }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            color: 'var(--ink-dim)',
+                          }}
                         >
                           <ChevronRight size={14} />
                         </motion.div>
@@ -311,7 +441,16 @@ const FindingsTable = ({ findings }) => {
                       <td style={{ padding: '10px 0 10px 12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
                           <SeverityLED severity={finding.severity} />
-                          <span className="mono" style={{ fontSize: '11px', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+
+                          <span
+                            className="mono"
+                            style={{
+                              fontSize: '11px',
+                              color: 'var(--ink)',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.04em',
+                            }}
+                          >
                             {finding.severity}
                           </span>
                         </div>
@@ -319,18 +458,45 @@ const FindingsTable = ({ findings }) => {
 
                       {/* Rule ID */}
                       <td style={{ padding: '10px 0' }}>
-                        <span className="mono" style={{ fontSize: '12px', color: 'var(--trace)', letterSpacing: '0.02em' }}>
+                        <span
+                          className="mono"
+                          style={{
+                            fontSize: '12px',
+                            color: 'var(--trace)',
+                            letterSpacing: '0.02em',
+                          }}
+                        >
                           {finding.rule_id}
                         </span>
                       </td>
 
                       {/* Title + explanation preview */}
                       <td style={{ padding: '8px 12px 8px 0' }}>
-                        <div style={{ fontSize: '13px', color: 'var(--ink)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', marginBottom: '3px' }}>
+                        <div
+                          style={{
+                            fontSize: '13px',
+                            color: 'var(--ink)',
+                            overflow: 'hidden',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            marginBottom: '3px',
+                          }}
+                        >
                           {finding.title}
                         </div>
+
                         {finding.explanation && (
-                          <div style={{ fontSize: '11px', color: 'var(--ink-dim)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>
+                          <div
+                            style={{
+                              fontSize: '11px',
+                              color: 'var(--ink-dim)',
+                              overflow: 'hidden',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 1,
+                              WebkitBoxOrient: 'vertical',
+                            }}
+                          >
                             {finding.explanation}
                           </div>
                         )}
@@ -338,14 +504,28 @@ const FindingsTable = ({ findings }) => {
 
                       {/* Resource ID */}
                       <td className="hide-on-mobile" style={{ padding: '10px 0' }}>
-                        <span className="mono" style={{ fontSize: '11px', color: 'var(--ink-dim)', letterSpacing: '0.04em' }}>
+                        <span
+                          className="mono"
+                          style={{
+                            fontSize: '11px',
+                            color: 'var(--ink-dim)',
+                            letterSpacing: '0.04em',
+                          }}
+                        >
                           {finding.resource_id ?? '—'}
                         </span>
                       </td>
 
                       {/* CIS Control */}
                       <td className="hide-on-mobile" style={{ padding: '10px 12px 10px 0' }}>
-                        <span className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)', letterSpacing: '0.03em' }}>
+                        <span
+                          className="mono"
+                          style={{
+                            fontSize: '10px',
+                            color: 'var(--ink-dim)',
+                            letterSpacing: '0.03em',
+                          }}
+                        >
                           {finding.cis_control}
                         </span>
                       </td>
@@ -353,7 +533,15 @@ const FindingsTable = ({ findings }) => {
 
                     {/* Expanded detail row */}
                     <tr style={{ backgroundColor: 'var(--substrate)' }}>
-                      <td colSpan={6} style={{ padding: 0, borderBottom: isExpanded ? '1px solid var(--wire)' : 'none' }}>
+                      <td
+                        colSpan={6}
+                        style={{
+                          padding: 0,
+                          borderBottom: isExpanded
+                            ? '1px solid var(--wire)'
+                            : 'none',
+                        }}
+                      >
                         <AnimatePresence>
                           {isExpanded && (
                             <ExpandedDetail
