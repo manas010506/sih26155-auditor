@@ -40,10 +40,24 @@ def _parser_for(source_type: str):
 
 
 def _device_block(doc: dict, source_type: str) -> dict:
-    """Identify the audited thing. The PDF report requires this section."""
+    """Identify the audited thing. The PDF report requires this section.
+
+    serial and model are part of the required device identification but are
+    not present in a running-config: on Cisco they come from `show version`
+    or `show inventory`, which we are not given. The keys are always present
+    so the report and PDF have a stable shape; they populate when inventory
+    output is supplied alongside the config.
+    """
     if source_type == "terraform_aws":
-        return {"hostname": "aws-account", "vendor": "aws", "os": "terraform",
-                "version": "provider ~> 5.0", "role": "cloud_account"}
+        return {
+            "hostname": "aws-account",
+            "vendor": "aws",
+            "os": "terraform",
+            "version": "provider ~> 5.0",
+            "role": "cloud_account",
+            "model": None,
+            "serial": None,
+        }
 
     g = next((r for r in doc["resources"] if r["type"] == "global_settings"), None)
     attrs = g["attributes"] if g else {}
@@ -53,8 +67,9 @@ def _device_block(doc: dict, source_type: str) -> dict:
         "os": "IOS",
         "version": attrs.get("os_version") or "unknown",
         "role": "network_device",
+        "model": attrs.get("model"),
+        "serial": attrs.get("serial"),
     }
-
 
 def run_audit(config_text: str, source_type: str, filename: str | None = None) -> dict:
     """Audit one configuration file. Returns the Report shape (Handbook 4.2).
