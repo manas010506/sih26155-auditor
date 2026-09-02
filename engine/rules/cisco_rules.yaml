@@ -323,7 +323,8 @@
   severity: critical
   check:
     attribute: aaa_auth_login
-    operator: exists
+    operator: equals
+    value: true
   remediation: \"aaa authentication login default group tacacs+ local\"
   explanation: Without AAA login authentication, the device may fall back to insecure
     local passwords or no authentication at all.
@@ -334,7 +335,8 @@
   severity: critical
   check:
     attribute: aaa_auth_enable
-    operator: exists
+    operator: equals
+    value: true
   remediation: \"aaa authentication enable default group tacacs+ enable\"
   explanation: Privileged EXEC mode must be protected by AAA to ensure that only authorized
     administrators can enter enable mode.
@@ -346,7 +348,8 @@
   severity: medium
   check:
     attribute: aaa_accounting_commands
-    operator: exists
+    operator: equals
+    value: true
   remediation: \"aaa accounting commands 15 default start-stop group tacacs+\"
   explanation: Accounting for privilege 15 commands is essential for forensic audits
     to see exactly what changes were made by which administrator.
@@ -357,7 +360,8 @@
   severity: low
   check:
     attribute: aaa_accounting_connection
-    operator: exists
+    operator: equals
+    value: true
   remediation: \"aaa accounting connection default start-stop group tacacs+\"
   explanation: Connection accounting tracks the start and end of sessions, helping
     to identify session hijacking or unusual login patterns.
@@ -368,7 +372,8 @@
   severity: low
   check:
     attribute: aaa_accounting_exec
-    operator: exists
+    operator: equals
+    value: true
   remediation: \"aaa accounting exec default start-stop group tacacs+\"
   explanation: Exec accounting logs the start and end of the shell session itself.
 - id: CIS-NET-032
@@ -378,7 +383,8 @@
   severity: low
   check:
     attribute: aaa_accounting_network
-    operator: exists
+    operator: equals
+    value: true
   remediation: \"aaa accounting network default start-stop group tacacs+\"
   explanation: Network accounting tracks network-related service requests.
 - id: CIS-NET-033
@@ -388,7 +394,8 @@
   severity: low
   check:
     attribute: aaa_accounting_system
-    operator: exists
+    operator: equals
+    value: true
   remediation: \"aaa accounting system default start-stop group tacacs+\"
   explanation: System accounting logs events not associated with users, such as system
     reloads.
