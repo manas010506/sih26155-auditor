@@ -5,7 +5,7 @@ Target: samples/normalized_examples.json -> "cisco_example"
 """
 
 from ciscoconfparse2 import CiscoConfParse
-
+from engine.parsers.learned import load_mappings, match_line
 from .base import Parser
 
 
@@ -13,6 +13,7 @@ class CiscoIOSParser(Parser):
     source_type = "cisco_ios"
 
     def parse(self, config_text: str, filename: str) -> dict:
+        mappings = load_mappings()
         doc = self.empty(self.source_type, filename)
         self._claimed = set()
         try:
@@ -34,6 +35,7 @@ class CiscoIOSParser(Parser):
         doc["resources"].append(self._ssh_settings(cfg))
         doc["resources"].append(self._logging(cfg))
         doc["resources"].append(self._ntp(cfg))
+        self._apply_learned_mappings(doc, config_text, mappings)
         self._claim_handled_commands(cfg)
         doc["_unparsed"] = self._unparsed_lines(config_text)
         return doc
@@ -115,6 +117,27 @@ class CiscoIOSParser(Parser):
             self._claim(block)
             for child in block.children:
                 self._claim(child)
+
+    def _apply_learned_mappings(self, doc, config_text, mappings):
+        """Apply learned mappings to previously unclaimed configuration lines."""
+        for linenum, line in enumerate(config_text.splitlines()):
+            text = line.strip()
+
+            if not text or text.startswith("!"):
+                continue
+
+            if linenum in self._claimed:
+                continue
+
+            mapping = match_line(text, mappings, self.source_type)
+            if mapping is None:
+                continue
+
+            for resource in doc["resources"]:
+                if resource["type"] == mapping["resource_type"]:
+                    resource["attributes"][mapping["attribute"]] = mapping["value"]
+                    self._claimed.add(linenum)
+                    break
 
     def _unparsed_lines(self, config_text: str):
         """Return config lines that were not consumed by the parser."""
