@@ -23,3 +23,6 @@ Thumbs.db
 
 # NOTE: engine/narrative/cache.json IS committed on purpose.
 # It is what makes the demo work with the wifi off.
+
+# runtime training mappings
+engine/parsers/learned_mappings.json
