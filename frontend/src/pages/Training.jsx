@@ -38,16 +38,16 @@ const ATTRIBUTES = [
   'value',
 ];
 
-
-
 const Training = ({ reportData }) => {
   const [selectedLine, setSelectedLine] = useState(null);
   const [resourceType, setResourceType] = useState('');
   const [attribute, setAttribute] = useState('');
   const [value, setValue] = useState('');
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
-    const lines = Array.isArray(reportData?.unparsed)
+  const lines = Array.isArray(reportData?.unparsed)
     ? reportData.unparsed
     : [];
 
@@ -57,23 +57,59 @@ const Training = ({ reportData }) => {
     setAttribute('');
     setValue('');
     setSaved(false);
+    setError('');
   };
 
-  const saveMapping = () => {
+  const saveMapping = async () => {
     if (!selectedLine || !resourceType || !attribute || !value.trim()) {
+      return;
+    }
+
+    const sourceType = reportData?.source?.type;
+
+    if (!sourceType) {
+      setError('Unable to determine source type.');
+      setSaved(false);
       return;
     }
 
     const mapping = {
       line: selectedLine.line,
       text: selectedLine.text,
+      source_type: sourceType,
       resource_type: resourceType,
       attribute,
       value: value.trim(),
     };
 
-    console.log('Training mapping:', mapping);
-    setSaved(true);
+    setSaving(true);
+    setError('');
+    setSaved(false);
+
+    try {
+      const response = await fetch('/api/training', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(mapping),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || `Training save failed (${response.status})`
+        );
+      }
+
+      setSaved(true);
+    } catch (err) {
+      setError(err.message || 'Failed to save training mapping.');
+      setSaved(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -290,6 +326,7 @@ const Training = ({ reportData }) => {
                   onChange={(event) => {
                     setResourceType(event.target.value);
                     setSaved(false);
+                    setError('');
                   }}
                   className="bg-substrate text-ink border-wire"
                   style={{
@@ -328,6 +365,7 @@ const Training = ({ reportData }) => {
                   onChange={(event) => {
                     setAttribute(event.target.value);
                     setSaved(false);
+                    setError('');
                   }}
                   className="bg-substrate text-ink border-wire"
                   style={{
@@ -366,6 +404,7 @@ const Training = ({ reportData }) => {
                   onChange={(event) => {
                     setValue(event.target.value);
                     setSaved(false);
+                    setError('');
                   }}
                   placeholder="Enter normalized value"
                   className="bg-substrate text-ink border-wire"
@@ -380,7 +419,12 @@ const Training = ({ reportData }) => {
               <button
                 type="button"
                 onClick={saveMapping}
-                disabled={!resourceType || !attribute || !value.trim()}
+                disabled={
+                  saving ||
+                  !resourceType ||
+                  !attribute ||
+                  !value.trim()
+                }
                 className="w-full"
                 style={{
                   display: 'flex',
@@ -395,11 +439,19 @@ const Training = ({ reportData }) => {
                   fontSize: '12px',
                   fontWeight: 600,
                   cursor:
-                    !resourceType || !attribute || !value.trim()
+                    saving ||
+                    !resourceType ||
+                    !attribute ||
+                    !value.trim()
                       ? 'not-allowed'
                       : 'pointer',
                   opacity:
-                    !resourceType || !attribute || !value.trim() ? 0.45 : 1,
+                    saving ||
+                    !resourceType ||
+                    !attribute ||
+                    !value.trim()
+                      ? 0.45
+                      : 1,
                 }}
               >
                 {saved ? (
@@ -408,8 +460,24 @@ const Training = ({ reportData }) => {
                   <IconDeviceFloppy size={15} />
                 )}
 
-                {saved ? 'MAPPING SAVED' : 'SAVE MAPPING'}
+                {saving
+                  ? 'SAVING...'
+                  : saved
+                    ? 'MAPPING SAVED'
+                    : 'SAVE MAPPING'}
               </button>
+
+              {error && (
+                <div
+                  className="text-ink-dim"
+                  style={{
+                    marginTop: '10px',
+                    fontSize: '11px',
+                  }}
+                >
+                  {error}
+                </div>
+              )}
             </>
           )}
         </aside>
