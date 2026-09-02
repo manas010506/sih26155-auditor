@@ -110,7 +110,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                     onClick={() => handleToggle(true)}
                     icon={Server}
                     title="Local model (air-gapped)"
-                    description="AI remediation and attack-path narratives run on a self-hosted local model. Nothing leaves this network."
+                    description="Narratives come from cached results and deterministic templates. No network calls, nothing leaves this machine."
                   />
                   <ToggleButton
                     active={!useLocalModel}
