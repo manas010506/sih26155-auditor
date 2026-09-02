@@ -12,6 +12,8 @@ Run:  pip install flask flask-cors
 import json
 import pathlib
 
+from engine.parsers.learned import add_mapping, load_mappings
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
@@ -54,3 +56,30 @@ def audit():
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
+
+@app.get("/api/training")
+def training_list():
+    return jsonify(mappings=load_mappings())
+
+
+@app.post("/api/training")
+def training_add():
+    body = request.get_json(silent=True) or {}
+
+    for field in ("text", "source_type", "resource_type", "attribute", "value"):
+        val = body.get(field)
+        if not isinstance(val, str) or not val.strip():
+            return jsonify(error=f"{field} is required and must be a non-empty string"), 400
+
+    if body["source_type"] not in VALID_TYPES:
+        return jsonify(error=f"source_type must be one of {sorted(VALID_TYPES)}"), 400
+
+    line = body.get("line")
+    if line is not None and not isinstance(line, int):
+        return jsonify(error="line must be an integer when provided"), 400
+
+    try:
+        return jsonify(add_mapping(body)), 201
+    except Exception as exc:                      # never leak a stack trace
+        app.logger.exception("training save failed")
+        return jsonify(error=f"could not save mapping: {type(exc).__name__}"), 500
