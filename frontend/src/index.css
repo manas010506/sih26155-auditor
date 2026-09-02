@@ -480,3 +480,7 @@ button:focus-visible, a:focus-visible {
   .print-break-inside-avoid { break-inside: avoid; }
 }
 
+select {
+  color-scheme: dark;
+}
+

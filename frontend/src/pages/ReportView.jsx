@@ -1,35 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
-import { motion, useInView } from 'framer-motion';
-import { IconPrinter, IconLoader } from '@tabler/icons-react';
+import { motion } from 'framer-motion';
+import { IconPrinter } from '@tabler/icons-react';
 import SeverityLED from '../components/SeverityLED';
 
-/* Custom lightweight CountUp */
-const CountUp = ({ end, duration = 1.4 }) => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  const [display, setDisplay] = useState('0');
-
-  useEffect(() => {
-    if (!inView) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setDisplay(end.toString());
-      return;
-    }
-    const durationMs = duration * 1000;
-    const start = performance.now();
-    const tick = (now) => {
-      const progress = Math.min((now - start) / durationMs, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const value = Math.round(eased * end);
-      setDisplay(value.toString());
-      if (progress < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, [inView, end, duration]);
-
-  return <span ref={ref}>{display}</span>;
-};
 
 const ReportView = () => {
   const { reportData } = useOutletContext();
@@ -78,7 +52,7 @@ const ReportView = () => {
   }
 
   const { device, findings } = reportData;
-  const totalFindings = findings.length; // every finding is a failure by definition
+  const totalFindings = findings.length;   // findings are failures; passes come from score_breakdown
 
   return (
     <>
@@ -129,7 +103,6 @@ const ReportView = () => {
         margin: '0 auto',
         backgroundColor: 'var(--substrate)',
       }}>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
         {/* Document header */}
         <div style={{ marginBottom: '40px', paddingBottom: '24px', borderBottom: '1px solid var(--wire)' }}>
@@ -150,11 +123,14 @@ const ReportView = () => {
               ['Device',      device.hostname],
               ['Vendor',      device.vendor],
               ['OS',          device.os],
+              ['OS Version',  device.version],
+              ['Model',       device.model],
+              ['Serial',      device.serial],
               ['Source Type', reportData.source?.type],
             ].map(([label, value]) => (
               <div key={label} style={{ backgroundColor: 'var(--panel)', padding: '10px 14px' }}>
                 <div className="label" style={{ marginBottom: '3px' }}>{label}</div>
-                <div className="value">{value}</div>
+                <div className="value">{value ?? 'not in config'}</div>
               </div>
             ))}
           </div>
@@ -163,12 +139,14 @@ const ReportView = () => {
         {/* Summary row */}
         <div style={{ display: 'flex', gap: '1px', backgroundColor: 'var(--wire)', marginBottom: '32px', border: '1px solid var(--wire)' }}>
           {[
-            { label: 'Total Findings',    value: totalFindings,                    color: 'var(--severity-critical)' },
-            { label: 'Compliance Score',  value: reportData.compliance_score ?? '—', color: 'var(--ink)' },
+            { label: 'Checks Run',       value: reportData.score_breakdown?.rules_evaluated ?? '—', color: 'var(--ink)' },
+            { label: 'Passed',           value: reportData.score_breakdown?.rules_passed ?? '—',    color: 'var(--trace)' },
+            { label: 'Failed',           value: totalFindings,                                      color: 'var(--severity-critical)' },
+            { label: 'Compliance Score', value: reportData.compliance_score ?? '—',                 color: 'var(--ink)' },
           ].map(({ label, value, color }) => (
             <div key={label} style={{ flex: 1, backgroundColor: 'var(--panel)', padding: '14px 16px', textAlign: 'center' }}>
               <div className="mono" style={{ fontSize: '28px', fontWeight: 700, color, lineHeight: 1, marginBottom: '4px' }}>
-                {typeof value === 'number' ? <CountUp end={value} duration={1.5} /> : value}
+                {value}
               </div>
               <div className="label">{label}</div>
             </div>
@@ -217,13 +195,13 @@ const ReportView = () => {
                   <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--wire)', flexShrink: 0 }} />
                   <span className="mono" style={{ fontSize: '11px', color: 'var(--ink-dim)', textTransform: 'uppercase' }}>{finding.cis_control}</span>
                 </div>
-  
+
                 {/* Description */}
                 <div style={{ padding: '10px 16px', fontSize: '13px', color: 'var(--ink)', borderBottom: '1px solid var(--wire)' }}>
                   <div style={{ fontWeight: 600, marginBottom: '4px' }}>{finding.title}</div>
                   <div>{finding.explanation}</div>
                 </div>
-  
+
                 {/* Remediation CLI */}
                 {finding.remediation_template && (
                   <div style={{ padding: '10px 16px', backgroundColor: 'var(--substrate)' }}>
