@@ -26,3 +26,6 @@ Thumbs.db
 
 .env
 .env.local
+
+# runtime state - mappings taught through the training UI
+engine/parsers/learned_mappings.json

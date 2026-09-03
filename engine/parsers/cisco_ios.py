@@ -5,7 +5,7 @@ Target: samples/normalized_examples.json -> "cisco_example"
 """
 
 from ciscoconfparse2 import CiscoConfParse
-
+from engine.parsers.learned import load_mappings, match_line
 from .base import Parser
 
 
@@ -13,14 +13,13 @@ class CiscoIOSParser(Parser):
     source_type = "cisco_ios"
 
     def parse(self, config_text: str, filename: str) -> dict:
+        mappings = load_mappings()
         doc = self.empty(self.source_type, filename)
-
+        self._claimed = set()
         try:
             cfg = CiscoConfParse(config_text.splitlines(), syntax="ios")
         except Exception:
-            doc["_unparsed"] = [
-                {"line": 0, "text": "config could not be parsed"}
-            ]
+            doc["_unparsed"] = self._unparsed_lines(config_text)
             return doc
 
         doc["resources"].append(self._global_settings(cfg))
@@ -28,7 +27,7 @@ class CiscoIOSParser(Parser):
         doc["resources"].extend(self._local_users(cfg))
         doc["resources"].extend(self._snmp_communities(cfg))
         doc["resources"].append(self._snmp_settings(cfg))
-
+        self._claim_interfaces(cfg)
         # Already implemented
         doc["resources"].extend(self._vty_lines(cfg))
 
@@ -36,7 +35,9 @@ class CiscoIOSParser(Parser):
         doc["resources"].append(self._ssh_settings(cfg))
         doc["resources"].append(self._logging(cfg))
         doc["resources"].append(self._ntp(cfg))
-        doc["_unparsed"] = self._unparsed_lines(config_text, cfg)
+        self._apply_learned_mappings(doc, config_text, mappings)
+        self._claim_handled_commands(cfg)
+        doc["_unparsed"] = self._unparsed_lines(config_text)
         return doc
 
     # ---------------------------------------------------------------- helpers
@@ -49,42 +50,28 @@ class CiscoIOSParser(Parser):
             "snippet": obj.text.strip(),
         }
 
-    @staticmethod
-    def _find_line(cfg, pattern):
+    def _claim(self, obj):
+        """Mark a CiscoConfParse object as consumed by the parser."""
+        self._claimed.add(obj.linenum)
+
+    def _claim_all(self, cfg, pattern):
+        """Mark all matching CiscoConfParse objects as consumed."""
+        for obj in cfg.find_objects(pattern):
+            self._claim(obj)
+
+    def _find_line(self, cfg, pattern):
         """Return the first matching object, or None."""
         matches = cfg.find_objects(pattern)
-        return matches[0] if matches else None
+        if matches:
+            self._claim(matches[0])
+            return matches[0]
+        return None
 
-    @staticmethod
-    def _unparsed_lines(config_text: str, cfg):
-        """Return config lines that are not handled by the parser."""
-        recognized = set()
+    def _claim_handled_commands(self, cfg):
+        """Claim known Cisco IOS commands handled by the parser."""
 
-        # ---------------------------------------------------------
-        # Global commands handled by the parser
-        # ---------------------------------------------------------
-        global_patterns = [
-            r"^version ",
-            r"^hostname ",
-            r"^(?:no )?service password-encryption$",
-            r"^(?:no )?aaa new-model$",
-            r"^(?:no )?ip http server$",
-            r"^(?:no )?ip http secure-server$",
-            r"^(?:no )?cdp run$",
-            r"^banner login",
-            r"^banner motd",
-            r"^(?:no )?ip source-route$",
-            r"^aaa authentication login ",
-            r"^aaa authentication enable ",
-            r"^aaa accounting commands ",
-            r"^aaa accounting connection ",
-            r"^aaa accounting exec ",
-            r"^aaa accounting network ",
-            r"^aaa accounting system ",
-            r"^enable secret ",
-            r"^enable password ",
-
-            # Other global configuration
+        patterns = [
+            # Global commands
             r"^service timestamps ",
             r"^boot-start-marker$",
             r"^boot-end-marker$",
@@ -95,43 +82,13 @@ class CiscoIOSParser(Parser):
             r"^ip forward-protocol ",
             r"^ip route ",
             r"^access-list ",
-        ]
 
-        # ---------------------------------------------------------
-        # Resources handled by the parser
-        # ---------------------------------------------------------
-        resource_patterns = [
-            # Local users
-            r"^username ",
-
-            # SNMP
-            r"^snmp-server community ",
-            r"^snmp-server group .* v3",
-            r"^snmp-server user .* v3",
-            r"^snmp-server enable traps",
+            # SNMP metadata
             r"^snmp-server location ",
             r"^snmp-server contact ",
 
-            # Lines
-            r"^line vty ",
-            r"^line con ",
+            # Line blocks
             r"^line aux ",
-
-            # SSH
-            r"^ip ssh version ",
-            r"^ip ssh time-out ",
-            r"^ip ssh authentication-retries ",
-            r"^crypto key generate rsa",
-
-            # Logging
-            r"^logging host ",
-            r"^logging buffered ",
-            r"^logging trap ",
-            r"^login on-success log",
-
-            # NTP
-            r"^ntp server ",
-            r"^ntp authenticate",
 
             # Interface configuration
             r"^interface ",
@@ -146,45 +103,44 @@ class CiscoIOSParser(Parser):
             r"^end$",
         ]
 
-        # ---------------------------------------------------------
-        # Child commands handled inside line blocks
-        # ---------------------------------------------------------
-        child_patterns = [
-            r"^exec-timeout ",
-            r"^password ",
-            r"^login$",
-            r"^login authentication ",
-            r"^no login$",
-            r"^transport input ",
-            r"^access-class ",
-            r"^privilege level ",
-        ]
+        for pattern in patterns:
+            self._claim_all(cfg, pattern)
 
-        import re
+        # Claim children inside auxiliary line blocks.
+        for block in cfg.find_objects(r"^line aux "):
+            self._claim(block)
+            for child in block.children:
+                self._claim(child)
 
-        # ---------------------------------------------------------
-        # Mark every recognized line
-        # ---------------------------------------------------------
-        all_patterns = (
-            global_patterns
-            + resource_patterns
-            + child_patterns
-        )
+        # Claim all children inside VTY blocks.
+        for block in cfg.find_objects(r"^line vty "):
+            self._claim(block)
+            for child in block.children:
+                self._claim(child)
 
-        for obj in cfg.objs:
-            text = obj.text.strip()
+    def _apply_learned_mappings(self, doc, config_text, mappings):
+        """Apply learned mappings to previously unclaimed configuration lines."""
+        for linenum, line in enumerate(config_text.splitlines()):
+            text = line.strip()
 
             if not text or text.startswith("!"):
                 continue
 
-            for pattern in all_patterns:
-                if re.match(pattern, text):
-                    recognized.add(obj.linenum)
+            if linenum in self._claimed:
+                continue
+
+            mapping = match_line(text, mappings, self.source_type)
+            if mapping is None:
+                continue
+
+            for resource in doc["resources"]:
+                if resource["type"] == mapping["resource_type"]:
+                    resource["attributes"][mapping["attribute"]] = mapping["value"]
+                    self._claimed.add(linenum)
                     break
 
-        # ---------------------------------------------------------
-        # Return anything genuinely unrecognized
-        # ---------------------------------------------------------
+    def _unparsed_lines(self, config_text: str):
+        """Return config lines that were not consumed by the parser."""
         unparsed = []
 
         for linenum, line in enumerate(config_text.splitlines()):
@@ -193,14 +149,13 @@ class CiscoIOSParser(Parser):
             if not text or text.startswith("!"):
                 continue
 
-            if linenum not in recognized:
+            if linenum not in self._claimed:
                 unparsed.append({
                     "line": linenum + 1,
                     "text": text,
                 })
 
         return unparsed
-
     # ------------------------------------------------------------- GLOBAL
 
     def _global_settings(self, cfg):
@@ -449,6 +404,7 @@ class CiscoIOSParser(Parser):
         out = []
 
         for obj in cfg.find_objects(r"^username "):
+            self._claim(obj)
             parts = obj.text.strip().split()
 
             if len(parts) < 2:
@@ -504,6 +460,7 @@ class CiscoIOSParser(Parser):
         out = []
 
         for obj in cfg.find_objects(r"^snmp-server community "):
+            self._claim(obj)
             parts = obj.text.strip().split()
 
             # snmp-server community STRING ACCESS [ACL]
@@ -550,15 +507,26 @@ class CiscoIOSParser(Parser):
         if communities:
             versions = ["v1", "v2c"]
 
-        v3 = bool(
-            cfg.find_objects(r"^snmp-server group .* v3")
-            or cfg.find_objects(r"^snmp-server user .* v3")
-        )
+        v3_group = cfg.find_objects(r"^snmp-server group .* v3")
+        v3_user = cfg.find_objects(r"^snmp-server user .* v3")
+
+        for obj in v3_group:
+            self._claim(obj)
+
+        for obj in v3_user:
+            self._claim(obj)
+
+        v3 = bool(v3_group or v3_user)
 
         if v3:
             versions.append("v3")
 
-        traps = bool(cfg.find_objects(r"^snmp-server enable traps"))
+        trap_objects = cfg.find_objects(r"^snmp-server enable traps")
+
+        for obj in trap_objects:
+            self._claim(obj)
+
+        traps = bool(trap_objects)
 
         return {
             "id": "snmp",
@@ -588,10 +556,12 @@ class CiscoIOSParser(Parser):
                 t = child.text.strip()
 
                 if t.startswith("transport input"):
+                    self._claim(block)
                     transport = t.replace("transport input", "").split()
                     refs["transport_input"] = self._ref(child)
 
                 elif t.startswith("exec-timeout"):
+                    self._claim(block)
                     parts = t.split()
 
                     if len(parts) > 1:
@@ -603,15 +573,18 @@ class CiscoIOSParser(Parser):
                     refs["exec_timeout_minutes"] = self._ref(child)
 
                 elif t.startswith("access-class"):
+                    self._claim(block)
                     parts = t.split()
                     if len(parts) > 1:
                         access_class = parts[1]
                     refs["access_class"] = self._ref(child)
 
                 elif t.startswith("login authentication"):
+                    self._claim(block)
                     login = "aaa"
 
                 elif t == "login":
+                    self._claim(block)
                     login = "password"
 
             out.append({
@@ -632,6 +605,15 @@ class CiscoIOSParser(Parser):
         return out
 
     # -------------------------------------------------------------- CONSOLE
+            # ------------------------------------------------------------ INTERFACES
+
+    def _claim_interfaces(self, cfg):
+        """Claim interface blocks so their lines are not reported as unparsed."""
+        for block in cfg.find_objects(r"^interface "):
+            self._claim(block)
+
+            for child in block.children:
+                self._claim(child)
 
     def _console_line(self, cfg):
         block = cfg.find_objects(r"^line con 0")
@@ -650,6 +632,7 @@ class CiscoIOSParser(Parser):
             }
 
         block = block[0]
+        self._claim(block)
 
         timeout = None
         privilege = None
@@ -660,6 +643,7 @@ class CiscoIOSParser(Parser):
             t = child.text.strip()
 
             if t.startswith("exec-timeout"):
+                self._claim(child)
                 parts = t.split()
                 if len(parts) > 1:
                     try:
@@ -669,6 +653,7 @@ class CiscoIOSParser(Parser):
                 refs["exec_timeout_minutes"] = self._ref(child)
 
             elif t.startswith("privilege level"):
+                self._claim(child)
                 parts = t.split()
                 if len(parts) > 2:
                     try:
@@ -678,10 +663,12 @@ class CiscoIOSParser(Parser):
                 refs["privilege_level"] = self._ref(child)
 
             elif t == "no login":
+                self._claim(child)
                 login = "none"
                 refs["login_method"] = self._ref(child)
 
             elif t == "login":
+                self._claim(child)
                 login = "password"
                 refs["login_method"] = self._ref(child)
 
@@ -732,11 +719,12 @@ class CiscoIOSParser(Parser):
         hosts = []
 
         for obj in cfg.find_objects(r"^logging host "):
+            self._claim(obj)
             parts = obj.text.strip().split()
             if len(parts) >= 3:
                 hosts.append(parts[2])
 
-        buffered = bool(cfg.find_objects(r"^logging buffered "))
+        buffered = bool(self._find_line(cfg, r"^logging buffered "))
         trap = self._find_line(cfg, r"^logging trap ")
         admin = bool(cfg.find_objects(r"^login on-success log"))
 
@@ -763,6 +751,7 @@ class CiscoIOSParser(Parser):
         first = None
 
         for obj in cfg.find_objects(r"^ntp server "):
+            self._claim(obj)
             parts = obj.text.strip().split()
 
             if len(parts) >= 3:

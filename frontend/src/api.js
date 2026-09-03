@@ -21,6 +21,19 @@ export async function audit(configText, sourceType) {
   return res.json();
 }
 
+export async function addTrainingMapping(mapping) {
+  const res = await fetch(`${BASE}/api/training`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(mapping),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `could not save mapping (${res.status})`);
+  }
+  return res.json();
+}
+
 export async function health() {
   try {
     const r = await fetch(`${BASE}/api/health`);

@@ -13,6 +13,7 @@ import {
 } from '@tabler/icons-react';
 import TactileButton from '../components/TactileButton';
 import EmptyStateCard from '../components/EmptyStateCard';
+import { addTrainingMapping } from '../api';
 
 const RESOURCE_TYPES = [
   'global_settings',
@@ -50,6 +51,84 @@ const ATTRIBUTES = [
 const Training = () => {
   const { reportData } = useOutletContext();
 
+  // Every hook must run on every render. These used to sit below the
+  // `if (!reportData)` early return, so the hook count changed the moment an
+  // upload completed and React threw "Rendered more hooks than during the
+  // previous render". Keep all hooks above any conditional return.
+  const [selectedLine, setSelectedLine] = useState(null);
+  const [resourceType, setResourceType] = useState('');
+  const [attribute, setAttribute] = useState('');
+  const [value, setValue] = useState('');
+  const [saveError, setSaveError] = useState(null);
+
+  // Follow-up Tracking: Dictionary mapping line number -> mapping payload
+  const [mappings, setMappings] = useState({});
+
+  const unparsed = reportData?.unparsed ?? [];
+  const lines = Array.isArray(unparsed) ? unparsed : [];
+
+  const selectLine = (item) => {
+    setSelectedLine(item);
+    setSaveError(null);
+
+    // If we've already mapped this line in this session, pre-fill it so the user can edit
+    const existing = mappings[item.line];
+    if (existing) {
+      setResourceType(existing.resource_type);
+      setAttribute(existing.attribute);
+      setValue(existing.value);
+    } else {
+      setResourceType('');
+      setAttribute('');
+      setValue('');
+    }
+  };
+
+  const saveMapping = async () => {
+    if (!selectedLine || !resourceType || !attribute || !value.trim()) {
+      return;
+    }
+
+    const mapping = {
+      line: selectedLine.line,
+      text: selectedLine.text,
+      source_type: reportData?.source?.type ?? 'cisco_ios',
+      resource_type: resourceType,
+      attribute,
+      value: value.trim(),
+    };
+
+    // Persist to the engine. If this fails we must NOT show the line as saved -
+    // a checkmark for a mapping that never reached the server is worse than an
+    // error message.
+    try {
+      await addTrainingMapping(mapping);
+      setSaveError(null);
+    } catch (err) {
+      setSaveError(err.message || 'Could not reach the auditor. Mapping not saved.');
+      return;
+    }
+
+    // Update local state to show it as completed
+    setMappings(prev => ({
+      ...prev,
+      [selectedLine.line]: mapping
+    }));
+
+    // Auto-advance to the next unmapped line
+    const currentIndex = lines.findIndex(l => l.line === selectedLine.line);
+    const nextLine = lines.slice(currentIndex + 1).find(l => !mappings[l.line]);
+    if (nextLine) {
+      selectLine(nextLine);
+    } else {
+      setSelectedLine(null); // All caught up
+    }
+  };
+
+  const completedCount = Object.keys(mappings).length;
+  const remainingCount = Math.max(0, lines.length - completedCount);
+  const progressPercent = lines.length === 0 ? 100 : (completedCount / lines.length) * 100;
+
   if (!reportData) {
     const TrainingSVG = (
       <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -80,68 +159,6 @@ const Training = () => {
       />
     );
   }
-
-  const unparsed = reportData.unparsed ?? [];
-  const [selectedLine, setSelectedLine] = useState(null);
-  const [resourceType, setResourceType] = useState('');
-  const [attribute, setAttribute] = useState('');
-  const [value, setValue] = useState('');
-  
-  // Follow-up Tracking: Dictionary mapping line number -> mapping payload
-  const [mappings, setMappings] = useState({});
-
-  const lines = Array.isArray(unparsed) ? unparsed : [];
-
-  const selectLine = (item) => {
-    setSelectedLine(item);
-    
-    // If we've already mapped this line in this session, pre-fill it so the user can edit
-    const existing = mappings[item.line];
-    if (existing) {
-      setResourceType(existing.resource_type);
-      setAttribute(existing.attribute);
-      setValue(existing.value);
-    } else {
-      setResourceType('');
-      setAttribute('');
-      setValue('');
-    }
-  };
-
-  const saveMapping = () => {
-    if (!selectedLine || !resourceType || !attribute || !value.trim()) {
-      return;
-    }
-
-    const mapping = {
-      line: selectedLine.line,
-      text: selectedLine.text,
-      resource_type: resourceType,
-      attribute,
-      value: value.trim(),
-    };
-
-    console.log('Training mapping saved:', mapping);
-    
-    // Update local state to show it as completed
-    setMappings(prev => ({
-      ...prev,
-      [selectedLine.line]: mapping
-    }));
-    
-    // Auto-advance to the next unmapped line
-    const currentIndex = lines.findIndex(l => l.line === selectedLine.line);
-    const nextLine = lines.slice(currentIndex + 1).find(l => !mappings[l.line]);
-    if (nextLine) {
-      selectLine(nextLine);
-    } else {
-      setSelectedLine(null); // All caught up
-    }
-  };
-
-  const completedCount = Object.keys(mappings).length;
-  const remainingCount = Math.max(0, lines.length - completedCount);
-  const progressPercent = lines.length === 0 ? 100 : (completedCount / lines.length) * 100;
 
   const renderBody = () => {
 
@@ -451,6 +468,28 @@ const Training = () => {
                       />
                     </label>
                   </div>
+
+                  {/* Save failure - never show a mapping as saved when it wasn't */}
+                  {saveError && (
+                    <div
+                      className="mono"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        marginBottom: '20px',
+                        padding: '12px 16px',
+                        borderRadius: '6px',
+                        background: 'var(--severity-critical-bg, rgba(242,84,91,0.08))',
+                        border: '1px solid var(--severity-critical)',
+                        color: 'var(--severity-critical)',
+                        fontSize: '12px'
+                      }}
+                    >
+                      <IconX size={14} />
+                      {saveError}
+                    </div>
+                  )}
 
                   {/* Actions */}
                   <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
