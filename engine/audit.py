@@ -40,24 +40,10 @@ def _parser_for(source_type: str):
 
 
 def _device_block(doc: dict, source_type: str) -> dict:
-    """Identify the audited thing. The PDF report requires this section.
-
-    serial and model are part of the required device identification but are
-    not present in a running-config: on Cisco they come from `show version`
-    or `show inventory`, which we are not given. The keys are always present
-    so the report and PDF have a stable shape; they populate when inventory
-    output is supplied alongside the config.
-    """
+    """Identify the audited thing. The PDF report requires this section."""
     if source_type == "terraform_aws":
-        return {
-            "hostname": "aws-account",
-            "vendor": "aws",
-            "os": "terraform",
-            "version": "provider ~> 5.0",
-            "role": "cloud_account",
-            "model": None,
-            "serial": None,
-        }
+        return {"hostname": "aws-account", "vendor": "aws", "os": "terraform",
+                "version": "provider ~> 5.0", "role": "cloud_account"}
 
     g = next((r for r in doc["resources"] if r["type"] == "global_settings"), None)
     attrs = g["attributes"] if g else {}
@@ -67,15 +53,40 @@ def _device_block(doc: dict, source_type: str) -> dict:
         "os": "IOS",
         "version": attrs.get("os_version") or "unknown",
         "role": "network_device",
-        "model": attrs.get("model"),
-        "serial": attrs.get("serial"),
     }
 
-def run_audit(config_text: str, source_type: str, filename: str | None = None) -> dict:
+
+def _enrich_narratives(attack_paths: list[dict]) -> None:
+    """Upgrade attack-path prose from the template to the LLM, in place.
+
+    Attack paths only - never findings. Narrating 27 findings would be 27
+    network calls and a 30-second audit.
+
+    Every path already carries deterministic template text from the chain
+    definition, so this can only improve the report, never break it.
+    generate_narrative() returns the template on any failure, and a failure here
+    must not fail the audit - the offline demo depends on that.
+    """
+    from engine.narrative.generator import generate_narrative
+
+    for path in attack_paths:
+        try:
+            text = generate_narrative(path, "attack_path")
+            if text:
+                path["narrative"] = text
+        except Exception:                      # never let prose break an audit
+            continue
+
+
+def run_audit(config_text: str, source_type: str, filename: str | None = None,
+              enrich: bool = True) -> dict:
     """Audit one configuration file. Returns the Report shape (Handbook 4.2).
 
     Raises ValueError on an unknown source_type or empty input — the API turns
     that into a clean 400 rather than a 500.
+
+    enrich=False skips the LLM narrative pass. Tests use it so their results
+    never depend on a network call or a cache state.
     """
     if source_type not in SOURCES:
         raise ValueError(
@@ -98,6 +109,9 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None) -
     findings = evaluate(doc, rules)
     attack_paths = correlate(findings, str(CHAINS))
     scored = score(findings, rules)
+
+    if enrich:
+        _enrich_narratives(attack_paths)
 
     return {
         "source": {"type": source_type, "filename": filename},
