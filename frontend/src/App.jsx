@@ -82,7 +82,7 @@ const DashboardLayout = ({ reportData, setReportData, score }) => {
   );
 };
 
-import sampleReport from './sample_report.json';
+import sampleReport from './sample_report.json'; //To be removed
 
 function App() {
   const [reportData, setReportData] = useState(null);

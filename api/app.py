@@ -53,10 +53,6 @@ def audit():
         app.logger.exception("audit failed")
         return jsonify(error=f"audit failed: {type(exc).__name__}"), 500
 
-
-if __name__ == "__main__":
-    app.run(port=5000, debug=True)
-
 @app.get("/api/training")
 def training_list():
     return jsonify(mappings=load_mappings())
@@ -83,3 +79,7 @@ def training_add():
     except Exception as exc:                      # never leak a stack trace
         app.logger.exception("training save failed")
         return jsonify(error=f"could not save mapping: {type(exc).__name__}"), 500
+
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)
+
