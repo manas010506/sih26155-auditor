@@ -54,8 +54,13 @@ const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
   >
     <div style={{
       padding: '16px 24px 20px 52px',
-      borderLeft: '2px solid var(--trace)',
-      marginLeft: '24px',
+      borderLeft: `2px solid ${
+        finding.severity?.toLowerCase() === 'critical' ? 'var(--severity-critical)' :
+        finding.severity?.toLowerCase() === 'high' ? 'var(--severity-high)' :
+        finding.severity?.toLowerCase() === 'medium' ? 'var(--severity-medium)' :
+        'var(--severity-low)'
+      }`,
+      marginLeft: '12px',
       marginBottom: '8px',
       display: 'flex',
       flexDirection: 'column',
@@ -69,8 +74,9 @@ const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
           </div>
           <pre style={{
             margin: 0, padding: '10px 14px',
-            backgroundColor: 'var(--substrate)',
+            backgroundColor: 'var(--panel)',
             border: '1px solid var(--wire)',
+            borderRadius: '4px',
             fontFamily: 'IBM Plex Mono, monospace',
             fontSize: '12px', color: 'var(--ink)',
             overflowX: 'auto', lineHeight: '1.6',
@@ -82,8 +88,8 @@ const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
         <div>
           <div className="label" style={{ marginBottom: '6px' }}>Context</div>
           <div style={{
-            padding: '10px 14px', backgroundColor: 'var(--substrate)',
-            border: '1px solid var(--wire)', fontSize: '12px',
+            padding: '10px 14px', backgroundColor: 'var(--panel)',
+            border: '1px solid var(--wire)', borderRadius: '4px', fontSize: '12px',
             color: 'var(--ink-dim)', fontStyle: 'italic',
           }}>
             No direct line reference — global setting or missing configuration.
@@ -114,6 +120,7 @@ const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
                 display: 'inline-flex', alignItems: 'center', gap: '5px',
                 background: 'transparent', border: '1px solid var(--wire)',
                 color: copiedId === finding.rule_id ? 'var(--trace)' : 'var(--ink-dim)',
+                borderRadius: '4px',
                 padding: '3px 10px', cursor: 'pointer',
                 transition: 'border-color 0.15s, color 0.15s',
                 fontFamily: 'IBM Plex Mono, monospace',
@@ -127,8 +134,9 @@ const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
           </div>
           <pre style={{
             margin: 0, padding: '10px 14px',
-            backgroundColor: 'var(--substrate)',
+            backgroundColor: 'var(--panel)',
             border: `1px solid ${copiedId === finding.rule_id ? 'var(--trace)' : 'var(--wire)'}`,
+            borderRadius: '4px',
             fontFamily: 'IBM Plex Mono, monospace',
             fontSize: '12px', color: 'var(--ink)',
             overflowX: 'auto', lineHeight: '1.6',
@@ -199,35 +207,36 @@ const FindingsTable = ({ findings }) => {
   });
 
   const selectStyle = {
-    backgroundColor: 'var(--panel)',
+    backgroundColor: 'rgba(27, 33, 43, 0.6)',
     border: '1px solid var(--wire)',
     color: 'var(--ink)',
-    padding: '5px 10px',
+    padding: '6px 12px',
+    borderRadius: '4px',
     fontFamily: 'IBM Plex Mono, monospace',
     fontSize: '11px',
     textTransform: 'uppercase',
     letterSpacing: '0.04em',
     cursor: 'pointer',
     outline: 'none',
+    backdropFilter: 'blur(8px)',
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--substrate)' }}>
+    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
       {/* Filter bar */}
       <div style={{
-        padding: '10px 24px',
+        padding: '12px 24px',
         borderBottom: '1px solid var(--wire)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '12px',
         flexWrap: 'wrap',
-        backgroundColor: 'var(--panel)',
         flexShrink: 0,
       }}>
         <div className="label">{sorted.length} / {findings.length} findings</div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <select style={selectStyle} value={filterSeverity} onChange={e => setFilterSeverity(e.target.value)}>
             {severities.map(s => (
               <option key={s} value={s}>{s === 'all' ? 'ALL SEVERITIES' : s.toUpperCase()}</option>
@@ -254,7 +263,7 @@ const FindingsTable = ({ findings }) => {
             <div className="label">No findings match filters</div>
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <table className="zebra-table" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <colgroup>
               <col style={{ width: '36px' }} />
               <col style={{ width: '100px' }} />
@@ -265,9 +274,10 @@ const FindingsTable = ({ findings }) => {
             </colgroup>
             <thead>
               <tr style={{
-                backgroundColor: 'var(--panel)',
                 borderBottom: '1px solid var(--wire)',
                 position: 'sticky', top: 0, zIndex: 10,
+                backdropFilter: 'blur(12px)',
+                backgroundColor: 'rgba(27, 33, 43, 0.85)',
               }}>
                 <th style={{ padding: '8px 12px' }} />
                 <SortableHeader label="SEV" field="severity" sortField={sortField} sortDir={sortDir} onSort={handleSort} style={{ paddingLeft: '12px' }} />
@@ -280,6 +290,12 @@ const FindingsTable = ({ findings }) => {
             <tbody ref={tbodyRef}>
               {sorted.map((finding, rowIdx) => {
                 const isExpanded = expandedRows.has(finding.rule_id);
+                const sevLevel = finding.severity?.toLowerCase();
+                const borderColor = sevLevel === 'critical' ? 'var(--severity-critical)' :
+                                    sevLevel === 'high' ? 'var(--severity-high)' :
+                                    sevLevel === 'medium' ? 'var(--severity-medium)' :
+                                    'var(--severity-low)';
+
                 return (
                   <React.Fragment key={finding.rule_id}>
                     <motion.tr
@@ -293,11 +309,11 @@ const FindingsTable = ({ findings }) => {
                         cursor: 'pointer',
                         transition: 'background-color 0.12s ease',
                       }}
-                      onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.backgroundColor = 'var(--panel)'; }}
+                      onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.backgroundColor = 'rgba(74, 85, 99, 0.15)'; }}
                       onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.backgroundColor = 'transparent'; }}
                     >
-                      {/* Chevron */}
-                      <td style={{ padding: '10px 0 10px 12px' }}>
+                      {/* Chevron & Severity Left Border */}
+                      <td style={{ padding: '10px 0 10px 12px', borderLeft: `3px solid ${borderColor}` }}>
                         <motion.div
                           animate={{ rotate: isExpanded ? 90 : 0 }}
                           transition={{ duration: 0.18 }}
@@ -308,7 +324,7 @@ const FindingsTable = ({ findings }) => {
                       </td>
 
                       {/* Severity */}
-                      <td style={{ padding: '10px 0 10px 12px' }}>
+                      <td style={{ padding: '10px 0 10px 8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
                           <SeverityLED severity={finding.severity} />
                           <span className="mono" style={{ fontSize: '11px', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -352,8 +368,8 @@ const FindingsTable = ({ findings }) => {
                     </motion.tr>
 
                     {/* Expanded detail row */}
-                    <tr style={{ backgroundColor: 'var(--substrate)' }}>
-                      <td colSpan={6} style={{ padding: 0, borderBottom: isExpanded ? '1px solid var(--wire)' : 'none' }}>
+                    <tr>
+                      <td colSpan={6} style={{ padding: 0, borderBottom: isExpanded ? '1px solid var(--wire)' : 'none', backgroundColor: isExpanded ? 'rgba(0,0,0,0.1)' : 'transparent' }}>
                         <AnimatePresence>
                           {isExpanded && (
                             <ExpandedDetail

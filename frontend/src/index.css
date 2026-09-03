@@ -11,6 +11,7 @@
   /* Accent — desaturated oscilloscope teal, used ONLY for interactive elements */
   --trace: #3FA9A0;
   --trace-dim: rgba(63, 169, 160, 0.15);
+  --trace-glow: rgba(63, 169, 160, 0.25);
 
   /* Text */
   --ink: #E7EBF0;
@@ -24,6 +25,12 @@
 
   /* Animation */
   --ease-engineered: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Card system */
+  --card-border: rgba(63, 169, 160, 0.12);
+  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.25), 0 0 1px rgba(63, 169, 160, 0.1);
+  --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 1px rgba(63, 169, 160, 0.2);
+  --card-radius: 6px;
 }
 
 * {
@@ -34,10 +41,8 @@
 
 body {
   background-color: var(--substrate);
-  /* 1. SVG Noise 3%
-     2. Radial gradient (lighter center, darker edges)
-     3. Grid lines */
-  background-image: 
+  /* Layered background: noise → radial gradient → circuit grid */
+  background-image:
     url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E"),
     radial-gradient(circle at 50% 0%, #151a22 0%, #0c0f13 100%),
     repeating-linear-gradient(
@@ -90,6 +95,28 @@ h3 { font-size: 16px; }
 .bg-panel:hover { background-color: var(--panel-raised); border-top-color: #728092; }
 .bg-panel-raised { background-color: var(--panel-raised); }
 .bg-substrate { background-color: transparent; } /* Reverted to transparent so grid shows */
+
+/* ─── Glass Card System ─────────────────────────────────────────
+   Reusable elevated card with border, shadow, blur.
+   Use .glass-card on any panel for premium lifted feel.          */
+.glass-card {
+  background: rgba(27, 33, 43, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  transition: box-shadow 0.25s var(--ease-engineered),
+              border-color 0.25s var(--ease-engineered),
+              transform 0.25s var(--ease-engineered);
+}
+.glass-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  border-color: rgba(63, 169, 160, 0.22);
+}
+.glass-card-interactive:hover {
+  transform: translateY(-2px);
+}
 
 /* --- Tactical Utilities --- */
 .tactical-border {
@@ -448,6 +475,30 @@ button:focus-visible, a:focus-visible {
 .opacity-40 { opacity: 0.4; }
 .opacity-70 { opacity: 0.7; }
 
+/* ─── Keyframe Animations ────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes dash-draw {
+  to { stroke-dashoffset: -20; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(63, 169, 160, 0.3), 0 0 8px rgba(63, 169, 160, 0.15); }
+  50% { box-shadow: 0 0 8px rgba(63, 169, 160, 0.5), 0 0 16px rgba(63, 169, 160, 0.25); }
+}
+
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(63, 169, 160, 0.2); }
+  50% { border-color: rgba(63, 169, 160, 0.5); }
+}
+
 /* Print Styles */
 @media print {
   .print\:bg-white { background-color: #fff !important; }
@@ -483,4 +534,3 @@ button:focus-visible, a:focus-visible {
 select {
   color-scheme: dark;
 }
-

@@ -1,9 +1,10 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconUpload, IconFileText, IconCheck, IconAlertCircle } from '@tabler/icons-react';
+import { IconFileText, IconCheck, IconAlertCircle, IconUpload, IconShieldLock } from '@tabler/icons-react';
 import { audit } from '../api';
 import TactileButton from '../components/TactileButton';
+import UploadBackground from '../components/UploadBackground';
 
 /* Detect source type from file extension */
 const detectSourceType = (filename) => {
@@ -13,11 +14,11 @@ const detectSourceType = (filename) => {
   return { type: null, label: null, ext };
 };
 
-/* Spinning ring — pure CSS animation, no Tailwind animate-pulse */
+/* Spinning ring for loading */
 const SpinRing = () => (
   <div style={{
-    width: '40px',
-    height: '40px',
+    width: '56px',
+    height: '56px',
     border: '2px solid var(--wire)',
     borderTopColor: 'var(--trace)',
     borderRadius: '50%',
@@ -25,13 +26,13 @@ const SpinRing = () => (
   }} />
 );
 
-
+/* Abstract background illustration imported separately */
 
 const Upload = () => {
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState('empty'); // empty | detected | loading | success
-  const [detected, setDetected] = useState(null); // { name, type, label, file }
+  const [detected, setDetected] = useState(null);
   const inputRef = useRef(null);
   const navigate = useNavigate();
   const { setReportData } = useOutletContext();
@@ -93,159 +94,259 @@ const Upload = () => {
   const isLoading = status === 'loading' || status === 'success';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--substrate)', padding: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'transparent', position: 'relative' }}>
+      
+      {/* Full-page Background SVG Layer */}
+      <UploadBackground />
 
-      {/* Page header */}
-      <div style={{ marginBottom: '24px' }}>
-        <div className="heading-lg" style={{ marginBottom: '4px' }}>Data Ingestion</div>
-        <div style={{ fontSize: '13px', color: 'var(--ink-dim)' }}>
-          Upload a raw configuration file for normalization and CIS baseline auditing.
-        </div>
-      </div>
+      {/* Main Container - Centered Vertically and Horizontally */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '32px',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+        
+        {/* Page Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{ textAlign: 'center', marginBottom: '32px' }}
+        >
+          <h1 className="heading-lg" style={{ marginBottom: '8px' }}>Data Ingestion</h1>
+          <p style={{ fontSize: '14px', color: 'var(--ink-dim)' }}>
+            Upload a raw configuration file for normalization and CIS baseline auditing.
+          </p>
+        </motion.div>
 
-      {/* Spin keyframe — injected once */}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '100%', maxWidth: '560px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-          {/* Error banner */}
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2 }}
-                style={{
-                  backgroundColor: 'var(--panel)',
-                  border: '1px solid var(--wire)',
-                  borderLeft: '2px solid var(--severity-critical)',
-                  padding: '12px 16px',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '10px',
-                }}
-              >
-                <IconAlertCircle size={18} style={{ color: 'var(--severity-critical)', flexShrink: 0, marginTop: '1px' }} />
-                <div>
-                  <div className="mono" style={{ fontSize: '11px', fontWeight: 600, color: 'var(--severity-critical)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>
-                    Parse Error
-                  </div>
-                  <div style={{ fontSize: '13px', color: 'var(--ink-dim)' }}>{error}</div>
+        {/* Error banner */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="glass-card"
+              style={{
+                borderLeft: '3px solid var(--severity-critical)',
+                padding: '16px 20px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
+                marginBottom: '24px',
+                width: '100%',
+                maxWidth: '640px',
+                boxShadow: '0 8px 24px rgba(229, 72, 77, 0.1)',
+              }}
+            >
+              <IconAlertCircle size={20} style={{ color: 'var(--severity-critical)', flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <div className="mono" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--severity-critical)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>
+                  Parse Error
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                <div style={{ fontSize: '14px', color: 'var(--ink)' }}>{error}</div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-          {/* Drop zone — corner-marks for depth */}
+        {/* Outer glow container for depth */}
+        <div style={{ position: 'relative', width: '100%', maxWidth: '640px' }}>
+          
+          {/* Soft ambient teal blur behind card */}
           <motion.div
             animate={{
-              borderColor: dragActive
-                ? 'var(--trace)'
-                : isLoading
-                ? 'var(--wire)'
-                : 'var(--wire)',
-              backgroundColor: dragActive
-                ? 'var(--panel-raised)'
-                : 'var(--panel)',
+              opacity: dragActive ? 0.8 : 0.4,
+              scale: dragActive ? 1.05 : 1,
             }}
-            transition={{ duration: 0.15 }}
-            className="corner-marks"
+            transition={{ duration: 0.4 }}
+            style={{
+              position: 'absolute',
+              inset: '-10%',
+              background: 'radial-gradient(ellipse at center, rgba(63, 169, 160, 0.2) 0%, transparent 60%)',
+              filter: 'blur(32px)',
+              pointerEvents: 'none',
+              zIndex: -1,
+            }}
+          />
+
+          {/* Main Dropzone Card */}
+          <motion.div
+            animate={{
+              scale: dragActive ? 1.02 : 1,
+              borderColor: dragActive ? 'rgba(63, 169, 160, 0.8)' : 'rgba(74, 85, 99, 0.4)',
+              boxShadow: dragActive
+                ? '0 16px 48px rgba(0,0,0,0.5), inset 0 0 40px rgba(63,169,160,0.1)'
+                : '0 12px 32px rgba(0,0,0,0.3)',
+            }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="glass-card"
             style={{
               position: 'relative',
-              padding: '48px 32px',
-              border: `1px dashed var(--wire)`,
-              minHeight: '260px',
+              padding: '64px 40px',
+              borderRadius: '16px',
+              minHeight: '440px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '16px',
-              opacity: isLoading ? 0.6 : 1,
+              gap: '24px',
+              opacity: isLoading ? 0.7 : 1,
               pointerEvents: isLoading ? 'none' : 'auto',
-              transition: 'opacity 0.2s',
+              transition: 'opacity 0.3s',
+              overflow: 'hidden',
+              backgroundColor: 'var(--panel)', // Base color, overlaid by the gradient div
             }}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
+            {/* Gradient wash background */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: dragActive 
+                ? 'linear-gradient(135deg, rgba(63, 169, 160, 0.12) 0%, rgba(16, 20, 26, 0.95) 100%)'
+                : 'linear-gradient(135deg, rgba(63, 169, 160, 0.04) 0%, rgba(16, 20, 26, 0.8) 100%)',
+              zIndex: 0,
+              transition: 'background 0.3s ease',
+            }} />
+
+            {/* Oversized background icon texture */}
+            <IconShieldLock 
+              size={360} 
+              stroke={0.7}
+              style={{
+                position: 'absolute',
+                right: '-60px',
+                bottom: '-80px',
+                color: 'var(--trace)',
+                opacity: dragActive ? 0.15 : 0.04,
+                zIndex: 0,
+                transition: 'opacity 0.3s ease, transform 0.5s ease',
+                transform: dragActive ? 'scale(1.05) rotate(-5deg)' : 'scale(1) rotate(0deg)',
+                pointerEvents: 'none',
+              }} 
+            />
+            {/* Dashed border */}
+            <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+              <rect
+                x="2" y="2" width="calc(100% - 4px)" height="calc(100% - 4px)" rx="14" ry="14"
+                fill="none"
+                stroke={dragActive ? "var(--trace)" : "var(--wire)"}
+                strokeWidth="2"
+                strokeDasharray="12 12"
+                strokeLinecap="round"
+                style={{ transition: 'stroke 0.3s' }}
+              />
+            </svg>
+
             <AnimatePresence mode="wait">
 
-              {/* Loading Terminal */}
+              {/* Status: Loading */}
               {status === 'loading' && (
                 <motion.div key="loading"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%', zIndex: 1 }}
                 >
-                  <div className="mono" style={{ fontSize: '12px', color: 'var(--trace)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>
+                  <div className="mono" style={{ fontSize: '13px', color: 'var(--trace)', textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center' }}>
                     Engine Analysis Active
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>
-                    <SpinRing />
-                  </div>
+                  <SpinRing />
+                  <div style={{ fontSize: '14px', color: 'var(--ink-dim)' }}>Parsing and evaluating against CIS benchmarks...</div>
                 </motion.div>
               )}
 
-              {/* Success */}
+              {/* Status: Success */}
               {status === 'success' && (
                 <motion.div key="success"
                   initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', zIndex: 1 }}
                 >
-                  <IconCheck size={36} style={{ color: 'var(--trace)' }} />
-                  <div className="mono" style={{ fontSize: '12px', color: 'var(--trace)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    style={{
+                      width: '64px', height: '64px', borderRadius: '50%',
+                      backgroundColor: 'var(--trace-dim)', border: '2px solid var(--trace)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 0 24px rgba(63, 169, 160, 0.4)',
+                    }}
+                  >
+                    <IconCheck size={32} style={{ color: 'var(--trace)' }} />
+                  </motion.div>
+                  <div className="mono" style={{ fontSize: '14px', color: 'var(--trace)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                     Analysis Complete
                   </div>
                 </motion.div>
               )}
 
-              {/* Detected — show source type before submit */}
+              {/* Status: Detected */}
               {status === 'detected' && (
                 <motion.div key="detected"
-                  initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%' }}
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%', zIndex: 1 }}
                 >
-                  <IconFileText size={32} style={{ color: 'var(--trace)' }} />
+                  <motion.div
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    style={{
+                      width: '64px', height: '64px', borderRadius: '50%',
+                      backgroundColor: 'var(--trace-dim)', border: '1px solid rgba(63,169,160,0.4)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <IconFileText size={32} style={{ color: 'var(--trace)' }} />
+                  </motion.div>
 
-                  {/* Detected file info panel */}
                   <div style={{
                     width: '100%',
-                    backgroundColor: 'var(--substrate)',
+                    maxWidth: '400px',
+                    backgroundColor: 'rgba(16, 20, 26, 0.6)',
                     border: '1px solid var(--wire)',
-                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    padding: '16px 20px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '8px',
+                    gap: '12px',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div className="label">Filename</div>
-                      <div className="mono" style={{ fontSize: '12px', color: 'var(--ink)' }}>{detected.name}</div>
+                      <div className="mono" style={{ fontSize: '13px', color: 'var(--ink)' }}>{detected.name}</div>
                     </div>
                     <div style={{ height: '1px', backgroundColor: 'var(--wire)' }} />
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div className="label">Detected Source Type</div>
-                      <div className="mono" style={{ fontSize: '12px', color: 'var(--trace)', fontWeight: 600 }}>
+                      <div className="mono" style={{ fontSize: '13px', color: 'var(--trace)', fontWeight: 600 }}>
                         {detected.label}
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                     <TactileButton
                       onClick={handleSubmit}
                       style={{
                         backgroundColor: 'var(--trace)',
                         border: 'none',
                         color: 'var(--substrate)',
-                        padding: '8px 24px',
+                        padding: '12px 32px',
                         fontFamily: 'IBM Plex Mono, monospace',
-                        fontSize: '12px',
+                        fontSize: '13px',
                         fontWeight: 700,
                         textTransform: 'uppercase',
                         letterSpacing: '0.08em',
                         cursor: 'pointer',
+                        borderRadius: '6px',
+                        boxShadow: '0 4px 12px rgba(63, 169, 160, 0.3)',
                       }}
                     >
                       Run Audit
@@ -256,12 +357,13 @@ const Upload = () => {
                         backgroundColor: 'transparent',
                         border: '1px solid var(--wire)',
                         color: 'var(--ink-dim)',
-                        padding: '8px 16px',
+                        padding: '12px 24px',
                         fontFamily: 'IBM Plex Mono, monospace',
-                        fontSize: '12px',
+                        fontSize: '13px',
                         textTransform: 'uppercase',
                         letterSpacing: '0.08em',
                         cursor: 'pointer',
+                        borderRadius: '6px',
                       }}
                     >
                       Cancel
@@ -270,25 +372,38 @@ const Upload = () => {
                 </motion.div>
               )}
 
-              {/* Default — empty drop zone */}
+              {/* Status: Empty Default */}
               {status === 'empty' && (
                 <motion.div key="empty"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', zIndex: 1, padding: '20px' }}
                 >
-                  <svg width="48" height="48" viewBox="0 0 48 48" style={{ color: 'var(--ink-dim)', marginBottom: '4px' }}>
-                    {/* Dashed Outline box */}
-                    <rect x="8" y="8" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 4" />
-                    {/* Tick marks for depth/instrument feel */}
-                    <path d="M 8 16 h -4 M 8 32 h -4 M 40 16 h 4 M 40 32 h 4 M 16 8 v -4 M 32 8 v -4 M 16 40 v 4 M 32 40 v 4" stroke="currentColor" strokeWidth="1.5" />
-                    {/* Center cross/arrow */}
-                    <path d="M 24 30 v -12 M 18 24 l 6 -6 l 6 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
-                  </svg>
+                  <motion.div
+                    animate={{ y: dragActive ? -6 : 0, scale: dragActive ? 1.05 : 1 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ marginBottom: '8px' }}
+                  >
+                    <div style={{
+                      width: '80px', height: '80px', borderRadius: '50%',
+                      backgroundColor: dragActive ? 'rgba(63, 169, 160, 0.15)' : 'rgba(74, 85, 99, 0.15)',
+                      border: `2px ${dragActive ? 'solid' : 'dashed'} ${dragActive ? 'var(--trace)' : 'var(--wire)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.25s',
+                      boxShadow: dragActive ? '0 0 20px rgba(63, 169, 160, 0.3)' : 'none',
+                    }}>
+                      <IconUpload size={32} stroke={1.5} style={{
+                        color: dragActive ? 'var(--trace)' : 'var(--ink-dim)',
+                        transition: 'color 0.25s',
+                      }} />
+                    </div>
+                  </motion.div>
+                  
                   <div style={{ textAlign: 'center' }}>
-                    <div className="heading-sm" style={{ marginBottom: '6px' }}>Drop configuration file here</div>
-                    <div style={{ fontSize: '12px', color: 'var(--ink-dim)', marginBottom: '20px' }}>
+                    <div className="heading-md" style={{ marginBottom: '12px', fontSize: '20px' }}>Drop configuration file here</div>
+                    <div style={{ fontSize: '14px', color: 'var(--ink-dim)', marginBottom: '32px' }}>
                       Cisco IOS (.cfg, .txt) or Terraform (.tf)
                     </div>
+                    
                     <input
                       ref={inputRef}
                       type="file"
@@ -296,37 +411,52 @@ const Upload = () => {
                       onChange={handleChange}
                       style={{ display: 'none' }}
                     />
+                    
                     <TactileButton
                       onClick={() => inputRef.current?.click()}
                       style={{
                         backgroundColor: 'transparent',
                         border: '1px solid var(--wire)',
                         color: 'var(--ink)',
-                        padding: '7px 20px',
+                        padding: '10px 32px',
                         fontFamily: 'IBM Plex Mono, monospace',
-                        fontSize: '11px',
+                        fontSize: '12px',
                         textTransform: 'uppercase',
                         letterSpacing: '0.08em',
                         cursor: 'pointer',
-                        transition: 'border-color 0.15s, color 0.15s',
+                        borderRadius: '6px',
+                        transition: 'border-color 0.15s, color 0.15s, background-color 0.15s',
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--trace)'; e.currentTarget.style.color = 'var(--trace)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--wire)'; e.currentTarget.style.color = 'var(--ink)'; }}
+                      onMouseEnter={e => { 
+                        e.currentTarget.style.borderColor = 'var(--trace)'; 
+                        e.currentTarget.style.color = 'var(--trace)'; 
+                        e.currentTarget.style.backgroundColor = 'rgba(63, 169, 160, 0.05)';
+                      }}
+                      onMouseLeave={e => { 
+                        e.currentTarget.style.borderColor = 'var(--wire)'; 
+                        e.currentTarget.style.color = 'var(--ink)'; 
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
                     >
                       Select File
                     </TactileButton>
+                  </div>
+                  
+                  <div className="mono" style={{ 
+                    position: 'absolute', 
+                    bottom: '24px', 
+                    fontSize: '10px', 
+                    color: 'var(--ink-dim)', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.04em' 
+                  }}>
+                    Max file size: 10 MB
                   </div>
                 </motion.div>
               )}
 
             </AnimatePresence>
           </motion.div>
-
-          {/* Supported formats note */}
-          <div className="label" style={{ textAlign: 'center' }}>
-            Supported: .cfg · .txt · .tf &nbsp;·&nbsp; Max 10 MB
-          </div>
-
         </div>
       </div>
     </div>

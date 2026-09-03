@@ -11,6 +11,24 @@
     "role": "router"
   },
   "compliance_score": 15,
+  "unparsed": [
+    {
+      "line": 42,
+      "text": "crypto isakmp policy 10"
+    },
+    {
+      "line": 89,
+      "text": "switchport port-security violation restrict"
+    },
+    {
+      "line": 105,
+      "text": "ip dhcp snooping vlan 10,20,30"
+    },
+    {
+      "line": 210,
+      "text": "ntp server 192.168.1.50 prefer"
+    }
+  ],
   "score_breakdown": {
     "formula": "100 * (1 - failed_weight / total_weight)",
     "severity_weights": {

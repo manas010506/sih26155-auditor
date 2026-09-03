@@ -43,7 +43,7 @@ const scoreColor = (s) => {
   return 'var(--severity-critical)';
 };
 
-const ComplianceGauge = ({ score, breakdown }) => {
+const ComplianceGauge = ({ score, breakdown, compact = false }) => {
   if (score === undefined || score === null) return null;
 
   const radius = 40;
@@ -170,29 +170,31 @@ const ComplianceGauge = ({ score, breakdown }) => {
       </div>
 
       {/* Status label */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
-        style={{
-          textAlign: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '4px',
-        }}
-      >
-        <div className="mono" style={{ fontSize: '10px', color: color, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
-          {scoreLabel(score)}
-        </div>
-        <div className="mono" style={{ fontSize: '9px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          [ <CountUp end={score} duration={0.8} />/100 ]
-        </div>
-        {breakdown && (
-          <div className="mono" style={{ fontSize: '9px', color: 'var(--ink-dim)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            {breakdown.rules_evaluated} checks &middot; {breakdown.rules_passed} passed &middot; {breakdown.rules_failed} failed
+      {!compact && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          style={{
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+          }}
+        >
+          <div className="mono" style={{ fontSize: '10px', color: color, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
+            {scoreLabel(score)}
           </div>
-        )}
-      </motion.div>
+          <div className="mono" style={{ fontSize: '9px', color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            [ <CountUp end={score} duration={0.8} />/100 ]
+          </div>
+          {breakdown && (
+            <div className="mono" style={{ fontSize: '9px', color: 'var(--ink-dim)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              {breakdown.rules_evaluated} checks &middot; {breakdown.rules_passed} passed &middot; {breakdown.rules_failed} failed
+            </div>
+          )}
+        </motion.div>
+      )}
     </motion.div>
   );
 };

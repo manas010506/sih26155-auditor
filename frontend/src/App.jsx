@@ -64,10 +64,10 @@ const DashboardLayout = ({ reportData, setReportData, score }) => {
           <AnimatePresence mode="wait">
             <motion.div
               key={useLocation().pathname}
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               style={{ height: '100%' }}
             >
               <Outlet context={{ reportData, setReportData }} />
@@ -85,7 +85,7 @@ const DashboardLayout = ({ reportData, setReportData, score }) => {
 import sampleReport from './sample_report.json';
 
 function App() {
-  const [reportData, setReportData] = useState(sampleReport);
+  const [reportData, setReportData] = useState(null);
 
   // Data ingestion happens via Upload.jsx, which sets the reportData.
 

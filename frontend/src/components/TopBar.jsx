@@ -109,23 +109,11 @@ const TopBar = ({ device, source, onSettingsClick }) => {
       flexShrink: 0,
     }}>
       {/* LEFT: Identity & Device */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-        <div className="hide-on-mobile" style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--ink)' }}>
-          <Shield size={20} className="text-trace" />
-          <div style={{
-            fontSize: '14px',
-            fontWeight: 700,
-            letterSpacing: '-0.01em',
-            lineHeight: 1.2,
-          }}>
-            COMPLIANCE<br />AUDITOR
-          </div>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexShrink: 0 }}>
 
-        <div className="hide-on-mobile"><Divider /></div>
 
         {device ? (
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', flexShrink: 0, minWidth: 'max-content' }}>
             <button
               onClick={() => setDeviceDropdownOpen(!deviceDropdownOpen)}
               style={{
@@ -165,7 +153,7 @@ const TopBar = ({ device, source, onSettingsClick }) => {
       </div>
 
       {/* RIGHT: Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
         
         {/* Notifications */}
         <div style={{ position: 'relative' }}>
