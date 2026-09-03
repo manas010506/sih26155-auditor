@@ -101,6 +101,7 @@ report = {
     "score_breakdown": _SCORE["score_breakdown"],
     "findings": F,
     "attack_paths": PATHS,
+    "unparsed": normalized.get("_unparsed", []),
 }
 
 # merge, don't clobber - build_fixtures_aws.py writes terraform_example here too

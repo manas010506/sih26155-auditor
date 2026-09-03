@@ -387,5 +387,6 @@
         "why": "Moving to enable secret replaces a readable password with an irreversible hash, so reading the configuration no longer yields privileged access."
       }
     }
-  ]
+  ],
+  "unparsed": []
 }
