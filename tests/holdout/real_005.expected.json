@@ -1,0 +1,30 @@
+{
+  "config": "real_005.cfg",
+  "issues": [
+    {
+      "control": "CIS 1.2.1",
+      "note": "ip http server enabled",
+      "line": 19
+    },
+    {
+      "control": "CIS 1.5.2",
+      "note": "default SNMP community public RO",
+      "line": 36
+    },
+    {
+      "control": "CIS 1.5.4",
+      "note": "SNMP community private RW",
+      "line": 37
+    },
+    {
+      "control": "CIS 2.1.2",
+      "note": "no cdp run missing",
+      "line": 0
+    },
+    {
+      "control": "CIS 2.3.1",
+      "note": "ntp authenticate missing",
+      "line": 45
+    }
+  ]
+}

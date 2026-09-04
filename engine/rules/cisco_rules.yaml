@@ -281,7 +281,7 @@
 - id: CIS-NET-023
   title: SSH session timeout too high
   applies_to: ssh_settings
-  cis_control: '"CIS Cisco IOS 1.2.4 - Set SSH timeout to 60 seconds or less"'
+  cis_control: CIS Cisco IOS 1.2.4 - Set SSH timeout to 60 seconds or less
   severity: low
   check:
     attribute: timeout_seconds
@@ -294,7 +294,7 @@
 - id: CIS-NET-024
   title: IP source routing enabled
   applies_to: global_settings
-  cis_control: '"CIS Cisco IOS 1.6.1 - Disable IP source routing"'
+  cis_control: CIS Cisco IOS 1.6.1 - Disable IP source routing
   severity: medium
   check:
     attribute: source_routing
@@ -307,7 +307,7 @@
 - id: CIS-NET-025
   title: No MOTD banner configured
   applies_to: global_settings
-  cis_control: '"CIS Cisco IOS 1.4.2 - Configure a Message of the Day (MOTD) banner"'
+  cis_control: CIS Cisco IOS 1.4.2 - Configure a Message of the Day (MOTD) banner
   severity: low
   check:
     attribute: motd_banner
@@ -318,7 +318,7 @@
 - id: CIS-NET-027
   title: AAA login authentication not configured
   applies_to: global_settings
-  cis_control: '"CIS Cisco IOS 1.1.2 - Enable ''aaa authentication login''"'
+  cis_control: CIS Cisco IOS 1.1.2 - Enable 'aaa authentication login'
   severity: critical
   check:
     attribute: aaa_auth_login
@@ -329,7 +329,7 @@
 - id: CIS-NET-028
   title: AAA enable authentication not configured
   applies_to: global_settings
-  cis_control: '"CIS Cisco IOS 1.1.3 - Enable ''aaa authentication enable default''"'
+  cis_control: CIS Cisco IOS 1.1.3 - Enable 'aaa authentication enable default'
   severity: critical
   check:
     attribute: aaa_auth_enable
@@ -340,8 +340,8 @@
 - id: CIS-NET-029
   title: AAA command accounting disabled
   applies_to: global_settings
-  cis_control: '"CIS Cisco IOS 1.1.6 - Set ''aaa accounting'' to log all privileged
-    use commands"'
+  cis_control: CIS Cisco IOS 1.1.6 - Set 'aaa accounting' to log all privileged use
+    commands
   severity: medium
   check:
     attribute: aaa_accounting_commands
@@ -352,7 +352,7 @@
 - id: CIS-NET-030
   title: AAA connection accounting disabled
   applies_to: global_settings
-  cis_control: '"CIS Cisco IOS 1.1.7 - Set ''aaa accounting connection''"'
+  cis_control: CIS Cisco IOS 1.1.7 - Set 'aaa accounting connection'
   severity: low
   check:
     attribute: aaa_accounting_connection
@@ -363,7 +363,7 @@
 - id: CIS-NET-031
   title: AAA exec accounting disabled
   applies_to: global_settings
-  cis_control: '"CIS Cisco IOS 1.1.8 - Set ''aaa accounting exec''"'
+  cis_control: CIS Cisco IOS 1.1.8 - Set 'aaa accounting exec'
   severity: low
   check:
     attribute: aaa_accounting_exec
@@ -373,7 +373,7 @@
 - id: CIS-NET-032
   title: AAA network accounting disabled
   applies_to: global_settings
-  cis_control: '"CIS Cisco IOS 1.1.9 - Set ''aaa accounting network''"'
+  cis_control: CIS Cisco IOS 1.1.9 - Set 'aaa accounting network'
   severity: low
   check:
     attribute: aaa_accounting_network
@@ -383,7 +383,7 @@
 - id: CIS-NET-033
   title: AAA system accounting disabled
   applies_to: global_settings
-  cis_control: '"CIS Cisco IOS 1.1.10 - Set ''aaa accounting system''"'
+  cis_control: CIS Cisco IOS 1.1.10 - Set 'aaa accounting system'
   severity: low
   check:
     attribute: aaa_accounting_system
@@ -396,7 +396,7 @@
   applies_to: local_user
   when:
     privilege: 15
-  cis_control: '"CIS Cisco IOS 1.2.1 - Set ''privilege 1'' for local users"'
+  cis_control: CIS Cisco IOS 1.2.1 - Set 'privilege 1' for local users
   severity: high
   check:
     attribute: privilege

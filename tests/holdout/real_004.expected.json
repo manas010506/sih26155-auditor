@@ -1,0 +1,45 @@
+{
+  "config": "real_004.cfg",
+  "issues": [
+    {
+      "control": "CIS 1.4.2",
+      "note": "service password-encryption disabled",
+      "line": 6
+    },
+    {
+      "control": "CIS 1.1.1",
+      "note": "enable password used",
+      "line": 8
+    },
+    {
+      "control": "CIS 1.1.4",
+      "note": "vty uses simple password, no AAA",
+      "line": 43
+    },
+    {
+      "control": "CIS 1.2.2",
+      "note": "transport input telnet enabled",
+      "line": 46
+    },
+    {
+      "control": "CIS 1.2.8",
+      "note": "no exec-timeout on vty",
+      "line": 43
+    },
+    {
+      "control": "CIS 1.5.2",
+      "note": "default SNMP community atlro",
+      "line": 38
+    },
+    {
+      "control": "CIS 1.3.1",
+      "note": "no login banner",
+      "line": 0
+    },
+    {
+      "control": "CIS 1.3.3",
+      "note": "no motd banner",
+      "line": 0
+    }
+  ]
+}

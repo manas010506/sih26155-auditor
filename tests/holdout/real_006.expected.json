@@ -1,0 +1,30 @@
+{
+  "config": "real_006.cfg",
+  "issues": [
+    {
+      "control": "CIS 2.1.1.1.3",
+      "note": "RSA modulus 1024 < 2048",
+      "line": 14
+    },
+    {
+      "control": "CIS 3.1.2",
+      "note": "ip proxy-arp enabled on interfaces",
+      "line": 24
+    },
+    {
+      "control": "CIS 1.5.2",
+      "note": "default SNMP community public RO",
+      "line": 38
+    },
+    {
+      "control": "CIS 2.3.1",
+      "note": "ntp authenticate missing",
+      "line": 45
+    },
+    {
+      "control": "CIS 1.2.8",
+      "note": "exec-timeout 45 > 10",
+      "line": 49
+    }
+  ]
+}

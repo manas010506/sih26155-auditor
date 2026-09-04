@@ -1,0 +1,45 @@
+{
+  "config": "real_002.cfg",
+  "issues": [
+    {
+      "control": "CIS 1.1.1",
+      "note": "enable password used instead of secret",
+      "line": 7
+    },
+    {
+      "control": "CIS 1.3.1",
+      "note": "no login banner",
+      "line": 0
+    },
+    {
+      "control": "CIS 1.3.3",
+      "note": "no motd banner",
+      "line": 0
+    },
+    {
+      "control": "CIS 1.1.4",
+      "note": "vty uses simple password/login",
+      "line": 42
+    },
+    {
+      "control": "CIS 1.2.2",
+      "note": "transport input telnet enabled",
+      "line": 45
+    },
+    {
+      "control": "CIS 1.2.8",
+      "note": "no exec-timeout on vty",
+      "line": 42
+    },
+    {
+      "control": "CIS 1.5.2",
+      "note": "default SNMP community public RO",
+      "line": 38
+    },
+    {
+      "control": "CIS 1.2.1",
+      "note": "ip http server enabled",
+      "line": 11
+    }
+  ]
+}
