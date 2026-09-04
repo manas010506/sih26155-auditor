@@ -80,6 +80,16 @@ def training_add():
         app.logger.exception("training save failed")
         return jsonify(error=f"could not save mapping: {type(exc).__name__}"), 500
 
+@app.get("/api/schema")
+def schema_types():
+    """Resource types and their attributes, straight from the schema.
+
+    The training UI reads this to populate its dropdowns, so a user can only
+    ever create a mapping the rule engine can actually read.
+    """
+    from engine.schema.schema import known_attributes
+    return jsonify({t: sorted(a) for t, a in known_attributes().items()})
+
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
 

@@ -12,6 +12,7 @@ import importlib
 import pathlib
 
 from engine.correlation.correlator import correlate
+from engine.parsers.suggest import suggest_all
 from engine.rules.engine import evaluate, load_rules, score
 from engine.schema.schema import validate
 
@@ -120,10 +121,12 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None,
         "score_breakdown": scored["score_breakdown"],
         "findings": findings,
         "attack_paths": attack_paths,
-        # Lines the parser did not recognise. This is what the training
-        # interface reads: unknown vendor syntax surfaces here instead of being
-        # silently dropped.
-        "unparsed": doc.get("_unparsed", []),
+        # Lines the parser did not recognise, each with a proposed mapping.
+        # The problem statement asks for pattern matching to identify keywords
+        # in configurations the system has not been pre-trained on: the
+        # suggestion is that step. It only ever proposes - an administrator
+        # confirms, and the confirmed mapping is what the parser applies.
+        "unparsed": suggest_all(doc.get("_unparsed", [])),
     }
 
 
