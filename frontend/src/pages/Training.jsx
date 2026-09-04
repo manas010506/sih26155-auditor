@@ -1,5 +1,5 @@
 import { useOutletContext } from 'react-router-dom';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconBrain,
@@ -13,7 +13,7 @@ import {
 } from '@tabler/icons-react';
 import TactileButton from '../components/TactileButton';
 import EmptyStateCard from '../components/EmptyStateCard';
-import { addTrainingMapping } from '../api';
+import { addTrainingMapping, getSchema } from '../api';
 
 const RESOURCE_TYPES = [
   'global_settings',
@@ -36,18 +36,6 @@ const RESOURCE_TYPES = [
   'rds_instance',
 ];
 
-const ATTRIBUTES = [
-  'enabled',
-  'transport_input',
-  'access',
-  'version',
-  'password',
-  'username',
-  'source',
-  'destination',
-  'value',
-];
-
 const Training = () => {
   const { reportData } = useOutletContext();
 
@@ -64,6 +52,20 @@ const Training = () => {
   // Follow-up Tracking: Dictionary mapping line number -> mapping payload
   const [mappings, setMappings] = useState({});
 
+  // Schema-driven attribute list
+  const [schema, setSchema] = useState({});
+
+  useEffect(() => {
+    getSchema()
+      .then(setSchema)
+      .catch(() => setSchema({}));
+  }, []);
+
+  // Only attributes this resource type actually has.
+  // An empty schema (backend unreachable) yields an empty list,
+  // so the UI can never offer a mapping the rule engine won't read.
+  const availableAttributes = schema[resourceType] ?? [];
+
   const unparsed = reportData?.unparsed ?? [];
   const lines = Array.isArray(unparsed) ? unparsed : [];
 
@@ -71,17 +73,24 @@ const Training = () => {
     setSelectedLine(item);
     setSaveError(null);
 
-    // If we've already mapped this line in this session, pre-fill it so the user can edit
+    // If we've already mapped this line in this session,
+    // pre-fill it so the user can edit it.
     const existing = mappings[item.line];
+
     if (existing) {
       setResourceType(existing.resource_type);
       setAttribute(existing.attribute);
       setValue(existing.value);
-    } else {
-      setResourceType('');
-      setAttribute('');
-      setValue('');
+      return;
     }
+
+    // Pre-fill from the engine's proposal.
+    // The admin confirms or corrects it - nothing is saved until
+    // they press the button.
+    const s = item.suggestion;
+    setResourceType(s?.resource_type ?? '');
+    setAttribute(s?.attribute ?? '');
+    setValue(s?.value ?? '');
   };
 
   const saveMapping = async () => {
@@ -118,6 +127,7 @@ const Training = () => {
     // Auto-advance to the next unmapped line
     const currentIndex = lines.findIndex(l => l.line === selectedLine.line);
     const nextLine = lines.slice(currentIndex + 1).find(l => !mappings[l.line]);
+
     if (nextLine) {
       selectLine(nextLine);
     } else {
@@ -161,14 +171,13 @@ const Training = () => {
   }
 
   const renderBody = () => {
-
     return (
       <div
         className="flex-1 relative z-10"
         style={{
           minHeight: 0,
           display: 'grid',
-          gridTemplateColumns: '380px 1fr', // Fixed width for sidebar, rest for editor
+          gridTemplateColumns: '380px 1fr',
           gap: '24px'
         }}
       >
@@ -222,13 +231,16 @@ const Training = () => {
                   }}
                 >
                   {/* Status Indicator */}
-                  <div style={{ 
-                    flexShrink: 0, 
-                    width: '24px', height: '24px', 
-                    borderRadius: '50%', 
+                  <div style={{
+                    flexShrink: 0,
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
                     background: isMapped ? 'var(--trace-dim)' : 'var(--substrate)',
                     border: `1px solid ${isMapped ? 'var(--trace)' : 'var(--wire)'}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}>
                     {isMapped ? (
                       <IconCheck size={14} style={{ color: 'var(--trace)' }} />
@@ -253,6 +265,17 @@ const Training = () => {
                       {item.text}
                     </code>
                   </div>
+
+                  {!isMapped && item.suggestion && (
+                    <IconBrain
+                      size={12}
+                      style={{
+                        color: 'var(--trace)',
+                        opacity: 0.6,
+                        flexShrink: 0
+                      }}
+                    />
+                  )}
 
                   {isSelected && (
                     <motion.div layoutId="active-indicator" style={{ position: 'absolute', left: 0, top: '20%', bottom: '20%', width: '3px', background: 'var(--trace)', borderRadius: '0 4px 4px 0' }} />
@@ -315,20 +338,20 @@ const Training = () => {
                     background: 'radial-gradient(circle, rgba(63, 169, 160, 0.05) 0%, transparent 70%)',
                   }} />
                 </div>
-                
+
                 {/* Content Layer */}
                 <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ 
-                    width: '72px', 
-                    height: '72px', 
-                    borderRadius: '50%', 
-                    background: 'var(--trace-dim)', 
-                    border: '1px solid rgba(63,169,160,0.3)', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
+                  <div style={{
+                    width: '72px',
+                    height: '72px',
+                    borderRadius: '50%',
+                    background: 'var(--trace-dim)',
+                    border: '1px solid rgba(63,169,160,0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     margin: '0 auto 24px',
-                    boxShadow: '0 0 24px rgba(63, 169, 160, 0.15)' 
+                    boxShadow: '0 0 24px rgba(63, 169, 160, 0.15)'
                   }}>
                     <IconCode size={32} style={{ color: 'var(--trace)' }} stroke={1.5} />
                   </div>
@@ -361,10 +384,10 @@ const Training = () => {
                   </div>
 
                   {/* Code Snippet Box */}
-                  <div style={{ 
-                    background: 'var(--substrate)', 
-                    border: '1px solid var(--wire)', 
-                    borderRadius: '8px', 
+                  <div style={{
+                    background: 'var(--substrate)',
+                    border: '1px solid var(--wire)',
+                    borderRadius: '8px',
                     padding: '20px',
                     marginBottom: '32px',
                     position: 'relative'
@@ -377,9 +400,45 @@ const Training = () => {
                     </code>
                   </div>
 
+                  {/* Suggestion Banner */}
+                  {selectedLine?.suggestion && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        marginBottom: '20px',
+                        padding: '12px 16px',
+                        borderRadius: '6px',
+                        background: 'var(--trace-dim)',
+                        border: '1px solid var(--trace)',
+                      }}
+                    >
+                      <IconBrain
+                        size={16}
+                        style={{
+                          color: 'var(--trace)',
+                          flexShrink: 0
+                        }}
+                      />
+                      <div style={{ fontSize: '12px', lineHeight: 1.5 }}>
+                        <span className="mono" style={{ color: 'var(--trace)' }}>
+                          SUGGESTED
+                        </span>
+                        <span className="text-ink-dim">
+                          {' '}— matched{' '}
+                          <code className="mono" style={{ color: 'var(--ink)' }}>
+                            {selectedLine.suggestion.matched}
+                          </code>
+                          . Confirm or correct below.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Form Grid */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
-                    
+
                     {/* Resource Type */}
                     <label className="flex flex-col gap-2">
                       <span className="mono" style={{ fontSize: '11px', color: 'var(--ink-dim)' }}>RESOURCE TYPE</span>
@@ -387,7 +446,10 @@ const Training = () => {
                         <IconDatabase size={16} className="text-ink-dim" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                         <select
                           value={resourceType}
-                          onChange={(e) => setResourceType(e.target.value)}
+                          onChange={(e) => {
+                            setResourceType(e.target.value);
+                            setAttribute('');
+                          }}
                           style={{
                             width: '100%',
                             appearance: 'none',
@@ -437,7 +499,7 @@ const Training = () => {
                           onBlur={(e) => e.target.style.borderColor = 'var(--wire)'}
                         >
                           <option value="" disabled>Select attribute...</option>
-                          {ATTRIBUTES.map(attr => (
+                          {availableAttributes.map(attr => (
                             <option key={attr} value={attr}>{attr}</option>
                           ))}
                         </select>
@@ -508,6 +570,7 @@ const Training = () => {
                     >
                       Cancel
                     </TactileButton>
+
                     <TactileButton
                       onClick={saveMapping}
                       disabled={!resourceType || !attribute || !value.trim()}
@@ -544,7 +607,7 @@ const Training = () => {
 
   return (
     <div className="h-full flex flex-col text-ink" style={{ position: 'relative', padding: '24px', gap: '24px', backgroundColor: 'transparent' }}>
-      
+
       {/* Decorative background element for premium feel */}
       <div style={{
         position: 'absolute',
@@ -580,7 +643,7 @@ const Training = () => {
             Map unrecognized configuration syntax to standard audit rules.
           </p>
         </div>
-        
+
         {/* Overall Progress Widget - ONLY RENDER IF THERE ARE LINES TO MAP */}
         {lines.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -591,7 +654,7 @@ const Training = () => {
               </div>
             </div>
             <div style={{ width: '120px', height: '4px', background: 'var(--substrate)', borderRadius: '2px', overflow: 'hidden', border: '1px solid var(--wire)' }}>
-              <motion.div 
+              <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}

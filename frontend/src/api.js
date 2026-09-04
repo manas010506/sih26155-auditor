@@ -34,6 +34,12 @@ export async function addTrainingMapping(mapping) {
   return res.json();
 }
 
+export async function getSchema() {
+  const res = await fetch(`${BASE}/api/schema`);
+  if (!res.ok) throw new Error(`could not load schema (${res.status})`);
+  return res.json();
+}
+
 export async function health() {
   try {
     const r = await fetch(`${BASE}/api/health`);
