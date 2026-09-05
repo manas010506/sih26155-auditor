@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconFileText, IconCheck, IconAlertCircle, IconUpload, IconShieldLock } from '@tabler/icons-react';
-import { audit } from '../api';
+import { audit, auditBatch } from '../api';
 import TactileButton from '../components/TactileButton';
 import UploadBackground from '../components/UploadBackground';
 import { useSettings } from '../context/SettingsContext';
@@ -46,19 +46,33 @@ const Upload = () => {
     else if (e.type === 'dragleave') setDragActive(false);
   }, []);
 
-  const processFile = (file) => {
-    if (!file) return;
-    const { type, label, ext } = detectSourceType(file.name);
+  const processFiles = (files) => {
+    if (!files || files.length === 0) return;
+    const fileArray = Array.from(files);
 
-    if (!type) {
-      setError(`Unsupported file type: "${ext}". Upload a Cisco running-config (.cfg, .txt) or Terraform file (.tf).`);
+    const detectedTypes = new Set(fileArray.map(f => detectSourceType(f.name).type));
+    if (detectedTypes.has(null)) {
+      setError("Some files have unsupported types. Only Cisco IOS or Terraform are supported.");
+      setStatus('empty');
+      setDetected(null);
+      return;
+    }
+    if (detectedTypes.size > 1) {
+      setError("Cannot mix Cisco IOS and Terraform files in a single batch.");
       setStatus('empty');
       setDetected(null);
       return;
     }
 
+    const type = Array.from(detectedTypes)[0];
+    const label = type === 'cisco_ios' ? 'Cisco IOS' : 'Terraform';
+
     setError(null);
-    setDetected({ name: file.name, type, label, file });
+    if (fileArray.length === 1) {
+      setDetected({ name: fileArray[0].name, type, label, files: fileArray, isBatch: false });
+    } else {
+      setDetected({ name: `${fileArray.length} files selected`, type, label, files: fileArray, isBatch: true });
+    }
     setStatus('detected');
   };
 
@@ -66,25 +80,38 @@ const Upload = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files?.[0]) processFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files?.length > 0) processFiles(e.dataTransfer.files);
   }, []);
 
   const handleChange = (e) => {
     e.preventDefault();
-    if (e.target.files?.[0]) processFile(e.target.files[0]);
+    if (e.target.files?.length > 0) processFiles(e.target.files);
   };
+
+  const [batchResults, setBatchResults] = useState(null);
 
   const handleSubmit = async () => {
     if (!detected) return;
     setStatus('loading');
     
     try {
-      const text = await detected.file.text();
-      const result = await audit(text, detected.type, defaultFramework);
-      setReportData(result);
-      
-      setStatus('success');
-      setTimeout(() => navigate('/audit/findings'), 800);
+      if (detected.isBatch) {
+        const configs = await Promise.all(detected.files.map(async f => ({
+          name: f.name,
+          text: await f.text()
+        })));
+        const result = await auditBatch(configs, detected.type, defaultFramework);
+        const reports = Array.isArray(result) ? result : result.reports || [];
+        setBatchResults(reports);
+        setStatus('batch_summary');
+      } else {
+        const text = await detected.files[0].text();
+        const result = await audit(text, detected.type, defaultFramework);
+        setReportData(result);
+        
+        setStatus('success');
+        setTimeout(() => navigate('/audit/findings'), 800);
+      }
     } catch (err) {
       console.error('Audit failed:', err);
       setError(err.message || 'Failed to process configuration.');
@@ -291,6 +318,59 @@ const Upload = () => {
                 </motion.div>
               )}
 
+              {/* Status: Batch Summary */}
+              {status === 'batch_summary' && batchResults && (
+                <motion.div key="batch_summary"
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  style={{ width: '100%', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}
+                >
+                  <div className="heading-md" style={{ textAlign: 'center', marginBottom: '8px' }}>Batch Upload Complete</div>
+                  <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--wire)', borderRadius: '6px', background: 'var(--panel-raised)' }}>
+                    <table className="zebra-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                      <thead style={{ position: 'sticky', top: 0, background: 'var(--panel)', borderBottom: '1px solid var(--wire)' }}>
+                        <tr>
+                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--ink-dim)', fontWeight: 500 }}>Device Name</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--ink-dim)', fontWeight: 500 }}>Score</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--ink-dim)', fontWeight: 500 }}>Failures</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--ink-dim)', fontWeight: 500 }}>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {batchResults.map((report, idx) => {
+                          const hostname = report.device?.hostname || report.device?.name || `Device ${idx + 1}`;
+                          const score = report.compliance_score ?? 'N/A';
+                          const failCount = report.score_breakdown?.rules_failed ?? report.findings?.length ?? 0;
+                          return (
+                            <tr key={idx} style={{ borderBottom: '1px solid var(--wire)' }}>
+                              <td className="mono" style={{ padding: '8px 12px' }}>{hostname}</td>
+                              <td style={{ padding: '8px 12px', color: score < 40 ? 'var(--severity-critical)' : score < 70 ? 'var(--severity-medium)' : 'var(--trace)' }}>{score}</td>
+                              <td style={{ padding: '8px 12px' }}>{failCount}</td>
+                              <td style={{ padding: '8px 12px' }}>
+                                <TactileButton
+                                  onClick={() => {
+                                    setReportData(report);
+                                    navigate('/audit/findings');
+                                  }}
+                                  style={{ padding: '4px 8px', fontSize: '11px', background: 'transparent', border: '1px solid var(--trace)', color: 'var(--trace)', borderRadius: '4px' }}
+                                >
+                                  View
+                                </TactileButton>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <TactileButton
+                    onClick={() => { setStatus('empty'); setDetected(null); setBatchResults(null); }}
+                    style={{ background: 'transparent', border: '1px solid var(--wire)', color: 'var(--ink-dim)', padding: '8px 16px', alignSelf: 'center', marginTop: '8px', borderRadius: '6px' }}
+                  >
+                    Upload Another Batch
+                  </TactileButton>
+                </motion.div>
+              )}
+
               {/* Status: Detected */}
               {status === 'detected' && (
                 <motion.div key="detected"
@@ -409,6 +489,7 @@ const Upload = () => {
                     <input
                       ref={inputRef}
                       type="file"
+                      multiple
                       accept=".cfg,.txt,.tf"
                       onChange={handleChange}
                       style={{ display: 'none' }}

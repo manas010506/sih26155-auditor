@@ -21,6 +21,19 @@ export async function audit(configText, sourceType, framework) {
   return res.json();
 }
 
+export async function auditBatch(configs, sourceType, framework) {
+  const res = await fetch(`${BASE}/api/audit/batch`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ configs, source_type: sourceType, framework }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `batch audit failed (${res.status})`);
+  }
+  return res.json();
+}
+
 export async function addTrainingMapping(mapping) {
   const res = await fetch(`${BASE}/api/training`, {
     method: "POST",
