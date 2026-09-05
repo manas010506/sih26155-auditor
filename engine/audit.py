@@ -24,6 +24,11 @@ CHAINS = ROOT / "engine" / "correlation" / "attack_chains.yaml"
 SOURCES = {
     "cisco_ios": ("engine.parsers.cisco_ios", "CiscoIOSParser",
                   ROOT / "engine/rules/cisco_rules.yaml", "config.cfg"),
+    # Juniper uses the SAME ruleset as Cisco. The rules read the normalized
+    # model, not vendor syntax, so a second network vendor costs a parser and
+    # nothing else.
+    "juniper_junos": ("engine.parsers.juniper_junos", "JuniperJunOSParser",
+                      ROOT / "engine/rules/cisco_rules.yaml", "config.conf"),
     "terraform_aws": ("engine.parsers.terraform_aws", "TerraformAWSParser",
                       ROOT / "engine/rules/aws_rules.yaml", "main.tf"),
 }
@@ -45,6 +50,17 @@ def _device_block(doc: dict, source_type: str) -> dict:
     if source_type == "terraform_aws":
         return {"hostname": "aws-account", "vendor": "aws", "os": "terraform",
                 "version": "provider ~> 5.0", "role": "cloud_account"}
+
+    if source_type == "juniper_junos":
+        g = next((r for r in doc["resources"] if r["type"] == "global_settings"), None)
+        a = g["attributes"] if g else {}
+        return {
+            "hostname": a.get("hostname") or "Not available in supplied configuration",
+            "vendor": "juniper",
+            "os": "JunOS",
+            "version": a.get("os_version") or "Not available in supplied configuration",
+            "role": "network_device",
+        }
 
     g = next((r for r in doc["resources"] if r["type"] == "global_settings"), None)
     attrs = g["attributes"] if g else {}

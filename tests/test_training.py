@@ -62,7 +62,7 @@ def test_whitespace_only_field_is_400(client):
 
 
 def test_unknown_source_type_is_400(client):
-    assert post(client, **{**VALID, "source_type": "juniper_junos"}).status_code == 400
+    assert post(client, **{**VALID, "source_type": "arista_eos"}).status_code == 400
 
 
 def test_non_string_field_is_400_not_500(client):

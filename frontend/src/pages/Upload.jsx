@@ -11,6 +11,7 @@ import { useSettings } from '../context/SettingsContext';
 const detectSourceType = (filename) => {
   const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase();
   if (ext === '.cfg' || ext === '.txt') return { type: 'cisco_ios', label: 'Cisco IOS', ext };
+  if (ext === '.conf') return { type: 'juniper_junos', label: 'Juniper JunOS', ext };
   if (ext === '.tf') return { type: 'terraform_aws', label: 'Terraform (.tf)', ext };
   return { type: null, label: null, ext };
 };
@@ -64,7 +65,7 @@ const Upload = () => {
     const kinds = new Set(typed.map(t => t.type));
     const label = kinds.size > 1
       ? `${kinds.size} vendors`
-      : (typed[0].type === 'cisco_ios' ? 'Cisco IOS' : 'Terraform');
+      : ({ cisco_ios: 'Cisco IOS', juniper_junos: 'Juniper JunOS', terraform_aws: 'Terraform' }[typed[0].type]);
 
     setError(null);
     setDetected({
@@ -523,7 +524,7 @@ const Upload = () => {
                       ref={inputRef}
                       type="file"
                       multiple
-                      accept=".cfg,.txt,.tf"
+                      accept=".cfg,.txt,.conf,.tf"
                       onChange={handleChange}
                       style={{ display: 'none' }}
                     />

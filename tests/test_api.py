@@ -73,7 +73,7 @@ def test_empty_config_text_is_400(client):
 
 
 def test_unknown_source_type_is_400(client):
-    r = post(client, config_text=CISCO, source_type="juniper_junos")
+    r = post(client, config_text=CISCO, source_type="arista_eos")
     assert r.status_code == 400
     assert "source_type" in r.get_json()["error"]
 

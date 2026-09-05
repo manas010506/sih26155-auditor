@@ -4,8 +4,9 @@ const BASE = "http://localhost:5000";
 export function sourceTypeFor(filename) {
   const ext = filename.toLowerCase().split(".").pop();
   if (ext === "tf") return "terraform_aws";
+  if (ext === "conf") return "juniper_junos";
   if (["cfg", "conf", "txt"].includes(ext)) return "cisco_ios";
-  return null;                       // UI must show the manual dropdown
+  return null;
 }
 
 export async function audit(configText, sourceType, framework) {

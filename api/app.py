@@ -24,7 +24,7 @@ CORS(app)
 
 SAMPLE = pathlib.Path("samples/sample_report.json")
 MAX_BYTES = 2 * 1024 * 1024
-VALID_TYPES = {"cisco_ios", "terraform_aws"}
+VALID_TYPES = {"cisco_ios", "terraform_aws","juniper_junos"}
 
 
 @app.get("/api/health")

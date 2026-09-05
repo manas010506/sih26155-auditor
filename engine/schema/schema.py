@@ -4,7 +4,7 @@ her parser output, so the error messages have to be useful.
 """
 from typing import Any
 
-SOURCE_TYPES = {"cisco_ios", "terraform_aws"}
+SOURCE_TYPES = {"cisco_ios", "juniper_junos", "terraform_aws"}
 
 # Every resource type a parser may emit. Adding one is a contract change:
 # update this, update samples/, tell the group.
