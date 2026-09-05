@@ -534,3 +534,9 @@ button:focus-visible, a:focus-visible {
 select {
   color-scheme: dark;
 }
+
+@media print {
+  aside, nav, header button, .no-print { display: none !important; }
+  body, #root { background: #fff !important; color: #000 !important; }
+  #report-body { max-width: 100% !important; margin: 0 !important; }
+}

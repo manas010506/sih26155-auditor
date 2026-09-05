@@ -5,8 +5,6 @@ import { IconPrinter, IconFileText, IconCheck, IconLoader2, IconShieldCheck, Ico
 import SeverityLED from '../components/SeverityLED';
 import EmptyStateCard from '../components/EmptyStateCard';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle, AlignmentType } from 'docx';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 
 /* Animated count-up for report numbers */
 const CountUp = ({ end, duration = 1.2 }) => {
@@ -374,54 +372,11 @@ const ReportView = () => {
     URL.revokeObjectURL(url);
   };
 
-  /* ── PDF Export ────────────────────────────────────────────── */
-  const generatePdf = async () => {
-    const element = document.getElementById('report-body');
-    if (!element) return;
-
-    // Temporarily adjust styling for a clean render without UI constraints
-    const origMaxWidth = element.style.maxWidth;
-    const origMargin = element.style.margin;
-    element.style.maxWidth = '1000px';
-    element.style.margin = '0';
-
-    try {
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#0a0d14', // var(--substrate) equivalent
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 1.0);
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      let heightLeft = pdfHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
-      }
-
-      pdf.save(`compliance_report_${device.hostname}_${new Date().toISOString().slice(0, 10)}.pdf`);
-    } finally {
-      element.style.maxWidth = origMaxWidth;
-      element.style.margin = origMargin;
-    }
+  const generatePdf = () => {
+    // The browser's own print-to-PDF. It renders real text rather than a
+    // canvas screenshot, so the output is selectable and searchable, it needs
+    // no dependencies, and it works with the network off.
+    window.print();
   };
 
   return (
@@ -547,7 +502,9 @@ const ReportView = () => {
                 ].map(({ label, value, color }) => (
                   <div key={label} style={{ flex: 1, backgroundColor: 'var(--panel)', padding: '16px', textAlign: 'center' }}>
                     <div className="mono" style={{ fontSize: '28px', fontWeight: 700, color, lineHeight: 1, marginBottom: '4px' }}>
-                      {typeof value === 'number' ? <CountUp end={value} /> : value}
+                      {/* No CountUp here - print captures the DOM mid-animation
+                          and every number renders as 0 in the PDF. */}
+                      {value}
                     </div>
                     <div className="label">{label}</div>
                   </div>
