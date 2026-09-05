@@ -71,11 +71,12 @@ RULES: list[tuple[str, str, str, str | None]] = [
 
     # --- management services ----------------------------------------------
     (r"\bhttps?\b.*\bsecure-?server\b", "global_settings", "https_server", "true"),
+    (r"\b(www|web-?management|web-?ui|webgui)\b", "global_settings", "http_server", "true"),
     (r"\bhttp\b.*\b(server|service|www)\b", "global_settings", "http_server", "true"),
     (r"\b(cdp|lldp|discovery)\b", "global_settings", "cdp_enabled", "true"),
     (r"\bsource-?route\b", "global_settings", "source_routing", "true"),
     (r"\bbanner\b.*\bmotd\b", "global_settings", "motd_banner", None),
-    (r"\b(banner|login-?banner|login message|message-?of-?the-?day)\b",
+    (r"\b(banner|login-?banner|login message|message-?of-?the-?day|note set note|show-?at-?login)\b",
      "global_settings", "login_banner", None),
     (r"\b(hostname|system identity|host-?name)\b", "global_settings", "hostname", None),
 ]
