@@ -20,6 +20,18 @@ import io
 
 from engine.parsers.base import Parser
 
+# Terraform resource types this parser understands. Anything else is reported
+# in _unparsed rather than silently ignored - a config full of resources we
+# cannot read must not come back as "no findings, score 100".
+HANDLED_TYPES = {
+    "aws_s3_bucket", "aws_s3_bucket_acl",
+    "aws_s3_bucket_server_side_encryption_configuration",
+    "aws_s3_bucket_versioning", "aws_s3_bucket_logging",
+    "aws_s3_bucket_public_access_block",
+    "aws_security_group", "aws_iam_policy", "aws_db_instance",
+    "aws_kms_key", "aws_cloudtrail",
+}
+
 DEFAULT_SG_OPEN_CIDRS = {"0.0.0.0/0", "::/0"}
 ADMIN_PORTS = {22, 3389}
 
@@ -61,7 +73,27 @@ class TerraformAWSParser(Parser):
         doc["resources"].extend(self._rds_instances(blocks))
         doc["resources"].extend(self._kms_keys(blocks))
         doc["resources"].extend(self._cloudtrails(blocks))
+        doc["_unparsed"] = self._unhandled_blocks(blocks)
         return doc
+
+    def _unhandled_blocks(self, blocks: dict) -> list[dict]:
+        """Resource types we have no support for.
+
+        Without this, a Terraform file made entirely of resources we cannot read
+        returns zero findings and a score of 100 - confidently wrong, which is
+        worse than reporting nothing at all.
+        """
+        out = []
+        for rtype, bodies in sorted(blocks.items()):
+            if rtype in HANDLED_TYPES:
+                continue
+            for rname in sorted(bodies):
+                ref = self._find_prefix(f'resource "{rtype}" "{rname}"')
+                out.append({
+                    "line": ref["line"] if ref else 0,
+                    "text": f'resource "{rtype}" "{rname}"',
+                })
+        return out
 
     # ---------------------------------------------------------------- helpers
     def _line_of(self, needle: str, occurrence: int = 1):
