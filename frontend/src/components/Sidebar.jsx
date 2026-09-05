@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconUpload,
@@ -9,6 +9,7 @@ import {
   IconLogout,
   IconBrain,
   IconChevronRight,
+  IconAlertTriangle,
 } from '@tabler/icons-react';
 import { ChevronLeft } from 'lucide-react';
 import ComplianceGauge from './ComplianceGauge';
@@ -21,7 +22,7 @@ const NAV_ITEMS = [
   { id: '05', path: '/audit/training',     label: 'TRAINING',     Icon: IconBrain    },
 ];
 
-const Sidebar = ({ score, breakdown, isCollapsed, setIsCollapsed }) => {
+const Sidebar = ({ score, breakdown, isCollapsed, setIsCollapsed, reportData }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [hoveredItem, setHoveredItem] = React.useState(null);
@@ -373,7 +374,31 @@ const Sidebar = ({ score, breakdown, isCollapsed, setIsCollapsed }) => {
             </div>
             
             {score !== null && score !== undefined ? (
-              <ComplianceGauge score={score} breakdown={breakdown} />
+              <>
+                <ComplianceGauge score={score} breakdown={breakdown} />
+                {reportData?.unparsed?.length > 0 && (
+                  <div
+                    style={{
+                      display: 'flex', alignItems: 'flex-start', gap: '10px',
+                      padding: '12px 14px', marginTop: '12px', borderRadius: '6px',
+                      background: 'var(--severity-high-bg, rgba(240,136,62,0.08))',
+                      border: '1px solid var(--severity-high)',
+                    }}
+                  >
+                    <IconAlertTriangle size={16} style={{ color: 'var(--severity-high)', flexShrink: 0, marginTop: '1px' }} />
+                    <div style={{ fontSize: '12px', lineHeight: 1.5 }}>
+                      <div className="mono" style={{ color: 'var(--severity-high)', marginBottom: '2px' }}>
+                        INCOMPLETE
+                      </div>
+                      <span className="text-ink-dim">
+                        {reportData.unparsed.length} lines were not recognised. Rules that depend
+                        on them could not be evaluated, so this score is a floor, not a verdict.
+                        {' '}<Link to="/audit/training" style={{ color: 'var(--trace)' }}>Teach the parser</Link>.
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <div style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-dim)', opacity: 0.6 }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '8px' }}>

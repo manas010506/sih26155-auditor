@@ -52,7 +52,7 @@ const DashboardLayout = ({ reportData, setReportData, score }) => {
         onClick={() => setMobileMenuOpen(false)} // close on nav
       >
         <div onClick={e => e.stopPropagation()} className="h-full">
-          <Sidebar score={score} breakdown={reportData?.score_breakdown} findings={reportData?.findings} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+          <Sidebar score={score} breakdown={reportData?.score_breakdown} findings={reportData?.findings} reportData={reportData} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
         </div>
       </div>
 
