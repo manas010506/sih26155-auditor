@@ -211,3 +211,76 @@
 .react-flow__edge-path {
   animation: dash-draw 1.5s linear infinite;
 }
+
+/* Chain selector tabs. Without these the three spans render as one
+   unstyled run: "1Cleartext management plane...critical2SNMP..." */
+
+.attack-path-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.attack-path-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--wire);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.attack-path-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.attack-path-tab:hover { border-color: var(--trace); }
+
+.attack-path-tab.is-active {
+  border-color: var(--trace);
+  background: var(--panel-raised);
+}
+
+.attack-path-number {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--substrate);
+  border: 1px solid var(--wire);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-dim);
+}
+
+.attack-path-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.attack-path-severity {
+  flex-shrink: 0;
+  min-width: 68px;          /* add */
+  text-align: center; 
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--severity-critical-bg, rgba(242,84,91,0.12));
+  color: var(--severity-critical);
+}
