@@ -79,8 +79,24 @@ def _enrich_narratives(attack_paths: list[dict]) -> None:
             continue
 
 
+def available_frameworks() -> list[str]:
+    """Frameworks the loaded rulesets actually cover.
+
+    Derived from the rules, not hardcoded, so the selector can only ever offer
+    something we can genuinely evaluate against.
+    """
+    seen: set[str] = set()
+    for _, _, rules_path, _ in SOURCES.values():
+        try:
+            for rule in load_rules(str(rules_path)):
+                seen.add(rule.get("framework", "CIS"))
+        except Exception:
+            continue
+    return sorted(seen)
+
+
 def run_audit(config_text: str, source_type: str, filename: str | None = None,
-              enrich: bool = True) -> dict:
+              enrich: bool = True, framework: str | None = None) -> dict:
     """Audit one configuration file. Returns the Report shape (Handbook 4.2).
 
     Raises ValueError on an unknown source_type or empty input — the API turns
@@ -88,6 +104,9 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None,
 
     enrich=False skips the LLM narrative pass. Tests use it so their results
     never depend on a network call or a cache state.
+
+    framework filters the ruleset to one benchmark (CIS, NIST, STIG,
+    ISO27001). None evaluates everything loaded, which is the default.
     """
     if source_type not in SOURCES:
         raise ValueError(
@@ -106,7 +125,10 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None,
         raise ValueError(f"{source_type} parser produced an invalid document: "
                          f"{problems[0]}")
 
-    rules = load_rules(str(rules_path))
+    rules = load_rules(str(rules_path), framework=framework)
+    if not rules:
+        raise ValueError(
+            f"no rules for framework {framework!r} and source type {source_type!r}")
     findings = evaluate(doc, rules)
     attack_paths = correlate(findings, str(CHAINS))
     scored = score(findings, rules)
