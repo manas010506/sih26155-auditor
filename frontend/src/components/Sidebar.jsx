@@ -391,7 +391,7 @@ const Sidebar = ({ score, breakdown, isCollapsed, setIsCollapsed, reportData }) 
                         INCOMPLETE
                       </div>
                       <span className="text-ink-dim">
-                        {reportData.unparsed.length} lines were not recognised. Rules that depend
+                        {reportData?.unparsed?.length} lines were not recognised. Rules that depend
                         on them could not be evaluated, so this score is a floor, not a verdict.
                         {' '}<Link to="/audit/training" style={{ color: 'var(--trace)' }}>Teach the parser</Link>.
                       </span>

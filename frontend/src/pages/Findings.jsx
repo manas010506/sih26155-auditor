@@ -55,9 +55,9 @@ const Findings = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <SeverityDashboard findings={reportData.findings} />
+      <SeverityDashboard findings={reportData?.findings} />
       <div className="flex-1 overflow-hidden">
-        <FindingsTable findings={reportData.findings} />
+        <FindingsTable findings={reportData?.findings} />
       </div>
     </div>
   );
