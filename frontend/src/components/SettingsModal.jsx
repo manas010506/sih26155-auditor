@@ -4,49 +4,10 @@ import { Drawer } from 'vaul';
 import { toast } from 'sonner';
 import { useSettings } from '../context/SettingsContext';
 
-const ToggleButton = ({ active, onClick, icon: Icon, title, description }) => (
-  <button
-    onClick={onClick}
-    className="bezel-panel"
-    style={{
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: '16px',
-      padding: '16px',
-      width: '100%',
-      textAlign: 'left',
-      backgroundColor: active ? 'var(--panel-raised)' : 'var(--substrate)',
-      borderTopColor: active ? '#8392a5' : '#6e7c8e',
-      transition: 'background-color 0.2s',
-    }}
-  >
-    <div style={{ color: active ? 'var(--trace)' : 'var(--ink-dim)', marginTop: '2px' }}>
-      <Icon size={20} />
-    </div>
-    <div style={{ flex: 1 }}>
-      <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink)', marginBottom: '4px' }}>
-        {title}
-      </div>
-      <div style={{ fontSize: '12px', color: 'var(--ink-dim)', lineHeight: 1.5 }}>
-        {description}
-      </div>
-    </div>
-    {active && (
-      <div style={{ color: 'var(--trace)' }}>
-        <Check size={18} />
-      </div>
-    )}
-  </button>
-);
-
 const SettingsModal = ({ isOpen, onClose }) => {
-  const { useLocalModel, setUseLocalModel } = useSettings();
   const [toastVisible, setToastVisible] = useState(false);
 
-  const handleToggle = (value) => {
-    setUseLocalModel(value);
-    toast.success('Settings saved');
-  };
+
 
   return (
     <Drawer.Root direction="right" open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -88,37 +49,14 @@ const SettingsModal = ({ isOpen, onClose }) => {
           {/* Content */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
             
-            {/* Account section */}
-            <section>
-              <div className="label" style={{ marginBottom: '16px' }}>Account</div>
-                <div className="bezel-panel corner-marks" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 500 }}>Admin User</div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div className="mono text-ink-dim" style={{ fontSize: '12px' }}>
-                      <a href="mailto:admin@ntro.gov.in" style={{ color: 'var(--trace)', textDecoration: 'none' }}>admin@ntro.gov.in</a>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
               {/* Data & Privacy section */}
               <section>
                 <div className="label" style={{ marginBottom: '16px' }}>Data & Privacy</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <ToggleButton
-                    active={useLocalModel}
-                    onClick={() => handleToggle(true)}
-                    icon={Server}
-                    title="Local model (air-gapped)"
-                    description="Narratives come from cached results and deterministic templates. No network calls, nothing leaves this machine."
-                  />
-                  <ToggleButton
-                    active={!useLocalModel}
-                    onClick={() => handleToggle(false)}
-                    icon={Cloud}
-                    title="Hosted API (sanitised findings only)"
-                    description="Uses an external API for convenience. Only abstracted, sanitised findings are sent — never raw configs, hostnames, IPs, or secrets."
-                  />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <span style={{ fontSize: '13px' }}>Narrative source</span>
+                  <span className="mono text-ink-dim" style={{ fontSize: '11px', lineHeight: 1.5 }}>
+                    Templates offline; sanitised findings only when an API key is configured
+                  </span>
                 </div>
               </section>
 

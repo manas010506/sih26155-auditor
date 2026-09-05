@@ -4,7 +4,6 @@ import { autoAnimate } from '@formkit/auto-animate';
 import { ChevronDown, ChevronRight, ChevronUp, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import SeverityLED from './SeverityLED';
-import { useSettings } from '../context/SettingsContext';
 
 const SEVERITY_ORDER = { critical: 4, high: 3, medium: 2, low: 1 };
 
@@ -103,15 +102,6 @@ const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div className="label">Remediation CLI</div>
-              <div className="mono" style={{
-                fontSize: '9px', padding: '2px 6px',
-                backgroundColor: 'var(--panel-raised)',
-                border: '1px solid var(--wire)',
-                color: 'var(--trace)',
-                borderRadius: '2px'
-              }}>
-                {useSettings().useLocalModel ? 'LOCAL MODEL' : 'SANITISED API CALL'}
-              </div>
             </div>
             <motion.button
               whileTap={{ scale: 0.95 }}
