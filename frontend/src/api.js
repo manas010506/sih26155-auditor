@@ -21,11 +21,11 @@ export async function audit(configText, sourceType, framework) {
   return res.json();
 }
 
-export async function auditBatch(configs, sourceType, framework) {
+export async function auditBatch(files, framework) {
   const res = await fetch(`${BASE}/api/audit/batch`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ configs, source_type: sourceType, framework }),
+    body: JSON.stringify({ files, framework }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

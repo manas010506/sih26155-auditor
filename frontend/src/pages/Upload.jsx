@@ -27,13 +27,12 @@ const SpinRing = () => (
   }} />
 );
 
-/* Abstract background illustration imported separately */
-
 const Upload = () => {
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState(null);
-  const [status, setStatus] = useState('empty'); // empty | detected | loading | success
+  const [status, setStatus] = useState('empty'); // empty | detected | loading | success | batch_summary
   const [detected, setDetected] = useState(null);
+  const [batchResults, setBatchResults] = useState(null);
   const inputRef = useRef(null);
   const navigate = useNavigate();
   const { setReportData } = useOutletContext();
@@ -49,30 +48,33 @@ const Upload = () => {
   const processFiles = (files) => {
     if (!files || files.length === 0) return;
     const fileArray = Array.from(files);
+    const typed = fileArray.map(f => ({ file: f, type: detectSourceType(f.name).type }));
 
-    const detectedTypes = new Set(fileArray.map(f => detectSourceType(f.name).type));
-    if (detectedTypes.has(null)) {
-      setError("Some files have unsupported types. Only Cisco IOS or Terraform are supported.");
-      setStatus('empty');
-      setDetected(null);
-      return;
-    }
-    if (detectedTypes.size > 1) {
-      setError("Cannot mix Cisco IOS and Terraform files in a single batch.");
+    const unsupported = typed.filter(t => !t.type);
+    if (unsupported.length) {
+      setError(`Unsupported: ${unsupported.map(t => t.file.name).join(', ')}. Cisco IOS (.cfg, .txt) or Terraform (.tf) only.`);
       setStatus('empty');
       setDetected(null);
       return;
     }
 
-    const type = Array.from(detectedTypes)[0];
-    const label = type === 'cisco_ios' ? 'Cisco IOS' : 'Terraform';
+    // Mixed vendors are fine. Each file carries its own source_type and the
+    // engine dispatches per file - auditing a Cisco router and a Terraform
+    // stack in one batch is the point, not an error.
+    const kinds = new Set(typed.map(t => t.type));
+    const label = kinds.size > 1
+      ? `${kinds.size} vendors`
+      : (typed[0].type === 'cisco_ios' ? 'Cisco IOS' : 'Terraform');
 
     setError(null);
-    if (fileArray.length === 1) {
-      setDetected({ name: fileArray[0].name, type, label, files: fileArray, isBatch: false });
-    } else {
-      setDetected({ name: `${fileArray.length} files selected`, type, label, files: fileArray, isBatch: true });
-    }
+    setDetected({
+      name: fileArray.length === 1 ? fileArray[0].name : `${fileArray.length} files selected`,
+      type: typed[0].type,
+      label,
+      typed,
+      files: fileArray,
+      isBatch: fileArray.length > 1,
+    });
     setStatus('detected');
   };
 
@@ -88,27 +90,27 @@ const Upload = () => {
     if (e.target.files?.length > 0) processFiles(e.target.files);
   };
 
-  const [batchResults, setBatchResults] = useState(null);
-
   const handleSubmit = async () => {
     if (!detected) return;
+
+    setError(null);
     setStatus('loading');
-    
+
     try {
       if (detected.isBatch) {
-        const configs = await Promise.all(detected.files.map(async f => ({
-          name: f.name,
-          text: await f.text()
+        const configs = await Promise.all(detected.typed.map(async t => ({
+          filename: t.file.name,
+          config_text: await t.file.text(),
+          source_type: t.type,
         })));
-        const result = await auditBatch(configs, detected.type, defaultFramework);
-        const reports = Array.isArray(result) ? result : result.reports || [];
-        setBatchResults(reports);
+        const result = await auditBatch(configs, defaultFramework);
+        setBatchResults(result.results ?? []);
         setStatus('batch_summary');
       } else {
         const text = await detected.files[0].text();
         const result = await audit(text, detected.type, defaultFramework);
         setReportData(result);
-        
+
         setStatus('success');
         setTimeout(() => navigate('/audit/findings'), 800);
       }
@@ -122,9 +124,14 @@ const Upload = () => {
 
   const isLoading = status === 'loading' || status === 'success';
 
+  const scoreColour = (s) =>
+    s < 40 ? 'var(--severity-critical)'
+      : s < 70 ? 'var(--severity-medium)'
+        : 'var(--trace)';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'transparent', position: 'relative' }}>
-      
+
       {/* Full-page Background SVG Layer */}
       <UploadBackground />
 
@@ -139,7 +146,7 @@ const Upload = () => {
         position: 'relative',
         zIndex: 1,
       }}>
-        
+
         {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -149,7 +156,7 @@ const Upload = () => {
         >
           <h1 className="heading-lg" style={{ marginBottom: '8px' }}>Data Ingestion</h1>
           <p style={{ fontSize: '14px', color: 'var(--ink-dim)' }}>
-            Upload a raw configuration file for normalization and CIS baseline auditing.
+            Upload one or more configuration files for normalization and CIS baseline auditing.
           </p>
         </motion.div>
 
@@ -186,8 +193,8 @@ const Upload = () => {
         </AnimatePresence>
 
         {/* Outer glow container for depth */}
-        <div style={{ position: 'relative', width: '100%', maxWidth: '520px' }}>
-          
+        <div style={{ position: 'relative', width: '100%', maxWidth: status === 'batch_summary' ? '760px' : '520px', transition: 'max-width 0.3s' }}>
+
           {/* Soft ambient teal blur behind card */}
           <motion.div
             animate={{
@@ -229,7 +236,7 @@ const Upload = () => {
               pointerEvents: isLoading ? 'none' : 'auto',
               transition: 'opacity 0.3s',
               overflow: 'hidden',
-              backgroundColor: 'var(--panel)', // Base color, overlaid by the gradient div
+              backgroundColor: 'var(--panel)',
             }}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -240,7 +247,7 @@ const Upload = () => {
             <div style={{
               position: 'absolute',
               inset: 0,
-              background: dragActive 
+              background: dragActive
                 ? 'linear-gradient(135deg, rgba(63, 169, 160, 0.12) 0%, rgba(16, 20, 26, 0.95) 100%)'
                 : 'linear-gradient(135deg, rgba(63, 169, 160, 0.04) 0%, rgba(16, 20, 26, 0.8) 100%)',
               zIndex: 0,
@@ -248,8 +255,8 @@ const Upload = () => {
             }} />
 
             {/* Oversized background icon texture */}
-            <IconShieldLock 
-              size={360} 
+            <IconShieldLock
+              size={360}
               stroke={0.7}
               style={{
                 position: 'absolute',
@@ -261,8 +268,9 @@ const Upload = () => {
                 transition: 'opacity 0.3s ease, transform 0.5s ease',
                 transform: dragActive ? 'scale(1.05) rotate(-5deg)' : 'scale(1) rotate(0deg)',
                 pointerEvents: 'none',
-              }} 
+              }}
             />
+
             {/* Dashed border */}
             <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
               <rect
@@ -323,34 +331,59 @@ const Upload = () => {
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                   style={{ width: '100%', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}
                 >
-                  <div className="heading-md" style={{ textAlign: 'center', marginBottom: '8px' }}>Batch Upload Complete</div>
-                  <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--wire)', borderRadius: '6px', background: 'var(--panel-raised)' }}>
-                    <table className="zebra-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div className="heading-md" style={{ marginBottom: '4px' }}>Batch Audit Complete</div>
+                    <div className="text-ink-dim" style={{ fontSize: '13px' }}>
+                      {batchResults.filter(r => r.ok).length} of {batchResults.length} audited, worst score first
+                    </div>
+                  </div>
+
+                  <div style={{ maxHeight: '320px', overflowY: 'auto', border: '1px solid var(--wire)', borderRadius: '6px', background: 'var(--panel-raised)' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                       <thead style={{ position: 'sticky', top: 0, background: 'var(--panel)', borderBottom: '1px solid var(--wire)' }}>
                         <tr>
-                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--ink-dim)', fontWeight: 500 }}>Device Name</th>
-                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--ink-dim)', fontWeight: 500 }}>Score</th>
-                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--ink-dim)', fontWeight: 500 }}>Failures</th>
-                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--ink-dim)', fontWeight: 500 }}>Action</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--ink-dim)', fontWeight: 500 }}>File</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--ink-dim)', fontWeight: 500 }}>Score</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--ink-dim)', fontWeight: 500 }}>Findings</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--ink-dim)', fontWeight: 500 }}>Critical</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--ink-dim)', fontWeight: 500 }}>Unread</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--ink-dim)', fontWeight: 500 }}></th>
                         </tr>
                       </thead>
                       <tbody>
-                        {batchResults.map((report, idx) => {
-                          const hostname = report.device?.hostname || report.device?.name || `Device ${idx + 1}`;
-                          const score = report.compliance_score ?? 'N/A';
-                          const failCount = report.score_breakdown?.rules_failed ?? report.findings?.length ?? 0;
+                        {batchResults.map((row, idx) => {
+                          // A file that failed to parse comes back ok:false with an
+                          // error rather than failing the whole batch.
+                          if (!row.ok) {
+                            return (
+                              <tr key={idx} style={{ borderBottom: '1px solid var(--wire)' }}>
+                                <td className="mono" style={{ padding: '8px 12px' }}>{row.filename}</td>
+                                <td colSpan={5} style={{ padding: '8px 12px', color: 'var(--severity-critical)', fontSize: '12px' }}>
+                                  {row.error}
+                                </td>
+                              </tr>
+                            );
+                          }
                           return (
                             <tr key={idx} style={{ borderBottom: '1px solid var(--wire)' }}>
-                              <td className="mono" style={{ padding: '8px 12px' }}>{hostname}</td>
-                              <td style={{ padding: '8px 12px', color: score < 40 ? 'var(--severity-critical)' : score < 70 ? 'var(--severity-medium)' : 'var(--trace)' }}>{score}</td>
-                              <td style={{ padding: '8px 12px' }}>{failCount}</td>
+                              <td className="mono" style={{ padding: '8px 12px' }}>{row.filename}</td>
+                              <td className="mono" style={{ padding: '8px 12px', textAlign: 'right', color: scoreColour(row.compliance_score), fontWeight: 600 }}>
+                                {row.compliance_score}
+                              </td>
+                              <td className="mono" style={{ padding: '8px 12px', textAlign: 'right' }}>{row.findings}</td>
+                              <td className="mono" style={{ padding: '8px 12px', textAlign: 'right', color: row.critical > 0 ? 'var(--severity-critical)' : 'var(--ink-dim)' }}>
+                                {row.critical}
+                              </td>
+                              <td className="mono" style={{ padding: '8px 12px', textAlign: 'right', color: row.unparsed > 0 ? 'var(--severity-high)' : 'var(--ink-dim)' }}>
+                                {row.unparsed}
+                              </td>
                               <td style={{ padding: '8px 12px' }}>
                                 <TactileButton
                                   onClick={() => {
-                                    setReportData(report);
+                                    setReportData(row.report);
                                     navigate('/audit/findings');
                                   }}
-                                  style={{ padding: '4px 8px', fontSize: '11px', background: 'transparent', border: '1px solid var(--trace)', color: 'var(--trace)', borderRadius: '4px' }}
+                                  style={{ padding: '4px 10px', fontSize: '11px', background: 'transparent', border: '1px solid var(--trace)', color: 'var(--trace)', borderRadius: '4px' }}
                                 >
                                   View
                                 </TactileButton>
@@ -361,6 +394,7 @@ const Upload = () => {
                       </tbody>
                     </table>
                   </div>
+
                   <TactileButton
                     onClick={() => { setStatus('empty'); setDetected(null); setBatchResults(null); }}
                     style={{ background: 'transparent', border: '1px solid var(--wire)', color: 'var(--ink-dim)', padding: '8px 16px', alignSelf: 'center', marginTop: '8px', borderRadius: '6px' }}
@@ -400,7 +434,7 @@ const Upload = () => {
                     gap: '12px',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div className="label">Filename</div>
+                      <div className="label">{detected.isBatch ? 'Selection' : 'Filename'}</div>
                       <div className="mono" style={{ fontSize: '13px', color: 'var(--ink)' }}>{detected.name}</div>
                     </div>
                     <div style={{ height: '1px', backgroundColor: 'var(--wire)' }} />
@@ -478,13 +512,13 @@ const Upload = () => {
                       }} />
                     </div>
                   </motion.div>
-                  
+
                   <div style={{ textAlign: 'center' }}>
-                    <div className="heading-md" style={{ marginBottom: '12px', fontSize: '20px' }}>Drop configuration file here</div>
+                    <div className="heading-md" style={{ marginBottom: '12px', fontSize: '20px' }}>Drop configuration files here</div>
                     <div style={{ fontSize: '14px', color: 'var(--ink-dim)', marginBottom: '32px' }}>
-                      Cisco IOS (.cfg, .txt) or Terraform (.tf)
+                      Cisco IOS (.cfg, .txt) or Terraform (.tf) &mdash; select several to audit together
                     </div>
-                    
+
                     <input
                       ref={inputRef}
                       type="file"
@@ -493,7 +527,7 @@ const Upload = () => {
                       onChange={handleChange}
                       style={{ display: 'none' }}
                     />
-                    
+
                     <TactileButton
                       onClick={() => inputRef.current?.click()}
                       style={{
@@ -509,28 +543,28 @@ const Upload = () => {
                         borderRadius: '6px',
                         transition: 'border-color 0.15s, color 0.15s, background-color 0.15s',
                       }}
-                      onMouseEnter={e => { 
-                        e.currentTarget.style.borderColor = 'var(--trace)'; 
-                        e.currentTarget.style.color = 'var(--trace)'; 
+                      onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = 'var(--trace)';
+                        e.currentTarget.style.color = 'var(--trace)';
                         e.currentTarget.style.backgroundColor = 'rgba(63, 169, 160, 0.05)';
                       }}
-                      onMouseLeave={e => { 
-                        e.currentTarget.style.borderColor = 'var(--wire)'; 
-                        e.currentTarget.style.color = 'var(--ink)'; 
+                      onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = 'var(--wire)';
+                        e.currentTarget.style.color = 'var(--ink)';
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
-                      Select File
+                      Select Files
                     </TactileButton>
                   </div>
-                  
-                  <div className="mono" style={{ 
-                    position: 'absolute', 
-                    bottom: '24px', 
-                    fontSize: '10px', 
-                    color: 'var(--ink-dim)', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.04em' 
+
+                  <div className="mono" style={{
+                    position: 'absolute',
+                    bottom: '24px',
+                    fontSize: '10px',
+                    color: 'var(--ink-dim)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em'
                   }}>
                     Max file size: 10 MB
                   </div>
