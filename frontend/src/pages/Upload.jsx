@@ -186,7 +186,7 @@ const Upload = () => {
         </AnimatePresence>
 
         {/* Outer glow container for depth */}
-        <div style={{ position: 'relative', width: '100%', maxWidth: '640px' }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: '520px' }}>
           
           {/* Soft ambient teal blur behind card */}
           <motion.div
@@ -218,9 +218,8 @@ const Upload = () => {
             className="glass-card"
             style={{
               position: 'relative',
-              padding: '64px 40px',
+              padding: '56px 48px',
               borderRadius: '16px',
-              minHeight: '440px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',

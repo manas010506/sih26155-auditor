@@ -14,7 +14,9 @@ import "@xyflow/react/dist/style.css";
 
 import AttackNode from "./AttackNode";
 import ImpactEdge from "./ImpactEdge";
-import { IconInfoCircle} from "@tabler/icons-react";
+import AttackEdge from "./AttackEdge";
+import EmptyStateCard from "./EmptyStateCard";
+import { IconInfoCircle, IconNetwork, IconLock, IconLockOpen } from "@tabler/icons-react";
 import "./AttackGraph.css";
 
 const nodeTypes = {
@@ -23,9 +25,10 @@ const nodeTypes = {
 
 const edgeTypes = {
   impact: ImpactEdge,
+  attack: AttackEdge,
 };
 
-function GraphCanvas({ nodes, edges, isLocked }) {
+function GraphCanvas({ nodes, edges, isLocked, onToggleLock }) {
   const { fitView } = useReactFlow();
 
   useEffect(() => {
@@ -59,16 +62,28 @@ function GraphCanvas({ nodes, edges, isLocked }) {
       nodesFocusable={!isLocked}
       edgesFocusable={!isLocked}
       panOnDrag={!isLocked}
-      panOnScroll={!isLocked}
-      zoomOnScroll={!isLocked}
+      panOnScroll={false}
+      zoomOnScroll={false}
       zoomOnPinch={!isLocked}
       zoomOnDoubleClick={!isLocked}
       autoPanOnNodeDrag={!isLocked}
       selectionOnDrag={!isLocked}
       deleteKeyCode={isLocked ? null : "Delete"}
+      preventScrolling={false}
     >
       <Background />
-      <Controls showInteractive={false} />
+      <Controls showInteractive={false}>
+        <button
+          type="button"
+          className={`graph-lock-button ${isLocked ? "locked" : "unlocked"}`}
+          onClick={onToggleLock}
+          title={isLocked ? "Unlock graph" : "Lock graph"}
+          aria-label={isLocked ? "Unlock graph" : "Lock graph"}
+          style={{ width: '100%', borderRadius: 0, padding: '4px 0', borderBottom: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          {isLocked ? <IconLock size={16} /> : <IconLockOpen size={16} />}
+        </button>
+      </Controls>
     </ReactFlow>
   );
 }
@@ -172,7 +187,7 @@ function AttackGraph({ report: reportProp }) {
         target:
           selectedPath.contributing_findings[i + 1],
         animated: true,
-        type: "smoothstep",
+        type: "attack",
         style: {
           stroke: "var(--wire)",
           strokeWidth: 2,
@@ -215,12 +230,30 @@ function AttackGraph({ report: reportProp }) {
   }, [report, selectedPath]);
 
   if (!report) {
+    const AttackPathsSVG = (
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="pathsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--trace)" stopOpacity="0" />
+            <stop offset="50%" stopColor="var(--trace)" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="var(--trace)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <circle cx="30%" cy="30%" r="6" fill="var(--wire)" opacity="0.4" />
+        <circle cx="50%" cy="50%" r="6" fill="var(--wire)" opacity="0.4" />
+        <circle cx="70%" cy="40%" r="6" fill="var(--wire)" opacity="0.4" />
+        <path d="M 120 60 L 200 100 L 280 80" fill="none" stroke="var(--wire)" strokeWidth="2" opacity="0.2" style={{ transformOrigin: 'center', transform: 'scale(1.5)' }} />
+        <path d="M -50 40 Q 250 80 550 40" fill="none" stroke="url(#pathsGrad)" strokeWidth="2" />
+      </svg>
+    );
+
     return (
-      <section className="attack-graph">
-        <div className="graph-loading">
-          Loading attack paths...
-        </div>
-      </section>
+      <EmptyStateCard
+        title="No Attack Paths"
+        description="Upload a configuration file to execute the auditing engine and visualize attack chains."
+        icon={IconNetwork}
+        svgLayer={AttackPathsSVG}
+      />
     );
   }
 
@@ -257,32 +290,6 @@ function AttackGraph({ report: reportProp }) {
         </div>
 
         <div className="attack-graph-actions">
-          <button
-            type="button"
-            className={`graph-lock-button ${
-              isLocked
-                ? "locked"
-                : "unlocked"
-            }`}
-            onClick={() =>
-              setIsLocked((value) => !value)
-            }
-            title={
-              isLocked
-                ? "Unlock graph"
-                : "Lock graph"
-            }
-            aria-label={
-              isLocked
-                ? "Unlock graph"
-                : "Lock graph"
-            }
-          >
-            <span>
-              {isLocked ? "LOCKED" : "UNLOCKED"}
-            </span>
-          </button>
-
           <div className="path-severity">
             {selectedPath.severity}
           </div>
@@ -375,6 +382,7 @@ function AttackGraph({ report: reportProp }) {
             nodes={graph.nodes}
             edges={graph.edges}
             isLocked={isLocked}
+            onToggleLock={() => setIsLocked((v) => !v)}
           />
         </ReactFlowProvider>
       </motion.div>
