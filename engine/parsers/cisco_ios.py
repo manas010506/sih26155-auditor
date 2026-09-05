@@ -547,7 +547,7 @@ class CiscoIOSParser(Parser):
         for block in cfg.find_objects(r"^line vty"):
             rng = block.text.strip().replace("line vty ", "")
             transport = []
-            timeout = None
+            timeout = 10
             access_class = None
             login = "none"
             refs = {}
@@ -568,7 +568,7 @@ class CiscoIOSParser(Parser):
                         try:
                             timeout = int(parts[1])
                         except ValueError:
-                            timeout = None
+                            timeout = 10
 
                     refs["exec_timeout_minutes"] = self._ref(child)
 

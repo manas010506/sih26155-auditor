@@ -244,7 +244,7 @@
     },
     {
       "rule_id": "CIS-NET-012",
-      "title": "NTP configured without authentication",
+      "title": "NTP not authenticated",
       "severity": "low",
       "resource_id": "ntp",
       "raw_ref": {

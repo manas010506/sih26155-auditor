@@ -65,10 +65,10 @@ def _device_block(doc: dict, source_type: str) -> dict:
     g = next((r for r in doc["resources"] if r["type"] == "global_settings"), None)
     attrs = g["attributes"] if g else {}
     return {
-        "hostname": attrs.get("hostname") or "unknown",
+        "hostname": attrs.get("hostname") or "Not available in supplied configuration",
         "vendor": "cisco",
         "os": "IOS",
-        "version": attrs.get("os_version") or "unknown",
+        "version": attrs.get("os_version") or "Not available in supplied configuration",
         "role": "network_device",
     }
 

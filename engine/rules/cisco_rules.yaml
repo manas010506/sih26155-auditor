@@ -141,7 +141,7 @@
     changes exist only in a buffer that is cleared on reboot and editable by anyone
     with privileged access.
 - id: CIS-NET-012
-  title: NTP configured without authentication
+  title: NTP not authenticated
   applies_to: ntp
   cis_control: CIS Cisco IOS 3.2.1 - Use authenticated NTP
   severity: low
