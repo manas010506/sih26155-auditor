@@ -5,6 +5,7 @@ import { IconFileText, IconCheck, IconAlertCircle, IconUpload, IconShieldLock } 
 import { audit } from '../api';
 import TactileButton from '../components/TactileButton';
 import UploadBackground from '../components/UploadBackground';
+import { useSettings } from '../context/SettingsContext';
 
 /* Detect source type from file extension */
 const detectSourceType = (filename) => {
@@ -36,6 +37,7 @@ const Upload = () => {
   const inputRef = useRef(null);
   const navigate = useNavigate();
   const { setReportData } = useOutletContext();
+  const { defaultFramework } = useSettings();
 
   const handleDrag = useCallback((e) => {
     e.preventDefault();
@@ -78,7 +80,7 @@ const Upload = () => {
     
     try {
       const text = await detected.file.text();
-      const result = await audit(text, detected.type);
+      const result = await audit(text, detected.type, defaultFramework);
       setReportData(result);
       
       setStatus('success');

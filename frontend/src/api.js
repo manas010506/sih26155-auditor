@@ -8,11 +8,11 @@ export function sourceTypeFor(filename) {
   return null;                       // UI must show the manual dropdown
 }
 
-export async function audit(configText, sourceType) {
+export async function audit(configText, sourceType, framework) {
   const res = await fetch(`${BASE}/api/audit`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ config_text: configText, source_type: sourceType }),
+    body: JSON.stringify({ config_text: configText, source_type: sourceType, framework }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -37,6 +37,12 @@ export async function addTrainingMapping(mapping) {
 export async function getSchema() {
   const res = await fetch(`${BASE}/api/schema`);
   if (!res.ok) throw new Error(`could not load schema (${res.status})`);
+  return res.json();
+}
+
+export async function getFrameworks() {
+  const res = await fetch(`${BASE}/api/frameworks`);
+  if (!res.ok) return { frameworks: ["CIS"] };
   return res.json();
 }
 

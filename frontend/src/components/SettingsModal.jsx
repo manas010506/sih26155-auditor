@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Server, Cloud, Check } from 'lucide-react';
 import { Drawer } from 'vaul';
 import { toast } from 'sonner';
 import { useSettings } from '../context/SettingsContext';
+import { getFrameworks } from '../api';
 
 const SettingsModal = ({ isOpen, onClose }) => {
-  const [toastVisible, setToastVisible] = useState(false);
+  const { defaultFramework, setDefaultFramework } = useSettings();
+  const [frameworks, setFrameworks] = useState(["CIS"]);
+
+  useEffect(() => {
+    getFrameworks().then(data => {
+      setFrameworks(data.frameworks || ["CIS"]);
+    }).catch(() => {});
+  }, []);
 
 
 
@@ -66,14 +74,14 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 <div className="bezel-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: '13px', color: 'var(--ink)' }}>Default Framework</div>
-                    <select style={{
+                    <select value={defaultFramework} onChange={e => setDefaultFramework(e.target.value)} style={{
                       backgroundColor: 'var(--substrate)', color: 'var(--ink)',
                       border: '1px solid var(--wire)', padding: '4px 8px',
                       fontFamily: 'IBM Plex Mono, monospace', fontSize: '12px'
                     }}>
-                      <option>CIS</option>
-                      <option>NIST</option>
-                      <option>STIG</option>
+                      {frameworks.map(f => (
+                        <option key={f} value={f}>{f}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
