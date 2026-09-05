@@ -30,16 +30,16 @@ const CountUp = ({ end, duration = 1.4 }) => {
 
 /* Score bands calibrated against the real penalty engine */
 const scoreLabel = (s) => {
-  if (s >= 25) return 'GOOD';
-  if (s >= 15) return 'FAIR';
-  if (s >= 8) return 'POOR';
+  if (s >= 90) return 'GOOD';
+  if (s >= 70) return 'FAIR';
+  if (s >= 40) return 'POOR';
   return 'CRITICAL';
 };
 
 const scoreColor = (s) => {
-  if (s >= 25) return 'var(--trace)';
-  if (s >= 15) return 'var(--severity-low)';
-  if (s >= 8) return 'var(--severity-medium)';
+  if (s >= 90) return 'var(--trace)';
+  if (s >= 70) return 'var(--severity-low)';
+  if (s >= 40) return 'var(--severity-medium)';
   return 'var(--severity-critical)';
 };
 
@@ -122,11 +122,11 @@ const ComplianceGauge = ({ score, breakdown, compact = false }) => {
 
             const isActive = pct <= score;
             const ledColor = isActive
-              ? score >= 25
+              ? score >= 90
                 ? 'var(--trace)'
-                : score >= 15
+                : score >= 70
                 ? 'var(--severity-low)'
-                : score >= 8
+                : score >= 40
                 ? 'var(--severity-medium)'
                 : 'var(--severity-critical)'
               : 'var(--wire)';
