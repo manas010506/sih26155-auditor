@@ -28,7 +28,7 @@ const RouteTitle = ({ title }) => {
   return null;
 };
 
-const DashboardLayout = ({ reportData, setReportData, score }) => {
+const DashboardLayout = ({ reportData, setReportData, batchResults, setBatchResults, score }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -70,7 +70,7 @@ const DashboardLayout = ({ reportData, setReportData, score }) => {
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               style={{ height: '100%' }}
             >
-              <Outlet context={{ reportData, setReportData }} />
+              <Outlet context={{ reportData, setReportData, batchResults, setBatchResults }} />
             </motion.div>
           </AnimatePresence>
         </main>
@@ -86,6 +86,7 @@ import sampleReport from './sample_report.json'; //To be removed
 
 function App() {
   const [reportData, setReportData] = useState(null);
+  const [batchResults, setBatchResults] = useState(null);
 
   // Data ingestion happens via Upload.jsx, which sets the reportData.
 
@@ -104,7 +105,7 @@ function App() {
             <Route path="/signup" element={<><RouteTitle title="Create Account" /><Signup /></>} />
 
             {/* Dashboard Layout */}
-            <Route path="/audit" element={<DashboardLayout reportData={reportData} setReportData={setReportData} score={score} />}>
+            <Route path="/audit" element={<DashboardLayout reportData={reportData} setReportData={setReportData} batchResults={batchResults} setBatchResults={setBatchResults} score={score} />}>
               <Route index element={<Navigate to="/audit/upload" replace />} />
               <Route path="upload" element={<><RouteTitle title="Upload Config" /><Upload /></>} />
               <Route path="findings" element={<><RouteTitle title="Findings" /><Findings /></>} />

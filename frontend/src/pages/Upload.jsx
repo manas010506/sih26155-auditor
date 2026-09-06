@@ -29,15 +29,15 @@ const SpinRing = () => (
 );
 
 const Upload = () => {
+  const { setReportData, batchResults, setBatchResults } = useOutletContext();
+  const { defaultFramework } = useSettings(); 
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState(null);
-  const [status, setStatus] = useState('empty'); // empty | detected | loading | success | batch_summary
+  const [status, setStatus] = useState(batchResults ? 'batch_summary' : 'empty'); // empty | detected | loading | success | batch_summary
   const [detected, setDetected] = useState(null);
-  const [batchResults, setBatchResults] = useState(null);
   const inputRef = useRef(null);
   const navigate = useNavigate();
-  const { setReportData } = useOutletContext();
-  const { defaultFramework } = useSettings();
+
 
   const handleDrag = useCallback((e) => {
     e.preventDefault();
