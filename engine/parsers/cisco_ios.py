@@ -83,6 +83,19 @@ class CiscoIOSParser(Parser):
             r"^ip route ",
             r"^access-list ",
 
+            # ACLs referenced by access-class
+            r"^ip access-list ",
+            r"^\s*permit ",
+            r"^\s*deny ",
+            # SNMP trap destination
+            r"^snmp-server host ",
+            # AAA on a line block
+            r"^\s*login authentication ",
+            # NTP authentication, read by _ntp
+            r"^ntp authenticate$",
+            r"^ntp authentication-key ",
+            r"^ntp trusted-key ",
+
             # SNMP metadata
             r"^snmp-server location ",
             r"^snmp-server contact ",
@@ -140,13 +153,37 @@ class CiscoIOSParser(Parser):
                     break
 
     def _unparsed_lines(self, config_text: str):
-        """Return config lines that were not consumed by the parser."""
+        """Return config lines that were not consumed by the parser.
+
+        Banner bodies are skipped. A `banner login ^C` line is followed by free
+        text until the delimiter repeats, and that prose is not configuration
+        syntax - reporting "All activity is logged and monitored." as an
+        unrecognised command is wrong, and it makes a well-parsed config look
+        incomplete.
+        """
         unparsed = []
+        in_banner = False
+        delimiter = None
 
         for linenum, line in enumerate(config_text.splitlines()):
             text = line.strip()
 
+            if in_banner:
+                # Everything up to and including the closing delimiter is prose.
+                if delimiter and delimiter in text:
+                    in_banner = False
+                    delimiter = None
+                continue
+
             if not text or text.startswith("!"):
+                continue
+
+            if text.startswith("banner "):
+                # Last character of the banner line is the delimiter, e.g. ^C.
+                delimiter = text[-1]
+                # A one-line banner opens and closes on the same line.
+                if text.count(delimiter) < 2:
+                    in_banner = True
                 continue
 
             if linenum not in self._claimed:
@@ -156,7 +193,6 @@ class CiscoIOSParser(Parser):
                 })
 
         return unparsed
-    # ------------------------------------------------------------- GLOBAL
 
     def _global_settings(self, cfg):
         """Build the normalized global_settings resource."""
