@@ -517,7 +517,7 @@ const Upload = () => {
                   <div style={{ textAlign: 'center' }}>
                     <div className="heading-md" style={{ marginBottom: '12px', fontSize: '20px' }}>Drop configuration files here</div>
                     <div style={{ fontSize: '14px', color: 'var(--ink-dim)', marginBottom: '32px' }}>
-                      Cisco IOS (.cfg, .txt) or Terraform (.tf) &mdash; select several to audit together
+                      Cisco IOS (.cfg, .txt), Juniper JunOS (.conf) or Terraform (.tf) — select several to audit together
                     </div>
 
                     <input
