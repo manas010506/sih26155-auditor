@@ -53,7 +53,7 @@ const Upload = () => {
 
     const unsupported = typed.filter(t => !t.type);
     if (unsupported.length) {
-      setError(`Unsupported: ${unsupported.map(t => t.file.name).join(', ')}. Cisco IOS (.cfg, .txt) or Terraform (.tf) only.`);
+      setError(`Unsupported: ${unsupported.map(t => t.file.name).join(', ')}. Cisco IOS (.cfg, .txt), Juniper JunOS (.conf) or Terraform (.tf) only.`);
       setStatus('empty');
       setDetected(null);
       return;

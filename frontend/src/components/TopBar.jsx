@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Settings, User, Server, Shield, LogOut } from 'lucide-react';
+import { Settings, User, Server, Shield, LogOut } from 'lucide-react';
 import TactileButton from './TactileButton';
 
 /* Pulsing LIVE dot */
@@ -88,7 +88,6 @@ const DropdownItem = ({ icon: Icon, label, onClick, destructive }) => (
 const TopBar = ({ device, source, onSettingsClick }) => {
   const [deviceDropdownOpen, setDeviceDropdownOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
   // Button hover handler for bezel buttons
@@ -155,49 +154,6 @@ const TopBar = ({ device, source, onSettingsClick }) => {
       {/* RIGHT: Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
         
-        {/* Notifications */}
-        <div style={{ position: 'relative' }}>
-          <TactileButton
-            className="bezel-panel"
-            style={{ 
-              width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--ink-dim)', transition: 'color 0.2s, border-color 0.2s', borderRadius: '2px', padding: 0
-            }}
-            onMouseEnter={(e) => handleBtnHover(e, true)}
-            onMouseLeave={(e) => handleBtnHover(e, false)}
-            onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-            title="Notifications"
-          >
-            <div style={{ position: 'relative', zIndex: 10 }}>
-              <Bell size={18} />
-              {/* Notification badge - pulsing */}
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: [1, 1.4, 1] }}
-                transition={{ repeat: 3, duration: 0.8, delay: 1 }}
-                style={{
-                  position: 'absolute', top: '-2px', right: '-2px',
-                  width: '8px', height: '8px', borderRadius: '50%',
-                  backgroundColor: 'var(--severity-critical)', border: '2px solid var(--substrate)'
-                }} 
-              />
-            </div>
-          </TactileButton>
-          
-          <DropdownMenu isOpen={notifDropdownOpen} onClose={() => setNotifDropdownOpen(false)} style={{ top: 'calc(100% + 8px)', right: 0, minWidth: '240px' }}>
-            <div className="label" style={{ padding: '8px 12px', borderBottom: '1px solid var(--wire)', marginBottom: '4px' }}>Notifications</div>
-            <div style={{ padding: '12px', fontSize: '12px', color: 'var(--ink)' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '12px' }}>
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--severity-critical)', flexShrink: 0, marginTop: '4px' }} />
-                <div>3 new critical findings detected on EDGE-RTR-01</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--ink-dim)', flexShrink: 0, marginTop: '4px' }} />
-                <div style={{ color: 'var(--ink-dim)' }}>Compliance report ready to export</div>
-              </div>
-            </div>
-          </DropdownMenu>
-        </div>
 
         {/* Settings */}
         <TactileButton
