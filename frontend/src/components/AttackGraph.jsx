@@ -229,7 +229,7 @@ function AttackGraph({ report: reportProp }) {
     };
   }, [report, selectedPath]);
 
-  if (!report) {
+  if (!report || !paths.length) {
     const AttackPathsSVG = (
       <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -254,16 +254,6 @@ function AttackGraph({ report: reportProp }) {
         icon={IconNetwork}
         svgLayer={AttackPathsSVG}
       />
-    );
-  }
-
-  if (!paths.length) {
-    return (
-      <section className="attack-graph">
-        <div className="graph-error">
-          No attack paths found.
-        </div>
-      </section>
     );
   }
 

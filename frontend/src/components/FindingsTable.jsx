@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 import { autoAnimate } from '@formkit/auto-animate';
 import { ChevronDown, ChevronRight, ChevronUp, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
@@ -149,6 +150,26 @@ const FindingsTable = ({ findings }) => {
   const [filterCategory, setFilterCategory] = useState('all');
   const [copiedRuleId, setCopiedRuleId] = useState(null);
 
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.selectedRuleId) {
+      const ruleId = location.state.selectedRuleId;
+      setExpandedRows(prev => new Set(prev).add(ruleId));
+      
+      setTimeout(() => {
+        const el = document.getElementById(`row-${ruleId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.style.backgroundColor = 'rgba(63, 169, 160, 0.15)';
+          setTimeout(() => {
+            el.style.backgroundColor = '';
+          }, 2000);
+        }
+      }, 100);
+    }
+  }, [location.state?.selectedRuleId]);
+
   // auto-animate on tbody for smooth row reflow on filter change
   const tbodyRef = useRef(null);
   useEffect(() => {
@@ -259,7 +280,7 @@ const FindingsTable = ({ findings }) => {
               <col style={{ width: '100px' }} />
               <col style={{ width: '120px' }} />
               <col /* title */ />
-              <col className="hide-on-mobile" style={{ width: '80px' }} />
+              <col className="hide-on-mobile" style={{ width: '180px' }} />
               <col className="hide-on-mobile" style={{ width: '160px' }} />
             </colgroup>
             <thead>
@@ -289,6 +310,7 @@ const FindingsTable = ({ findings }) => {
                 return (
                   <React.Fragment key={finding.rule_id}>
                     <motion.tr
+                      id={`row-${finding.rule_id}`}
                       initial={{ opacity: 0, x: -4 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.22, delay: Math.min(rowIdx * 0.03, 0.3) }}
@@ -297,7 +319,7 @@ const FindingsTable = ({ findings }) => {
                         borderBottom: '1px solid var(--wire)',
                         backgroundColor: isExpanded ? 'var(--panel-raised)' : 'transparent',
                         cursor: 'pointer',
-                        transition: 'background-color 0.12s ease',
+                        transition: 'background-color 0.4s ease',
                       }}
                       onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.backgroundColor = 'rgba(74, 85, 99, 0.15)'; }}
                       onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.backgroundColor = 'transparent'; }}
@@ -343,14 +365,14 @@ const FindingsTable = ({ findings }) => {
                       </td>
 
                       {/* Resource ID */}
-                      <td className="hide-on-mobile" style={{ padding: '10px 0' }}>
+                      <td className="hide-on-mobile" style={{ padding: '10px 16px 10px 0', wordBreak: 'break-word' }}>
                         <span className="mono" style={{ fontSize: '11px', color: 'var(--ink-dim)', letterSpacing: '0.04em' }}>
                           {finding.resource_id ?? '—'}
                         </span>
                       </td>
 
                       {/* CIS Control */}
-                      <td className="hide-on-mobile" style={{ padding: '10px 12px 10px 0' }}>
+                      <td className="hide-on-mobile" style={{ padding: '10px 12px 10px 0', wordBreak: 'break-word' }}>
                         <span className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)', letterSpacing: '0.03em' }}>
                           {finding.cis_control}
                         </span>

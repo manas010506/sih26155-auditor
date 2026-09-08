@@ -1,8 +1,10 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import GlitchText from './GlitchText';
-import { ArrowRight, ShieldAlert, Lock, CheckCircle2, ShieldCheck, Database, Server } from 'lucide-react';
+import { ArrowRight, ShieldAlert, Lock, CheckCircle2, ShieldCheck, Database, Server, GitMerge, Zap, BrainCircuit, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const MotionLink = motion.create ? motion.create(Link) : motion(Link);
 
 /* ---------- Reusable primitives ---------- */
 
@@ -65,17 +67,24 @@ export const HeroSection = () => {
         className="text-trace mono uppercase mb-6 relative"
         style={{ fontSize: '12px' }}
       >
-        [ // SYSTEM_AUDITOR_CORE_v2.0 ]
+        [ // COMPLIANCE_AUDITOR ]
       </motion.div>
 
       <motion.h1
         initial={{ opacity: 0, y: 60 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.0, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className="text-ink font-bold mb-8"
-        style={{ fontSize: 'clamp(36px, 7vw, 80px)', lineHeight: '1.0', letterSpacing: '-0.04em', maxWidth: '900px' }}
+        className="text-ink font-bold mb-8 flex items-center justify-center flex-wrap"
+        style={{ fontSize: 'clamp(36px, 7vw, 80px)', lineHeight: '1.15', letterSpacing: '-0.04em', maxWidth: '900px' }}
       >
         <GlitchText text={'FIND THE PATH\nBEFORE THEY DO.'} duration={1100} delay={400} />
+        <motion.span
+          animate={{ opacity: [1, 0, 1] }}
+          transition={{ repeat: Infinity, duration: 0.9, ease: "linear" }}
+          style={{ display: 'inline-block', marginLeft: '12px', color: 'var(--trace)' }}
+        >
+          _
+        </motion.span>
       </motion.h1>
 
       <motion.p
@@ -85,8 +94,8 @@ export const HeroSection = () => {
         className="text-ink-dim mb-12 max-w-xl"
         style={{ fontSize: '16px', lineHeight: '1.7' }}
       >
-        Multi-vendor network and cloud compliance auditing. Ingest raw configs,<br />
-        correlate findings, sever attack paths.
+        <span style={{ color: 'var(--ink)', fontWeight: 600 }}>Multi-vendor network and cloud compliance auditing.</span><br />
+        Ingest raw configs, correlate findings, sever attack paths.
       </motion.p>
 
       <motion.div
@@ -95,12 +104,41 @@ export const HeroSection = () => {
         transition={{ duration: 0.8, delay: 0.7 }}
         className="flex items-center gap-4 flex-wrap justify-center pointer-events-auto"
       >
-        <Link to="/audit/upload" className="bracket-btn px-8 py-4 flex items-center gap-3 text-sm">
-          [ LAUNCH_AUDITOR ] <ArrowRight size={16} />
-        </Link>
-        <Link to="/audit/findings" className="bracket-btn px-8 py-4 flex items-center gap-3 text-sm">
+        <MotionLink 
+          to="/audit/upload" 
+          className="px-8 py-4 flex items-center gap-3 text-sm mono font-bold"
+          whileHover="hover"
+          whileTap={{ scale: 0.97 }}
+          initial="initial"
+          animate={{ boxShadow: ['0 0 15px rgba(63, 169, 160, 0.3)', '0 0 25px rgba(63, 169, 160, 0.6)', '0 0 15px rgba(63, 169, 160, 0.3)'] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          style={{
+            backgroundColor: 'var(--trace)',
+            color: 'var(--substrate)',
+            borderRadius: '6px',
+            textDecoration: 'none'
+          }}
+        >
+          [ LAUNCH_AUDITOR ] 
+          <motion.div variants={{ hover: { x: 4 }, initial: { x: 0 } }} transition={{ type: 'spring', stiffness: 400, damping: 10 }}>
+            <ArrowRight size={16} />
+          </motion.div>
+        </MotionLink>
+
+        <MotionLink 
+          to="/audit/findings" 
+          state={{ loadSample: true }}
+          className="bracket-btn px-8 py-4 flex items-center gap-3 text-sm mono font-bold"
+          whileHover={{ 
+            borderColor: 'var(--trace)', 
+            backgroundColor: 'rgba(63, 169, 160, 0.05)',
+            color: 'var(--trace)'
+          }}
+          whileTap={{ scale: 0.97 }}
+          style={{ textDecoration: 'none' }}
+        >
           [ VIEW_SAMPLE_REPORT ]
-        </Link>
+        </MotionLink>
       </motion.div>
     </motion.div>
 
@@ -146,6 +184,40 @@ const PanelLayout = ({ tag, number, title, children }) => (
     </div>
   </div>
 );
+
+export const FeatureCardsSection = () => {
+  const cards = [
+    { icon: <GitMerge size={20} />, title: "Multi-Vendor Normalisation", desc: "Correlate Cisco IOS, JunOS, and Terraform/AWS into a unified schema instantly." },
+    { icon: <Activity size={20} />, title: "Attack-Path Correlation", desc: "Isolated findings chain into real exploit paths. Sever the chain before the breach." },
+    { icon: <BrainCircuit size={20} />, title: "Self-Learning Parser", desc: "Admin teaches unrecognized syntax on the fly. No backend redeploy necessary." },
+    { icon: <Zap size={20} />, title: "Deterministic Scoring", desc: "Consistent, mathematically sound compliance scores for every configuration state." }
+  ];
+
+  return (
+    <div className="py-16 px-6 border-b-wire relative z-20" style={{ background: 'rgba(16, 20, 26, 0.4)' }}>
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {cards.map((card, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.6, delay: 0.1 * i, ease: [0.16, 1, 0.3, 1] }}
+            whileHover={{ y: -6, boxShadow: '0 8px 24px rgba(0,0,0,0.3)', borderColor: 'var(--trace)' }}
+            className="tactical-border p-6 flex flex-col gap-4 rounded-lg bg-panel transition-colors"
+            style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+          >
+            <div className="w-10 h-10 flex items-center justify-center tactical-border rounded text-trace">
+              {card.icon}
+            </div>
+            <h3 className="text-ink font-bold text-sm tracking-wide">{card.title}</h3>
+            <p className="text-ink-dim text-xs leading-relaxed">{card.desc}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export const TheGapSection = () => (
   <PanelLayout tag="THE_GAP" number="01" title={<>SYNTACTIC DIVERSITY<br />SHOULDN'T MEAN BLINDNESS.</>}>

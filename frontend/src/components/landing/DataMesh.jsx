@@ -163,17 +163,29 @@ const NetworkGraph = () => {
     // ── Update animated node positions ──
     for (let i = 0; i < NODE_COUNT; i++) {
       const ph = phases[i];
-      const sp = speeds[i];
-      animPos[i * 3]     = basePos[i * 3]     + Math.sin(t * sp * 0.28 + ph) * 0.38;
-      animPos[i * 3 + 1] = basePos[i * 3 + 1] + Math.cos(t * sp * 0.20 + ph) * 0.25;
-      animPos[i * 3 + 2] = basePos[i * 3 + 2] + Math.sin(t * sp * 0.14 + ph * 2) * 0.15;
+      const sp = speeds[i] * 1.4; // Slightly increased drift speed
+      animPos[i * 3]     = basePos[i * 3]     + Math.sin(t * sp * 0.28 + ph) * 0.55;
+      animPos[i * 3 + 1] = basePos[i * 3 + 1] + Math.cos(t * sp * 0.20 + ph) * 0.35;
+      animPos[i * 3 + 2] = basePos[i * 3 + 2] + Math.sin(t * sp * 0.14 + ph * 2) * 0.25;
     }
 
     // ── Instanced nodes ──
     if (instancedRef.current) {
+      // Map mouse NDC to approximate world coordinates at z=0 plane
+      const mx = mouse.current.x * 12;
+      const my = mouse.current.y * 7 + 1.5; 
+
       for (let i = 0; i < NODE_COUNT; i++) {
-        const pulse = 0.55 + 0.45 * Math.abs(Math.sin(t * speeds[i] * 0.85 + phases[i]));
+        // Calculate mouse proximity boost
+        const dx = animPos[i * 3] - mx;
+        const dy = animPos[i * 3 + 1] - my;
+        const distSq = dx * dx + dy * dy;
+        const hoverBoost = Math.max(0, 1 - distSq / 10); // radius of ~3.1
+
+        const basePulse = Math.abs(Math.sin(t * speeds[i] * 0.85 + phases[i]));
+        const pulse = 0.55 + 0.45 * basePulse + (hoverBoost * 1.5);
         const scale = sizes[i] * (0.6 + 0.4 * pulse);
+
         dummy.position.set(animPos[i * 3], animPos[i * 3 + 1], animPos[i * 3 + 2]);
         dummy.scale.setScalar(scale);
         dummy.updateMatrix();
@@ -181,9 +193,9 @@ const NetworkGraph = () => {
 
         // Pulse the node color brightness
         nodeColor.setRGB(
-          colors[i * 3]     * (0.6 + 0.4 * pulse),
-          colors[i * 3 + 1] * (0.6 + 0.4 * pulse),
-          colors[i * 3 + 2] * (0.6 + 0.4 * pulse),
+          Math.min(1, colors[i * 3]     * (0.6 + 0.4 * pulse + hoverBoost * 0.8)),
+          Math.min(1, colors[i * 3 + 1] * (0.6 + 0.4 * pulse + hoverBoost * 0.8)),
+          Math.min(1, colors[i * 3 + 2] * (0.6 + 0.4 * pulse + hoverBoost * 0.8)),
         );
         instancedRef.current.setColorAt(i, nodeColor);
       }

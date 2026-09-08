@@ -18,7 +18,7 @@ import { SettingsProvider } from './context/SettingsContext';
 import { Toaster } from 'sonner';
 import AttackGraph from './components/AttackGraph';
 import Training from './pages/Training';
-
+import sampleReport from './sample_report.json';
 
 // Title updater (for dashboard routes without Helmet)
 const RouteTitle = ({ title }) => {
@@ -32,6 +32,13 @@ const DashboardLayout = ({ reportData, setReportData, batchResults, setBatchResu
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.loadSample && !reportData) {
+      setReportData(sampleReport);
+    }
+  }, [location.state?.loadSample, reportData, setReportData]);
 
   return (
     <div className="flex w-full md-flex-col" style={{ minHeight: '100vh' }}>
@@ -82,7 +89,7 @@ const DashboardLayout = ({ reportData, setReportData, batchResults, setBatchResu
   );
 };
 
-import sampleReport from './sample_report.json'; //To be removed
+import Landing from './pages/Landing';
 
 function App() {
   const [reportData, setReportData] = useState(null);
@@ -100,7 +107,7 @@ function App() {
           <CommandPalette />
           <Routes>
             {/* Public Landing Page */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<><RouteTitle title="Login" /><Login /></>} />
             <Route path="/signup" element={<><RouteTitle title="Create Account" /><Signup /></>} />
 
