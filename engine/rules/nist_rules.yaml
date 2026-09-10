@@ -26,13 +26,26 @@
   explanation: Restricting access to the management plane prevents unauthorized users
     from attempting to log into the device.
   framework: NIST
+- id: NIST-AU-02
+  title: 'Event Logging: Remote Syslog Enabled'
+  applies_to: global_settings
+  severity: medium
+  cis_control: AU-2
+  check:
+    attribute: logging_host
+    operator: exists
+    value: true
+  remediation: Configure a remote syslog server using the 'logging host' command.
+  explanation: Centralized logging ensures that audit records are preserved even if
+    the local device is compromised.
+  framework: NIST
 - id: NIST-SC-08
   title: 'Transmission Confidentiality: SSHv2 Enforced'
   applies_to: ssh_settings
   severity: high
   cis_control: N/A
   check:
-    attribute: ssh_version
+    attribute: version
     operator: equals
     value: 2
   remediation: 'Run the command: ip ssh version 2'
