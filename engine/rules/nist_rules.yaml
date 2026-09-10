@@ -1,0 +1,54 @@
+- id: NIST-AC-02
+  title: 'Account Management: Least Privilege'
+  applies_to: local_user
+  severity: medium
+  cis_control: AC-2
+  check:
+    attribute: privilege
+    operator: lte
+    value: 1
+  remediation: Assign the user to a non-privileged account (privilege 1) unless administrative
+    access is required.
+  explanation: Ensures that users are granted the minimum level of privilege necessary
+    to perform their job functions.
+  framework: NIST
+- id: NIST-AC-03
+  title: 'Access Enforcement: Restricted Management Access'
+  applies_to: vty_line
+  severity: high
+  cis_control: AC-3
+  check:
+    attribute: access_class
+    operator: exists
+    value: true
+  remediation: Apply an access-class to all VTY lines to restrict management access
+    to trusted IP addresses.
+  explanation: Restricting access to the management plane prevents unauthorized users
+    from attempting to log into the device.
+  framework: NIST
+- id: NIST-AU-02
+  title: 'Event Logging: Remote Syslog Enabled'
+  applies_to: global_settings
+  severity: medium
+  cis_control: AU-2
+  check:
+    attribute: logging_host
+    operator: exists
+    value: true
+  remediation: Configure a remote syslog server using the 'logging host' command.
+  explanation: Centralized logging ensures that audit records are preserved even if
+    the local device is compromised.
+  framework: NIST
+- id: NIST-SC-08
+  title: 'Transmission Confidentiality: SSHv2 Enforced'
+  applies_to: ssh_settings
+  severity: high
+  cis_control: SC-8
+  check:
+    attribute: ssh_version
+    operator: equals
+    value: 2
+  remediation: 'Run the command: ip ssh version 2'
+  explanation: Ensures that administrative traffic is encrypted using a secure version
+    of the SSH protocol.
+  framework: NIST
