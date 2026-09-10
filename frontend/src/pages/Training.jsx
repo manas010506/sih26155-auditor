@@ -9,7 +9,8 @@ import {
   IconDatabase,
   IconCode,
   IconX,
-  IconListDetails
+  IconListDetails,
+  IconGripVertical
 } from '@tabler/icons-react';
 import TactileButton from '../components/TactileButton';
 import EmptyStateCard from '../components/EmptyStateCard';
@@ -230,6 +231,9 @@ const Training = () => {
                     }
                   }}
                 >
+                  {/* Grabber Affordance */}
+                  <IconGripVertical size={14} style={{ color: 'var(--ink-dim)', opacity: 0.3, cursor: 'grab' }} />
+
                   {/* Status Indicator */}
                   <div style={{
                     flexShrink: 0,
@@ -341,20 +345,24 @@ const Training = () => {
 
                 {/* Content Layer */}
                 <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{
-                    width: '72px',
-                    height: '72px',
-                    borderRadius: '50%',
-                    background: 'var(--trace-dim)',
-                    border: '1px solid rgba(63,169,160,0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 24px',
-                    boxShadow: '0 0 24px rgba(63, 169, 160, 0.15)'
-                  }}>
+                  <motion.div
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    style={{
+                      width: '72px',
+                      height: '72px',
+                      borderRadius: '50%',
+                      background: 'var(--trace-dim)',
+                      border: '1px solid rgba(63,169,160,0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 24px',
+                      boxShadow: '0 0 24px rgba(63, 169, 160, 0.15)'
+                    }}
+                  >
                     <IconCode size={32} style={{ color: 'var(--trace)' }} stroke={1.5} />
-                  </div>
+                  </motion.div>
                   <h3 className="heading-md" style={{ marginBottom: '8px' }}>Select a line to map</h3>
                   <p className="text-ink-dim" style={{ fontSize: '14px', lineHeight: 1.5 }}>
                     Choose an unrecognized configuration line from the queue to define how the auditor should parse it in the future.

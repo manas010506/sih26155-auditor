@@ -226,7 +226,6 @@ const Upload = () => {
             }}
           />
 
-          {/* Main Dropzone Card */}
           <motion.div
             animate={{
               scale: dragActive ? 1.02 : 1,
@@ -257,16 +256,24 @@ const Upload = () => {
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
-            {/* Gradient wash background */}
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: dragActive
-                ? 'linear-gradient(135deg, rgba(63, 169, 160, 0.12) 0%, rgba(16, 20, 26, 0.95) 100%)'
-                : 'linear-gradient(135deg, rgba(63, 169, 160, 0.04) 0%, rgba(16, 20, 26, 0.8) 100%)',
-              zIndex: 0,
-              transition: 'background 0.3s ease',
-            }} />
+            {/* Animated Radial Gradient Background */}
+            <motion.div
+              animate={{
+                backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
+                opacity: dragActive ? 0.8 : 0.4
+              }}
+              transition={{
+                backgroundPosition: { duration: 15, repeat: Infinity, ease: "linear" },
+                opacity: { duration: 0.3 }
+              }}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'radial-gradient(circle at center, rgba(63, 169, 160, 0.08) 0%, transparent 70%)',
+                backgroundSize: '200% 200%',
+                zIndex: 0,
+              }}
+            />
 
             {/* Oversized background icon texture */}
             <IconShieldLock
@@ -323,7 +330,7 @@ const Upload = () => {
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                     style={{
                       width: '64px', height: '64px', borderRadius: '50%',
                       backgroundColor: 'var(--trace-dim)', border: '2px solid var(--trace)',
@@ -508,7 +515,7 @@ const Upload = () => {
                   style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', zIndex: 1, padding: '20px' }}
                 >
                   <motion.div
-                    animate={{ y: dragActive ? -6 : 0, scale: dragActive ? 1.05 : 1 }}
+                    animate={{ y: dragActive ? -6 : 0, scale: dragActive ? 1.08 : 1 }}
                     transition={{ duration: 0.2 }}
                     style={{ marginBottom: '8px' }}
                   >

@@ -310,6 +310,7 @@ const FindingsTable = ({ findings }) => {
                 return (
                   <React.Fragment key={finding.rule_id}>
                     <motion.tr
+                      className="finding-row"
                       id={`row-${finding.rule_id}`}
                       initial={{ opacity: 0, x: -4 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -319,10 +320,8 @@ const FindingsTable = ({ findings }) => {
                         borderBottom: '1px solid var(--wire)',
                         backgroundColor: isExpanded ? 'var(--panel-raised)' : 'transparent',
                         cursor: 'pointer',
-                        transition: 'background-color 0.4s ease',
+                        transition: 'background-color 0.4s ease, transform 0.2s ease, box-shadow 0.2s ease',
                       }}
-                      onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.backgroundColor = 'rgba(74, 85, 99, 0.15)'; }}
-                      onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.backgroundColor = 'transparent'; }}
                     >
                       {/* Chevron & Severity Left Border */}
                       <td style={{ padding: '10px 0 10px 12px', borderLeft: `3px solid ${borderColor}` }}>

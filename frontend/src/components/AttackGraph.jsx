@@ -98,6 +98,8 @@ function AttackGraph({ report: reportProp }) {
   const paths = report?.attack_paths ?? [];
   const selectedPath = paths[selectedPathIndex] ?? null;
 
+  const [hoveredNode, setHoveredNode] = useState(null);
+
   const graph = useMemo(() => {
     if (!report || !selectedPath) {
       return {
@@ -142,6 +144,8 @@ function AttackGraph({ report: reportProp }) {
               selectedPath.break_chain?.fix_rule,
             isImpact: false,
             index,
+            hoveredNode,
+            setHoveredNode,
           },
         };
       }
@@ -169,6 +173,8 @@ function AttackGraph({ report: reportProp }) {
         isBreakPoint: false,
         isImpact: true,
         index: impactIndex,
+        hoveredNode,
+        setHoveredNode,
       },
     });
 
@@ -188,13 +194,15 @@ function AttackGraph({ report: reportProp }) {
           selectedPath.contributing_findings[i + 1],
         animated: true,
         type: "attack",
-        style: {
-          stroke: "var(--wire)",
-          strokeWidth: 2,
-        },
         markerEnd: {
           type: MarkerType.ArrowClosed,
           color: "var(--wire)",
+        },
+        style: {
+          stroke: "var(--wire)",
+          strokeWidth: 2,
+          opacity: hoveredNode ? (hoveredNode === selectedPath.contributing_findings[i] || hoveredNode === selectedPath.contributing_findings[i + 1] ? 1 : 0.25) : 1,
+          transition: 'opacity 0.25s'
         },
       });
     }
@@ -211,14 +219,16 @@ function AttackGraph({ report: reportProp }) {
         source: lastFinding,
         target: impactId,
         animated: true,
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: "var(--severity-critical)",
+        },
         style: {
           stroke: "var(--severity-critical)",
           strokeWidth: 2,
           strokeDasharray: "6 4",
-        },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: "var(--severity-critical)",
+          opacity: hoveredNode ? (hoveredNode === lastFinding || hoveredNode === impactId ? 1 : 0.25) : 1,
+          transition: 'opacity 0.25s'
         },
       });
     }
@@ -227,7 +237,7 @@ function AttackGraph({ report: reportProp }) {
       nodes,
       edges,
     };
-  }, [report, selectedPath]);
+  }, [report, selectedPath, hoveredNode]);
 
   if (!report || !paths.length) {
     const AttackPathsSVG = (

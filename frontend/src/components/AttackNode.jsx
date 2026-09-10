@@ -38,8 +38,12 @@ function AttackNode({ data }) {
         .filter(Boolean)
         .join(" ")}
       onClick={handleClick}
+      onMouseEnter={() => data.setHoveredNode?.(data.ruleId)}
+      onMouseLeave={() => data.setHoveredNode?.(null)}
       style={{
         cursor: data.isImpact ? "default" : "pointer",
+        opacity: data.hoveredNode ? (data.hoveredNode === data.ruleId ? 1 : 0.25) : 1,
+        transition: "opacity 0.25s, box-shadow 0.2s, border-color 0.2s",
       }}
     >
       <Handle

@@ -540,3 +540,16 @@ select {
   body, #root { background: #fff !important; color: #000 !important; }
   #report-body { max-width: 100% !important; margin: 0 !important; }
 }
+
+.finding-row {
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.finding-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  background-color: var(--panel-raised) !important;
+}

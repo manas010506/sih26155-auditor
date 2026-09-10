@@ -14,7 +14,10 @@ const CountUp = ({ end, duration = 1.2 }) => {
   const [display, setDisplay] = useState('0');
 
   useEffect(() => {
-    if (!inView) return;
+    if (!inView || isNaN(Number(end))) {
+      setDisplay(end.toString());
+      return;
+    }
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setDisplay(end.toString());
       return;
@@ -24,13 +27,46 @@ const CountUp = ({ end, duration = 1.2 }) => {
     const tick = (now) => {
       const progress = Math.min((now - start) / durationMs, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(eased * end).toString());
+      setDisplay(Math.round(eased * Number(end)).toString());
       if (progress < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
   }, [inView, end, duration]);
 
-  return <span ref={ref}>{display}</span>;
+  return (
+    <span ref={ref}>
+      <span className="print-hide">{display}</span>
+      <span className="print-show" style={{ display: 'none' }}>{end}</span>
+    </span>
+  );
+};
+
+/* CopyButton for CLI commands */
+const CopyButton = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <motion.button
+      whileTap={{ scale: 0.95 }}
+      onClick={handleCopy}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: '5px',
+        background: 'transparent', border: '1px solid var(--wire)',
+        color: copied ? 'var(--trace)' : 'var(--ink-dim)',
+        borderRadius: '4px',
+        padding: '3px 10px', cursor: 'pointer',
+        transition: 'border-color 0.15s, color 0.15s',
+        fontFamily: 'IBM Plex Mono, monospace',
+        fontSize: '11px', letterSpacing: '0.04em',
+      }}
+    >
+      {copied ? <><IconCheck size={12} /> COPIED</> : <><IconFileText size={12} /> COPY</>}
+    </motion.button>
+  );
 };
 
 /* Severity badge component for report entries */
@@ -552,9 +588,7 @@ const ReportView = () => {
                 ].map(({ label, value, color }) => (
                   <div key={label} style={{ flex: 1, backgroundColor: 'var(--panel)', padding: '16px', textAlign: 'center' }}>
                     <div className="mono" style={{ fontSize: '28px', fontWeight: 700, color, lineHeight: 1, marginBottom: '4px' }}>
-                      {/* No CountUp here - print captures the DOM mid-animation
-                          and every number renders as 0 in the PDF. */}
-                      {value}
+                      <CountUp end={value} />
                     </div>
                     <div className="label">{label}</div>
                   </div>
@@ -686,7 +720,10 @@ const ReportView = () => {
                       {/* Remediation CLI — code block style */}
                       {finding.remediation_template && (
                         <div style={{ padding: '12px 16px', backgroundColor: 'rgba(16, 20, 26, 0.5)' }}>
-                          <div className="label" style={{ marginBottom: '8px' }}>Remediation CLI</div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <div className="label">Remediation CLI</div>
+                            <CopyButton text={finding.remediation_template} />
+                          </div>
                           <pre style={{
                             margin: 0,
                             padding: '10px 14px',
