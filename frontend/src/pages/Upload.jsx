@@ -105,11 +105,24 @@ const Upload = () => {
           source_type: t.type,
         })));
         const result = await auditBatch(configs, defaultFramework);
-        setBatchResults(result.results ?? []);
+        
+        // Inject config_text into each result's report so ReportView has access to it
+        const enrichedResults = (result.results ?? []).map((r, i) => {
+          if (r.report) {
+             r.report.config_text = configs[i].config_text;
+          }
+          return r;
+        });
+        
+        setBatchResults(enrichedResults);
         setStatus('batch_summary');
       } else {
         const text = await detected.files[0].text();
         const result = await audit(text, detected.type, defaultFramework);
+        
+        // Inject config_text for PDF export later
+        result.config_text = text;
+        
         setReportData(result);
 
         setStatus('success');
@@ -157,7 +170,7 @@ const Upload = () => {
         >
           <h1 className="heading-lg" style={{ marginBottom: '8px' }}>Data Ingestion</h1>
           <p style={{ fontSize: '14px', color: 'var(--ink-dim)' }}>
-            Upload one or more configuration files for normalization and CIS baseline auditing.
+            Upload one or more configuration files for normalization and compliance baseline auditing.
           </p>
         </motion.div>
 
@@ -297,7 +310,7 @@ const Upload = () => {
                     Engine Analysis Active
                   </div>
                   <SpinRing />
-                  <div style={{ fontSize: '14px', color: 'var(--ink-dim)' }}>Parsing and evaluating against CIS benchmarks...</div>
+                  <div style={{ fontSize: '14px', color: 'var(--ink-dim)' }}>Parsing and evaluating against compliance benchmarks...</div>
                 </motion.div>
               )}
 

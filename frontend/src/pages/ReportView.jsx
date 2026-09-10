@@ -5,6 +5,7 @@ import { IconPrinter, IconFileText, IconCheck, IconLoader2, IconShieldCheck, Ico
 import SeverityLED from '../components/SeverityLED';
 import EmptyStateCard from '../components/EmptyStateCard';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle, AlignmentType } from 'docx';
+import { exportReport } from '../api';
 
 /* Animated count-up for report numbers */
 const CountUp = ({ end, duration = 1.2 }) => {
@@ -372,15 +373,65 @@ const ReportView = () => {
     URL.revokeObjectURL(url);
   };
 
-  const generatePdf = () => {
-    // The browser's own print-to-PDF. It renders real text rather than a
-    // canvas screenshot, so the output is selectable and searchable, it needs
-    // no dependencies, and it works with the network off.
-    window.print();
+  const [exportError, setExportError] = useState(null);
+
+  const generatePdf = async () => {
+    setExportError(null);
+    try {
+      const configText = reportData.config_text;
+      const sourceType = reportData.source?.type || 'cisco_ios';
+      const framework = reportData.score_breakdown?.frameworks?.[0] || 'CIS';
+      
+      const blob = await exportReport(configText, sourceType, framework);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `compliance_report_${device.hostname}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('PDF export failed:', err);
+      // Map common errors
+      let errMsg = err.message || 'Failed to export PDF.';
+      if (errMsg.includes('400')) errMsg = 'Bad input: could not generate PDF.';
+      if (errMsg.includes('413')) errMsg = 'Configuration file is too large (over 2MB).';
+      if (errMsg.includes('500')) errMsg = 'Server error: PDF generation failed.';
+      setExportError(errMsg);
+      throw err; // Re-throw for ExportButton's internal loading state
+    }
   };
 
   return (
     <>
+      <AnimatePresence>
+        {exportError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="print-hide glass-card"
+            style={{
+              borderLeft: '3px solid var(--severity-critical)',
+              padding: '12px 16px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+              margin: '16px 24px 0 24px',
+              boxShadow: '0 8px 24px rgba(229, 72, 77, 0.1)',
+            }}
+          >
+            <IconAlertTriangle size={20} style={{ color: 'var(--severity-critical)', flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <div className="mono" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--severity-critical)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>
+                Export Error
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--ink)' }}>{exportError}</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Export toolbar ─────────────────────────────────────── */}
       <div className="print-hide" style={{
         padding: '14px 24px',
@@ -509,6 +560,27 @@ const ReportView = () => {
                     <div className="label">{label}</div>
                   </div>
                 ))}
+              </div>
+
+              {/* Frameworks Display */}
+              <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span className="label" style={{ marginRight: '8px' }}>Frameworks</span>
+                {['CIS', 'NIST', 'STIG', 'ISO/IEC 27001'].map(fw => {
+                  const isImplemented = reportData.score_breakdown?.frameworks?.includes(fw);
+                  return (
+                    <div key={fw} style={{
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontFamily: 'IBM Plex Mono, monospace',
+                      backgroundColor: isImplemented ? 'rgba(63, 169, 160, 0.1)' : 'var(--panel-raised)',
+                      color: isImplemented ? 'var(--trace)' : 'var(--ink-dim)',
+                      border: `1px solid ${isImplemented ? 'rgba(63, 169, 160, 0.3)' : 'var(--wire)'}`,
+                    }}>
+                      {fw} {isImplemented ? '' : '(Not implemented)'}
+                    </div>
+                  );
+                })}
               </div>
               {criticalCount > 0 && (
                 <div style={{
