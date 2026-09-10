@@ -30,3 +30,6 @@ Thumbs.db
 # runtime state - mappings taught through the training UI
 engine/parsers/learned_mappings.json
 reset_demo.ps1
+
+*.pptx
+*.docx

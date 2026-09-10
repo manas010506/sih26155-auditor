@@ -22,6 +22,19 @@ export async function audit(configText, sourceType, framework) {
   return res.json();
 }
 
+export async function exportReport(configText, sourceType, framework) {
+  const res = await fetch(`${BASE}/api/report`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ config_text: configText, source_type: sourceType, framework }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `report failed (${res.status})`);
+  }
+  return res.blob();
+}
+
 export async function auditBatch(files, framework) {
   const res = await fetch(`${BASE}/api/audit/batch`, {
     method: "POST",
