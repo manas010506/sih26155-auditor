@@ -49,7 +49,7 @@ def _device_block(doc: dict, source_type: str) -> dict:
     """Identify the audited thing. The PDF report requires this section."""
     if source_type == "terraform_aws":
         return {"hostname": "aws-account", "vendor": "aws", "os": "terraform",
-                "version": "provider ~> 5.0", "role": "cloud_account"}
+                "os_version": "provider ~> 5.0", "role": "cloud_account"}
 
     if source_type == "juniper_junos":
         g = next((r for r in doc["resources"] if r["type"] == "global_settings"), None)
@@ -58,7 +58,10 @@ def _device_block(doc: dict, source_type: str) -> dict:
             "hostname": a.get("hostname") or "Not available in supplied configuration",
             "vendor": "juniper",
             "os": "JunOS",
-            "version": a.get("os_version") or "Not available in supplied configuration",
+            "os_version": a.get("os_version") or "Not available in supplied configuration",
+            "model": a.get("model") or "Not available in supplied configuration",
+            "serial_number": a.get("serial_number") or "Not available in supplied configuration",
+            "firmware": a.get("firmware") or "Not available in supplied configuration",
             "role": "network_device",
         }
 
@@ -68,10 +71,12 @@ def _device_block(doc: dict, source_type: str) -> dict:
         "hostname": attrs.get("hostname") or "Not available in supplied configuration",
         "vendor": "cisco",
         "os": "IOS",
-        "version": attrs.get("os_version") or "Not available in supplied configuration",
+        "os_version": attrs.get("os_version") or "Not available in supplied configuration",
+        "model": attrs.get("model") or "Not available in supplied configuration",
+        "serial_number": attrs.get("serial_number") or "Not available in supplied configuration",
+        "firmware": attrs.get("firmware") or "Not available in supplied configuration",
         "role": "network_device",
     }
-
 
 def _enrich_narratives(attack_paths: list[dict]) -> None:
     """Upgrade attack-path prose from the template to the LLM, in place.
