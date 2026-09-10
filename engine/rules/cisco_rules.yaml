@@ -402,7 +402,7 @@
     attribute: privilege
     operator: equals
     value: 1
-  remediation: \"username <user> privilege 1\"
+  remediation: "username <user> privilege 1"
   explanation: Local accounts should be restricted to privilege 1. Administrative
     access should be gained via the 'enable' command to ensure a second layer of auth.
 - id: CIS-NET-017

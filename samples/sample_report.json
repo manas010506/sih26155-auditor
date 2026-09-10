@@ -170,7 +170,7 @@
         "snippet": "username admin privilege 15 password 0 admin123"
       },
       "cis_control": "CIS Cisco IOS 1.2.1 - Set 'privilege 1' for local users",
-      "remediation_template": "\\\"username <user> privilege 1\\\"",
+      "remediation_template": "username <user> privilege 1",
       "explanation": "Local accounts should be restricted to privilege 1. Administrative access should be gained via the 'enable' command to ensure a second layer of auth."
     },
     {

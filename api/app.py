@@ -11,10 +11,11 @@ Run:  pip install flask flask-cors
 """
 import json
 import pathlib
+from engine.report import build_report
 
 from engine.parsers.learned import add_mapping, load_mappings
 
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 
 from engine.audit import available_frameworks, run_audit
@@ -52,6 +53,37 @@ def audit():
     except Exception as exc:                      # never leak a stack trace
         app.logger.exception("audit failed")
         return jsonify(error=f"audit failed: {type(exc).__name__}"), 500
+
+@app.post("/api/report")
+def report():
+    """The audit as a PDF. Same body as /api/audit, a file comes back."""
+    body = request.get_json(silent=True) or {}
+    config_text = body.get("config_text", "")
+    source_type = body.get("source_type", "")
+
+    if not isinstance(config_text, str):
+        return jsonify(error="config_text must be a string"), 400
+    if not config_text.strip():
+        return jsonify(error="config_text is required"), 400
+    if len(config_text.encode()) > MAX_BYTES:
+        return jsonify(error="config file too large (2MB limit)"), 413
+    if source_type not in VALID_TYPES:
+        return jsonify(error=f"source_type must be one of {sorted(VALID_TYPES)}"), 400
+
+    try:
+        result = run_audit(config_text, source_type, framework=body.get("framework"))
+        pdf = build_report(result)
+    except Exception as exc:                      # never leak a stack trace
+        app.logger.exception("report failed")
+        return jsonify(error=f"report failed: {type(exc).__name__}"), 500
+
+    hostname = (result["device"].get("hostname") or "device").replace(" ", "-")
+    return Response(
+        pdf,
+        mimetype="application/pdf",
+        headers={"Content-Disposition":
+                 f'attachment; filename="{hostname}-compliance-report.pdf"'},
+    )
 
 @app.get("/api/training")
 def training_list():
