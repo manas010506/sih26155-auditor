@@ -287,7 +287,7 @@
     attribute: timeout_seconds
     operator: lte
     value: 60
-  remediation: \"ip ssh time-out 60\"
+  remediation: "ip ssh time-out 60"
   explanation: Excessively long timeouts leave authenticated sessions open longer
     than necessary, increasing the risk of session hijacking if a terminal is left
     unattended.
@@ -300,7 +300,7 @@
     attribute: source_routing
     operator: equals
     value: false
-  remediation: \"no ip source-route\"
+  remediation: "no ip source-route"
   explanation: Source routing allows a sender to specify the path a packet takes.
     This can be used by attackers to bypass security controls or map internal network
     topology.
@@ -312,7 +312,7 @@
   check:
     attribute: motd_banner
     operator: exists
-  remediation: \"banner motd ^C Authorized Access Only ^C\"
+  remediation: "banner motd ^C Authorized Access Only ^C"
   explanation: A MOTD banner provides a legal warning to unauthorized users. Without
     it, it is harder to prosecute unauthorized access in many legal jurisdictions.
 - id: CIS-NET-027
@@ -323,7 +323,7 @@
   check:
     attribute: aaa_auth_login
     operator: exists
-  remediation: \"aaa authentication login default group tacacs+ local\"
+  remediation: "aaa authentication login default group tacacs+ local"
   explanation: Without AAA login authentication, the device may fall back to insecure
     local passwords or no authentication at all.
 - id: CIS-NET-028
@@ -334,7 +334,7 @@
   check:
     attribute: aaa_auth_enable
     operator: exists
-  remediation: \"aaa authentication enable default group tacacs+ enable\"
+  remediation: "aaa authentication enable default group tacacs+ enable"
   explanation: Privileged EXEC mode must be protected by AAA to ensure that only authorized
     administrators can enter enable mode.
 - id: CIS-NET-029
@@ -346,7 +346,7 @@
   check:
     attribute: aaa_accounting_commands
     operator: exists
-  remediation: \"aaa accounting commands 15 default start-stop group tacacs+\"
+  remediation: "aaa accounting commands 15 default start-stop group tacacs+"
   explanation: Accounting for privilege 15 commands is essential for forensic audits
     to see exactly what changes were made by which administrator.
 - id: CIS-NET-030
@@ -357,7 +357,7 @@
   check:
     attribute: aaa_accounting_connection
     operator: exists
-  remediation: \"aaa accounting connection default start-stop group tacacs+\"
+  remediation: "aaa accounting connection default start-stop group tacacs+"
   explanation: Connection accounting tracks the start and end of sessions, helping
     to identify session hijacking or unusual login patterns.
 - id: CIS-NET-031
@@ -368,7 +368,7 @@
   check:
     attribute: aaa_accounting_exec
     operator: exists
-  remediation: \"aaa accounting exec default start-stop group tacacs+\"
+  remediation: "aaa accounting exec default start-stop group tacacs+"
   explanation: Exec accounting logs the start and end of the shell session itself.
 - id: CIS-NET-032
   title: AAA network accounting disabled
@@ -378,7 +378,7 @@
   check:
     attribute: aaa_accounting_network
     operator: exists
-  remediation: \"aaa accounting network default start-stop group tacacs+\"
+  remediation: "aaa accounting network default start-stop group tacacs+"
   explanation: Network accounting tracks network-related service requests.
 - id: CIS-NET-033
   title: AAA system accounting disabled
@@ -388,7 +388,7 @@
   check:
     attribute: aaa_accounting_system
     operator: exists
-  remediation: \"aaa accounting system default start-stop group tacacs+\"
+  remediation: "aaa accounting system default start-stop group tacacs+"
   explanation: System accounting logs events not associated with users, such as system
     reloads.
 - id: CIS-NET-034

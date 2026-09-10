@@ -140,7 +140,9 @@ def _findings(result: dict, st) -> list:
         if f.get("remediation_template"):
             block.append(Paragraph("Remediation:", st["Muted"]))
             block.append(Paragraph(
-                f["remediation_template"].replace(" ", "&nbsp;").replace("\n", "<br/>"),
+                f["remediation_template"]
+                .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                .replace(" ", "&nbsp;").replace("\n", "<br/>"),
                 st["Mono"]))
         block.append(Spacer(1, 5 * mm))
         flow.append(KeepTogether(block))

@@ -75,7 +75,7 @@
       "resource_id": "global",
       "raw_ref": null,
       "cis_control": "CIS Cisco IOS 1.1.2 - Enable 'aaa authentication login'",
-      "remediation_template": "\\\"aaa authentication login default group tacacs+ local\\\"",
+      "remediation_template": "aaa authentication login default group tacacs+ local",
       "explanation": "Without AAA login authentication, the device may fall back to insecure local passwords or no authentication at all."
     },
     {
@@ -85,7 +85,7 @@
       "resource_id": "global",
       "raw_ref": null,
       "cis_control": "CIS Cisco IOS 1.1.3 - Enable 'aaa authentication enable default'",
-      "remediation_template": "\\\"aaa authentication enable default group tacacs+ enable\\\"",
+      "remediation_template": "aaa authentication enable default group tacacs+ enable",
       "explanation": "Privileged EXEC mode must be protected by AAA to ensure that only authorized administrators can enter enable mode."
     },
     {
@@ -229,7 +229,7 @@
       "resource_id": "global",
       "raw_ref": null,
       "cis_control": "CIS Cisco IOS 1.6.1 - Disable IP source routing",
-      "remediation_template": "\\\"no ip source-route\\\"",
+      "remediation_template": "no ip source-route",
       "explanation": "Source routing allows a sender to specify the path a packet takes. This can be used by attackers to bypass security controls or map internal network topology."
     },
     {
@@ -239,7 +239,7 @@
       "resource_id": "global",
       "raw_ref": null,
       "cis_control": "CIS Cisco IOS 1.1.6 - Set 'aaa accounting' to log all privileged use commands",
-      "remediation_template": "\\\"aaa accounting commands 15 default start-stop group tacacs+\\\"",
+      "remediation_template": "aaa accounting commands 15 default start-stop group tacacs+",
       "explanation": "Accounting for privilege 15 commands is essential for forensic audits to see exactly what changes were made by which administrator."
     },
     {
@@ -285,7 +285,7 @@
       "resource_id": "ssh",
       "raw_ref": null,
       "cis_control": "CIS Cisco IOS 1.2.4 - Set SSH timeout to 60 seconds or less",
-      "remediation_template": "\\\"ip ssh time-out 60\\\"",
+      "remediation_template": "ip ssh time-out 60",
       "explanation": "Excessively long timeouts leave authenticated sessions open longer than necessary, increasing the risk of session hijacking if a terminal is left unattended."
     },
     {
@@ -295,7 +295,7 @@
       "resource_id": "global",
       "raw_ref": null,
       "cis_control": "CIS Cisco IOS 1.4.2 - Configure a Message of the Day (MOTD) banner",
-      "remediation_template": "\\\"banner motd ^C Authorized Access Only ^C\\\"",
+      "remediation_template": "banner motd ^C Authorized Access Only ^C",
       "explanation": "A MOTD banner provides a legal warning to unauthorized users. Without it, it is harder to prosecute unauthorized access in many legal jurisdictions."
     },
     {
@@ -305,7 +305,7 @@
       "resource_id": "global",
       "raw_ref": null,
       "cis_control": "CIS Cisco IOS 1.1.7 - Set 'aaa accounting connection'",
-      "remediation_template": "\\\"aaa accounting connection default start-stop group tacacs+\\\"",
+      "remediation_template": "aaa accounting connection default start-stop group tacacs+",
       "explanation": "Connection accounting tracks the start and end of sessions, helping to identify session hijacking or unusual login patterns."
     },
     {
@@ -315,7 +315,7 @@
       "resource_id": "global",
       "raw_ref": null,
       "cis_control": "CIS Cisco IOS 1.1.8 - Set 'aaa accounting exec'",
-      "remediation_template": "\\\"aaa accounting exec default start-stop group tacacs+\\\"",
+      "remediation_template": "aaa accounting exec default start-stop group tacacs+",
       "explanation": "Exec accounting logs the start and end of the shell session itself."
     },
     {
@@ -325,7 +325,7 @@
       "resource_id": "global",
       "raw_ref": null,
       "cis_control": "CIS Cisco IOS 1.1.9 - Set 'aaa accounting network'",
-      "remediation_template": "\\\"aaa accounting network default start-stop group tacacs+\\\"",
+      "remediation_template": "aaa accounting network default start-stop group tacacs+",
       "explanation": "Network accounting tracks network-related service requests."
     },
     {
@@ -335,7 +335,7 @@
       "resource_id": "global",
       "raw_ref": null,
       "cis_control": "CIS Cisco IOS 1.1.10 - Set 'aaa accounting system'",
-      "remediation_template": "\\\"aaa accounting system default start-stop group tacacs+\\\"",
+      "remediation_template": "aaa accounting system default start-stop group tacacs+",
       "explanation": "System accounting logs events not associated with users, such as system reloads."
     }
   ],
