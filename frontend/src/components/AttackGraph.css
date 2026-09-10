@@ -209,7 +209,7 @@
 
 /* Edge animation */
 .react-flow__edge-path {
-  animation: dash-draw 1.5s linear infinite;
+  animation: dash-draw 3s linear infinite;
 }
 
 /* Chain selector tabs. Without these the three spans render as one
@@ -283,4 +283,13 @@
   border-radius: 3px;
   background: var(--severity-critical-bg, rgba(242,84,91,0.12));
   color: var(--severity-critical);
+}
+
+@keyframes critical-pulse {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 6px 24px rgba(229, 72, 77, 0.25);
+  }
 }

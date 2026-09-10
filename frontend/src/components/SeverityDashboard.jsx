@@ -133,7 +133,7 @@ const SeverityLineGraph = ({ data }) => {
               strokeLinejoin="round"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
-              transition={{ duration: 1.5, ease: 'easeInOut' }}
+              transition={{ duration: 1.0, ease: 'easeInOut' }}
             />
 
             {/* Points */}
@@ -152,7 +152,7 @@ const SeverityLineGraph = ({ data }) => {
                   style={{ cursor: 'crosshair' }}
                 >
                   <circle cx={p.x} cy={p.y} r="16" fill="transparent" />
-                  <circle cx={p.x} cy={p.y} r={hoveredPoint?.name === p.name ? "7" : "6"} fill="var(--panel-raised)" stroke={pointColor} strokeWidth="3" style={{ transition: 'all 0.2s' }} />
+                  <circle cx={p.x} cy={p.y} r={hoveredPoint?.name === p.name ? "8" : "6"} fill="var(--panel-raised)" stroke={pointColor} strokeWidth="3" style={{ transition: 'all 0.2s' }} />
                 </motion.g>
               );
             })}
