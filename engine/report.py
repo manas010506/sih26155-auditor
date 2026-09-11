@@ -23,6 +23,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import (KeepTogether, PageBreak, Paragraph,
                                 SimpleDocTemplate, Spacer, Table, TableStyle)
+from engine.audit import available_frameworks
 
 SEVERITY_COLOUR = {
     "critical": colors.HexColor("#B3261E"),
@@ -92,8 +93,20 @@ def _framework_summary(result: dict, st) -> list:
 
     flow: list = [Paragraph("Framework coverage", st["H2x"])]
     rows = [["Framework", "Status"]]
+    # Three distinct states. "Not selected" means we have rules and the user
+    # audited against something else; "No rules implemented" means we have
+    # nothing to evaluate. Collapsing them would claim CIS is unsupported on
+    # every NIST audit.
+    available = {f.upper() for f in available_frameworks()}
     for name in ("CIS", "NIST", "STIG", "ISO 27001"):
-        rows.append([name, "Evaluated" if name in implemented else "Not implemented"])
+        key = name.replace(" ", "")
+        if name in implemented:
+            status = "Evaluated"
+        elif name in available or key in available:
+            status = "Not selected for this audit"
+        else:
+            status = "No rules implemented"
+        rows.append([name, status])
 
     t = Table(rows, colWidths=[45 * mm, 110 * mm])
     t.setStyle(TableStyle([

@@ -47,13 +47,13 @@ def test_in_range_rejects_zero_timeout():
 def test_resolve_prefers_attribute_ref():
     doc = norm("cisco_example")
     g = next(r for r in doc["resources"] if r["id"] == "global")
-    assert resolve_ref(g, "cdp_enabled")["snippet"] == "cdp run"
+    assert resolve_ref(g, "cdp_enabled")["snippet"] == "cdp run" # type: ignore
 
 
 def test_resolve_falls_through_to_resource_ref():
     doc = norm("cisco_example")
     vty = next(r for r in doc["resources"] if r["id"] == "vty-0-4")
-    assert resolve_ref(vty, "access_class")["snippet"] == "line vty 0 4"
+    assert resolve_ref(vty, "access_class")["snippet"] == "line vty 0 4" # type: ignore
 
 
 def test_resolve_returns_none_for_absent_feature():
@@ -79,7 +79,7 @@ def test_rules_load(rules_path):
 ])
 def test_engine_reproduces_the_fixture(key, rules_path, report_path):
     want = report(report_path)["findings"]
-    got = evaluate(norm(key), load_rules(rules_path))
+    got = evaluate(norm(key), load_rules(rules_path, framework="CIS"))
 
     assert {f["rule_id"] for f in got} == {f["rule_id"] for f in want}, \
         "wrong set of rules fired"
@@ -91,7 +91,7 @@ def test_engine_reproduces_the_fixture(key, rules_path, report_path):
 
 def test_dedupe_by_rule():
     """Two vty_line resources both fail CIS-NET-001. Expect ONE finding."""
-    got = evaluate(norm("cisco_example"), load_rules(CISCO_RULES))
+    got = evaluate(norm("cisco_example"), load_rules(CISCO_RULES, framework="CIS"))
     assert sum(f["rule_id"] == "CIS-NET-001" for f in got) == 1
 
 
@@ -103,8 +103,17 @@ def test_score(key, rules_path, report_path):
     """Compared against the fixture, not a hardcoded number. If this fails after
     a rule change, the fixture wasn't regenerated - run samples/build_fixtures*.py
     """
-    rules = load_rules(rules_path)
+    rules = load_rules(rules_path, framework="CIS")
     rep = report(report_path)
     got = score(evaluate(norm(key), rules), rules)
     assert got["compliance_score"] == rep["compliance_score"]
     assert got["score_breakdown"] == rep["score_breakdown"]
+
+def test_nist_rules_load_and_are_separable():
+    """A framework selection returns only that framework's rules. A score
+    blended across benchmarks would correspond to neither."""
+    nist = load_rules(CISCO_RULES, framework="NIST")
+    cis = load_rules(CISCO_RULES, framework="CIS")
+    assert len(nist) == 4
+    assert not {r["id"] for r in nist} & {r["id"] for r in cis}
+    assert all(r["framework"] == "NIST" for r in nist)

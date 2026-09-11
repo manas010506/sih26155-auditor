@@ -28,7 +28,12 @@ FRAMEWORKS = {"CIS", "NIST", "STIG", "ISO27001"}
 DEFAULT_FRAMEWORK = "CIS"
 
 REQUIRED_FIELDS = ("id", "title", "applies_to", "severity",
-                   "cis_control", "check", "remediation", "explanation")
+                   "check", "remediation", "explanation")
+
+# The control a rule maps to. Named cis_control when CIS was the only
+# framework; control_ref is the framework-neutral name. Either satisfies the
+# requirement, so a NIST rule never has to file its control under a CIS key.
+CONTROL_FIELDS = ("control_ref", "cis_control")
 
 # =============================================================================
 # Operators. `a` is the attribute value from the resource, `v` is the rule's
@@ -82,6 +87,10 @@ def load_rules(path: str, framework: str | None = None) -> list[dict]:
         missing = [f for f in REQUIRED_FIELDS if f not in rule]
         if missing:
             raise RuleError(f"{path}: {where} is missing {', '.join(missing)}")
+
+        if not any(f in rule for f in CONTROL_FIELDS):
+            raise RuleError(f"{path}: {where} is missing a control reference "
+                            f"(one of {', '.join(CONTROL_FIELDS)})")
 
         if rule["id"] in seen:
             raise RuleError(f"{path}: duplicate rule id {rule['id']}")
@@ -171,7 +180,7 @@ def _to_finding(rule: dict, resource: dict) -> dict:
         "severity": rule["severity"],
         "resource_id": resource["id"],
         "raw_ref": resolve_ref(resource, rule["check"]["attribute"]),
-        "cis_control": rule["cis_control"],
+        "cis_control": rule.get("control_ref") or rule["cis_control"],
         "remediation_template": rule["remediation"],
         "explanation": rule["explanation"],
     }

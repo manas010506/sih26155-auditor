@@ -45,12 +45,6 @@ def test_absent_hardware_is_stated_not_omitted():
     assert "Serial number" in out
     assert "Not available in supplied configuration" in out
 
-
-def test_unimplemented_frameworks_are_not_scored():
-    out = report_text("sample_cisco_ios.cfg", "cisco_ios")
-    assert "Not implemented" in out
-
-
 def test_findings_carry_evidence_and_remediation():
     out = report_text("sample_cisco_ios.cfg", "cisco_ios")
     assert "CIS-NET-001" in out
@@ -74,3 +68,14 @@ def test_cloud_account_has_no_hardware_rows():
     out = report_text("main.tf", "terraform_aws")
     assert "aws-account" in out
     assert "Serial number" not in out
+
+def test_unimplemented_frameworks_are_not_scored():
+    """Three distinct states. A framework we have rules for but did not audit
+    against is not the same as one we have never implemented, and a report that
+    said "not implemented" for CIS on every NIST audit would understate the
+    tool."""
+    out = report_text("sample_cisco_ios.cfg", "cisco_ios")
+    assert "CIS" in out
+    assert "Evaluated" in out
+    assert "No rules implemented" in out       # STIG and ISO 27001
+    assert "Not selected for this audit" in out  # NIST exists, wasn't chosen

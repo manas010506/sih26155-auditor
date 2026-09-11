@@ -15,6 +15,7 @@ from engine.correlation.correlator import correlate
 from engine.parsers.suggest import suggest_all
 from engine.rules.engine import evaluate, load_rules, score
 from engine.schema.schema import validate
+from engine.rules.engine import DEFAULT_FRAMEWORK, evaluate, load_rules, score
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CHAINS = ROOT / "engine" / "correlation" / "attack_chains.yaml"
@@ -146,7 +147,7 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None,
         raise ValueError(f"{source_type} parser produced an invalid document: "
                          f"{problems[0]}")
 
-    rules = load_rules(str(rules_path), framework=framework)
+    rules = load_rules(str(rules_path), framework=framework or DEFAULT_FRAMEWORK)
     if not rules:
         raise ValueError(
             f"no rules for framework {framework!r} and source type {source_type!r}")

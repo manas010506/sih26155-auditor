@@ -417,3 +417,81 @@
   remediation: ip http secure-server
   explanation: If web management is needed at all it must be encrypted; the plaintext
     HTTP server is never an acceptable substitute.
+
+- id: NIST-AC-02
+  title: Local account holds more privilege than its function requires
+  applies_to: local_user
+  framework: NIST
+  control_ref: AC-2 - Account Management
+  severity: medium
+  check:
+    attribute: privilege
+    operator: lte
+    value: 1
+  remediation: 'no username <user>
+
+    username <user> privilege 1 secret <strong-password>'
+  explanation: AC-2 requires accounts to carry only the privilege their function
+    needs. A local account at privilege 15 holds full administrative rights from
+    the moment it authenticates, with no second step to cross and nothing recording
+    the escalation. Privilege should be raised deliberately through enable, not
+    granted permanently at login.
+
+- id: NIST-AC-03
+  title: Management plane reachable from any network
+  applies_to: vty_line
+  framework: NIST
+  control_ref: AC-3 - Access Enforcement
+  severity: high
+  check:
+    attribute: access_class
+    operator: exists
+    value: true
+  remediation: 'ip access-list standard MGMT-HOSTS
+
+    permit 10.10.0.0 0.0.0.255
+
+    line vty 0 4
+
+    access-class MGMT-HOSTS in'
+  explanation: AC-3 requires access to be enforced at the point of entry, not left
+    to authentication alone. With no access-class, every network that can route to
+    this device can open a management session and attempt credentials. The ACL is
+    what turns an authorisation policy into something the device enforces.
+
+- id: NIST-AU-02
+  title: No remote audit record destination
+  applies_to: logging
+  framework: NIST
+  control_ref: AU-2 - Event Logging
+  severity: medium
+  check:
+    attribute: hosts
+    operator: min_length
+    value: 1
+  remediation: 'logging host 10.10.0.200
+
+    logging trap informational'
+  explanation: AU-2 requires audit records to be generated and retained. Logs held
+    only in a local buffer are cleared on reboot and editable by anyone with
+    privileged access, so the record of an intrusion is under the control of whoever
+    carried it out. A remote destination puts the audit trail beyond the reach of
+    the audited device.
+
+- id: NIST-SC-08
+  title: SSH protocol version not pinned to 2
+  applies_to: ssh_settings
+  framework: NIST
+  control_ref: SC-8 - Transmission Confidentiality and Integrity
+  severity: high
+  check:
+    attribute: version
+    operator: equals
+    value: 2
+  remediation: 'ip ssh version 2
+
+    ip ssh time-out 60'
+  explanation: SC-8 requires the confidentiality and integrity of transmitted
+    information to be protected. With no version pinned the device may negotiate
+    SSHv1, which has known integrity weaknesses and can be forced by an on-path
+    attacker, so the protection SC-8 requires is not actually guaranteed.

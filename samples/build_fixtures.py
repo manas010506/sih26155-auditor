@@ -53,7 +53,9 @@ import sys as _sys
 _sys.path.insert(0, ".")
 from engine.rules.engine import load_rules as _load_rules, evaluate as _evaluate, score as _score
 
-_RULES = _load_rules('engine/rules/cisco_rules.yaml')
+# The fixture is the CIS baseline. Without the filter this picks up every
+# framework in the file and the fixture stops matching what run_audit produces.
+_RULES = _load_rules('engine/rules/cisco_rules.yaml', framework='CIS')
 _ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 F = sorted(_evaluate(normalized, _RULES), key=lambda f: (_ORDER[f["severity"]], f["rule_id"]))
 
@@ -77,7 +79,7 @@ def _apply_rules(findings, rules_path):
         r = rules[f["rule_id"]]
         f["title"] = r["title"]
         f["severity"] = r["severity"]
-        f["cis_control"] = r["cis_control"]
+        f["cis_control"] = r.get("control_ref") or r["cis_control"]
         f["remediation_template"] = r["remediation"]
         f["explanation"] = r["explanation"]
     return findings
