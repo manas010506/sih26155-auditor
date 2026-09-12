@@ -51,7 +51,7 @@ python -m pytest -q
 
 ## Try it
 
-Audit a deliberately misconfigured Cisco router:
+Audit a deliberately misconfigured Cisco router. The current sample produces **15/100**, with **27 findings** and **3 attack paths**:
 
 ```bash
 python -c "from engine.audit import run_audit; \
@@ -65,14 +65,19 @@ Or dump the whole report:
 python -m engine.audit samples/sample_cisco_ios.cfg cisco_ios
 ```
 
+Demo configuration scores:
+
+- `samples/sample_cisco_ios.cfg` — **15/100**
+- `samples/main.tf` — **15/100**
+
 Regenerate the labelled test corpus and measure detection accuracy:
 
 ```bash
-python tests/generate_corpus.py
+python tests/generate_corpus.py  # 36 labelled configs + ground truth
 python -m tests.metrics
 ```
 
-The evaluation includes a **77.4% holdout detection result**.
+The evaluation shows **100% detection on the self-graded development corpus**, and **77.4% on a held-out set of 6 real configurations — 24 of 31 labelled findings detected**.
 
 Run the API and the UI:
 
@@ -80,6 +85,8 @@ Run the API and the UI:
 flask --app api/app.py run --port 5000
 cd frontend && npm install && npm run dev
 ```
+
+PDF reports are generated server-side through **`/api/report`**.
 
 ## How the score works
 
@@ -173,7 +180,7 @@ its own weights.
 | `engine/correlation/` | attack-chain matching | Manas, Deep |
 | `engine/narrative/` | explanations, LLM + fallback | Shreyash |
 | `engine/audit.py` | `run_audit()` — the single entry point | Manas |
-| `api/` | Flask API and reporting endpoints | Sanavi, Manas |
+| `api/` | Flask API and reporting endpoints | Sanavi |
 | `frontend/` | React dashboard + attack-path graph | Vedant, Sanavi |
 | `tests/` | corpus, ground truth, metrics | Deep |
 | `samples/` | shared fixtures — build against these | Manas |
