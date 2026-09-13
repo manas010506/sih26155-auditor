@@ -237,7 +237,10 @@ function AttackGraph({ report: reportProp }) {
       nodes,
       edges,
     };
-  }, [report, selectedPath, hoveredNode]);
+  // hoveredNode deliberately excluded: including it rebuilds every node on
+  // hover, which remounts them and oscillates. Hover dimming is disabled
+  // until the memo is split into structure and styling passes.
+  }, [report, selectedPath]);
 
   if (!report || !paths.length) {
     const AttackPathsSVG = (
@@ -365,11 +368,7 @@ function AttackGraph({ report: reportProp }) {
       </div>
 
       <motion.div
-        className={`graph-canvas ${
-          isLocked
-            ? "graph-is-locked"
-            : "graph-is-unlocked"
-        }`}
+        className="graph-canvas"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{
