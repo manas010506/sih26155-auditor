@@ -196,8 +196,7 @@ const Sidebar = ({ score, breakdown, isCollapsed, setIsCollapsed, reportData }) 
                           style={{
                             position: 'absolute',
                             left: 0,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
+                            top: '20%',
                             width: '3px',
                             height: '60%',
                             background: 'var(--trace)',
@@ -273,7 +272,6 @@ const Sidebar = ({ score, breakdown, isCollapsed, setIsCollapsed, reportData }) 
                     position: 'absolute',
                     left: '100%',
                     top: '50%',
-                    transform: 'translateY(-50%)',
                     marginLeft: '8px',
                     padding: '6px 12px',
                     backgroundColor: 'var(--panel-raised)',
