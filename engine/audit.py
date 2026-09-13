@@ -16,6 +16,7 @@ from engine.parsers.suggest import suggest_all
 from engine.rules.engine import evaluate, load_rules, score
 from engine.schema.schema import validate
 from engine.rules.engine import DEFAULT_FRAMEWORK, evaluate, load_rules, score
+from engine import cve
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CHAINS = ROOT / "engine" / "correlation" / "attack_chains.yaml"
@@ -158,7 +159,9 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None,
     if enrich:
         _enrich_narratives(attack_paths)
 
-    return {
+
+        
+    report = {
         "source": {"type": source_type, "filename": filename},
         "device": _device_block(doc, source_type),
         "compliance_score": scored["compliance_score"],
@@ -172,6 +175,13 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None,
         # confirms, and the confirmed mapping is what the parser applies.
         "unparsed": suggest_all(doc.get("_unparsed", [])),
     }
+
+    # Version-level CVE context from the offline cache. Read-only, runs after
+    # scoring, never influences findings or the compliance score.
+    if enrich:
+        cve.enrich(report)
+
+    return report
 
 
 if __name__ == "__main__":

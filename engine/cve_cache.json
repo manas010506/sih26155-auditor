@@ -1,0 +1,48 @@
+{
+  "generated": "2026-09-13T09:20:57+00:00",
+  "source": "NVD API 2.0, virtualMatchString, cpe:2.3:o:cisco:ios",
+  "filter": "CVSS v3.x CRITICAL/HIGH, top 5 by base score",
+  "versions": {
+    "15.2": {
+      "total_matched": 112,
+      "high_and_critical": 28,
+      "cves": [
+        {
+          "id": "CVE-2017-12240",
+          "severity": "CRITICAL",
+          "score": 9.8,
+          "published": "2017-09-29",
+          "summary": "The DHCP relay subsystem of Cisco IOS 12.2 through 15.6 and Cisco IOS XE Software contains a vulnerability that could allow an unauthenticated, remote attacker to execute arbitrary code and gain full ..."
+        },
+        {
+          "id": "CVE-2025-20363",
+          "severity": "CRITICAL",
+          "score": 9.0,
+          "published": "2025-09-25",
+          "summary": "A vulnerability in the web services of Cisco Secure Firewall Adaptive Security Appliance (ASA) Software, Cisco Secure Firewall Threat Defense (FTD) Software, Cisco IOS Software, Cisco IOS XE Software,..."
+        },
+        {
+          "id": "CVE-2017-6736",
+          "severity": "HIGH",
+          "score": 8.8,
+          "published": "2017-07-17",
+          "summary": "The Simple Network Management Protocol (SNMP) subsystem of Cisco IOS and IOS XE Software contains multiple vulnerabilities that could allow an authenticated, remote attacker to remotely execute code o..."
+        },
+        {
+          "id": "CVE-2017-6737",
+          "severity": "HIGH",
+          "score": 8.8,
+          "published": "2017-07-17",
+          "summary": "A vulnerability in the SNMP implementation of could allow an authenticated, remote attacker to cause a reload of the affected system or to remotely execute code. An attacker could exploit this vulnera..."
+        },
+        {
+          "id": "CVE-2017-6738",
+          "severity": "HIGH",
+          "score": 8.8,
+          "published": "2017-07-17",
+          "summary": "The Simple Network Management Protocol (SNMP) subsystem of Cisco IOS and IOS XE Software contains multiple vulnerabilities that could allow an authenticated, remote attacker to remotely execute code o..."
+        }
+      ]
+    }
+  }
+}
