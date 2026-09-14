@@ -40,7 +40,7 @@ RULES: list[tuple[str, str, str, str | None]] = [
     (r"\bssh\b.*\b(time-?out|idle)\b", "ssh_settings", "timeout_seconds", None),
     (r"\bssh\b.*\b(retry|retries|attempts)\b", "ssh_settings", "auth_retries", None),
     (r"\bssh\b", "vty_line", "transport_input", "ssh"),
-    (r"\b(exec-?timeout|idle-?timeout|session-?timeout)\b",
+    (r"\b(exec|idle|session|cli-session|cli)[-\s]?timeout\b",
      "vty_line", "exec_timeout_minutes", None),
     (r"\b(access-?class|management-?acl|allowed-?address)\b",
      "vty_line", "access_class", None),
@@ -70,6 +70,8 @@ RULES: list[tuple[str, str, str, str | None]] = [
      "local_user", "encrypted", "false"),
 
     # --- management services ----------------------------------------------
+    (r"\bhttps-?server\b", "global_settings", "https_server", "true"),
+    (r"\bhttp-?server\b", "global_settings", "http_server", "true"),
     (r"\bhttps?\b.*\bsecure-?server\b", "global_settings", "https_server", "true"),
     (r"\b(www|web-?management|web-?ui|webgui)\b", "global_settings", "http_server", "true"),
     (r"\bhttp\b.*\b(server|service|www)\b", "global_settings", "http_server", "true"),
