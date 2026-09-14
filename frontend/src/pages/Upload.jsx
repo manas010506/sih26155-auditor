@@ -29,8 +29,8 @@ const SpinRing = () => (
 );
 
 const Upload = () => {
-  const { setReportData, batchResults, setBatchResults } = useOutletContext();
-  const { defaultFramework } = useSettings(); 
+  const { reportData, setReportData, batchResults, setBatchResults } = useOutletContext();
+  const { defaultFramework } = useSettings();
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState(batchResults ? 'batch_summary' : 'empty'); // empty | detected | loading | success | batch_summary
@@ -105,24 +105,24 @@ const Upload = () => {
           source_type: t.type,
         })));
         const result = await auditBatch(configs, defaultFramework);
-        
+
         // Inject config_text into each result's report so ReportView has access to it
         const enrichedResults = (result.results ?? []).map((r, i) => {
           if (r.report) {
-             r.report.config_text = configs[i].config_text;
+            r.report.config_text = configs[i].config_text;
           }
           return r;
         });
-        
+
         setBatchResults(enrichedResults);
         setStatus('batch_summary');
       } else {
         const text = await detected.files[0].text();
         const result = await audit(text, detected.type, defaultFramework);
-        
+
         // Inject config_text for PDF export later
         result.config_text = text;
-        
+
         setReportData(result);
 
         setStatus('success');
@@ -170,7 +170,11 @@ const Upload = () => {
         >
           <h1 className="heading-lg" style={{ marginBottom: '8px' }}>Data Ingestion</h1>
           <p style={{ fontSize: '14px', color: 'var(--ink-dim)' }}>
-            Upload one or more configuration files for normalization and compliance baseline auditing.
+            {reportData && (
+              <p className="label" style={{ marginTop: '10px' }}>
+                Currently showing results for {reportData.device?.hostname ?? 'a previous file'} — uploading replaces them.
+              </p>
+            )}
           </p>
         </motion.div>
 
