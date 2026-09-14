@@ -695,7 +695,7 @@ const ReportView = () => {
                       color: isImplemented ? 'var(--trace)' : 'var(--ink-dim)',
                       border: `1px solid ${isImplemented ? 'rgba(63, 169, 160, 0.3)' : 'var(--wire)'}`,
                     }}>
-                      {fw} {isImplemented ? '' : '(Not implemented)'}
+                      {fw} {isImplemented ? '' : '(Not evaluated in this audit)'}
                     </div>
                   );
                 })}
@@ -832,6 +832,66 @@ const ReportView = () => {
                 )}
               </div>
             </motion.div>
+
+            {/* Passed controls — the other half of Pass/Fail */}
+            {reportData.passed?.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                style={{ marginTop: '32px', marginBottom: '32px' }}
+              >
+                <h2 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '6px', letterSpacing: '0.02em' }}>
+                  Passed Controls
+                </h2>
+                <div className="label" style={{ marginBottom: '12px' }}>
+                  {reportData.passed.length} of {reportData.score_breakdown?.rules_evaluated ?? reportData.passed.length} evaluated controls passed on this device
+                </div>
+
+                <div style={{
+                  border: '1px solid var(--wire)',
+                  borderRadius: '4px',
+                  backgroundColor: 'var(--panel)',
+                  overflow: 'hidden',
+                }}>
+                  {reportData.passed.map((p, idx) => (
+                    <div
+                      key={p.rule_id}
+                      style={{
+                        padding: '10px 16px',
+                        borderBottom: idx === reportData.passed.length - 1 ? 'none' : '1px solid var(--wire)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <span className="mono" style={{
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        letterSpacing: '0.06em',
+                        color: 'var(--trace)',
+                        border: '1px solid currentColor',
+                        borderRadius: '3px',
+                        padding: '2px 6px',
+                        flexShrink: 0,
+                      }}>
+                        PASS
+                      </span>
+                      <span className="mono" style={{ fontSize: '12px', color: 'var(--trace)', flexShrink: 0 }}>
+                        {p.rule_id}
+                      </span>
+                      <span style={{ fontSize: '13px', color: 'var(--ink)', minWidth: 0 }}>
+                        {p.control_ref || p.title}
+                      </span>
+                      <span className="label" style={{ marginLeft: 'auto', flexShrink: 0 }}>
+                        severity if failed: {p.severity}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
 
             {/* Footer */}
             <div style={{ marginTop: '48px', paddingTop: '20px', borderTop: '1px solid var(--wire)', textAlign: 'center' }}>

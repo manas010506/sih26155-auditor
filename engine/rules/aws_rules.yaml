@@ -148,7 +148,7 @@
 - id: CIS-CLOUD-021
   title: Ensure the Auto Minor Version Upgrade feature is enabled for RDS instances
   applies_to: rds_instance
-  cis_control: CIS AWS Foundations 3.2.2
+  cis_control: CIS AWS Foundations 3.2.2 - Ensure the Auto Minor Version Upgrade feature is enabled for RDS instances
   severity: low
   check:
     attribute: auto_minor_version_upgrade
@@ -297,7 +297,7 @@
 - id: CIS-CLOUD-023
   title: Ensure CloudTrail is enabled in all regions
   applies_to: cloudtrail
-  cis_control: CIS AWS Foundations 3.4.1
+  cis_control: CIS AWS Foundations 3.4.1 - Ensure CloudTrail is enabled in all regions
   severity: critical
   check:
     attribute: exists
