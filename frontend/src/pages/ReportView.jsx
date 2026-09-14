@@ -309,9 +309,9 @@ const ReportView = () => {
               ['Device', device.hostname],
               ['Vendor', device.vendor],
               ['OS', device.os],
-              ['OS Version', device.version],
+              ['OS Version', device.os_version],
               ['Model', device.model],
-              ['Serial', device.serial],
+              ['Serial', device.serial_number],
               ['Source Type', reportData.source?.type]
             ].map(([label, value]) => (
               new TableRow({
@@ -549,9 +549,9 @@ const ReportView = () => {
                   ['Device',      device.hostname],
                   ['Vendor',      device.vendor],
                   ['OS',          device.os],
-                  ['OS Version',  device.version],
+                  ['OS Version',  device.os_version],
                   ['Model',       device.model],
-                  ['Serial',      device.serial],
+                  ['Serial',      device.serial_number],
                   ['Source Type', reportData.source?.type],
                 ].map(([label, value]) => (
                   <div key={label} style={{ backgroundColor: 'var(--panel)', padding: '10px 14px' }}>
