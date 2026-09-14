@@ -1,0 +1,40 @@
+{
+  "generated": "2026-09-14T09:51:44+00:00",
+  "commit": "8da6d83",
+  "method": "Each chain has a minimal positive fixture and a negative that applies that chain's break_chain fix and nothing else. Expected verdicts were recorded before the engine was run.",
+  "positive_fixtures": 3,
+  "negative_fixtures": 3,
+  "all_passed": true,
+  "chains": [
+    {
+      "chain_id": "CHAIN-NET-CRED-EXPOSURE",
+      "name": "Configuration read to credential reuse",
+      "positive_fixture": "chain_cred_exposure_pos.cfg",
+      "negative_fixture": "chain_cred_exposure_neg.cfg",
+      "break_chain_rule": "CIS-NET-006",
+      "positive_fires_as_expected": true,
+      "negative_does_not_fire": true,
+      "break_chain_fix_isolated": true
+    },
+    {
+      "chain_id": "CHAIN-NET-MGMT-TAKEOVER",
+      "name": "Cleartext management plane to privileged takeover",
+      "positive_fixture": "chain_mgmt_takeover_pos.cfg",
+      "negative_fixture": "chain_mgmt_takeover_neg.cfg",
+      "break_chain_rule": "CIS-NET-004",
+      "positive_fires_as_expected": true,
+      "negative_does_not_fire": true,
+      "break_chain_fix_isolated": true
+    },
+    {
+      "chain_id": "CHAIN-NET-SNMP-CONTROL",
+      "name": "SNMP reconnaissance to device control",
+      "positive_fixture": "chain_snmp_control_pos.cfg",
+      "negative_fixture": "chain_snmp_control_neg.cfg",
+      "break_chain_rule": "CIS-NET-009",
+      "positive_fires_as_expected": true,
+      "negative_does_not_fire": true,
+      "break_chain_fix_isolated": true
+    }
+  ]
+}

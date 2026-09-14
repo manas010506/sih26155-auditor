@@ -161,6 +161,32 @@ def _findings(result: dict, st) -> list:
         flow.append(KeepTogether(block))
     return flow
 
+def _validation_note(st):
+    """One line describing how the chain logic was validated.
+
+    Read from the artifact produced by samples/build_validation_summary.py.
+    Absent or unreadable file means no line - a clone without the summary
+    still builds a report.
+    """
+    try:
+        import json
+        import pathlib
+        data = json.loads(
+            (pathlib.Path(__file__).resolve().parent / "validation_summary.json")
+            .read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if not data.get("all_passed"):
+        return None
+    stamp = (data.get("generated") or "")[:10]
+    commit = data.get("commit")
+    ref = f", commit {commit}" if commit else ""
+    return Paragraph(
+        f'Chain logic validated against {data.get("positive_fixtures", 0)} positive '
+        f'and {data.get("negative_fixtures", 0)} negative fixtures; each negative '
+        f'applies that chain&#39;s break-chain fix in isolation. '
+        f'Generated {stamp}{ref}.', st["Muted"])
+
 def _attack_paths(result: dict, st) -> list:
     """Findings that combine into something worse than their parts.
 
@@ -189,7 +215,8 @@ def _attack_paths(result: dict, st) -> list:
                 f'<b>Breaks the chain: {brk["fix_rule"]}</b> — {brk.get("why", "")}',
                 st["Body"]))
         block.append(Spacer(1, 5 * mm))
-        combined: list = [heading] + block
+        note = _validation_note(st)
+        combined: list = [heading] + ([note] if note else []) + block
         flow.append(KeepTogether(combined) if i == 0 else KeepTogether(block))
     return flow
 
