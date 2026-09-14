@@ -226,8 +226,23 @@ def score(findings: list[dict], rules: list[dict]) -> dict:
 
     frameworks = sorted({r.get("framework", DEFAULT_FRAMEWORK) for r in rules})
 
+    failed_ids = {f["rule_id"] for f in findings}
+    passed = [
+        {
+            "rule_id": r["id"],
+            "title": r.get("title", ""),
+            "severity": r["severity"],
+            "control_ref": r.get("control_ref") or r.get("cis_control"),
+            "framework": r.get("framework", DEFAULT_FRAMEWORK),
+        }
+        for r in rules if r["id"] not in failed_ids
+    ]
+
+    
+
     return {
         "compliance_score": round(100 * (1 - failed_weight / total_weight)),
+        "passed": passed,
         "score_breakdown": {
             "formula": "100 * (1 - failed_weight / total_weight)",
             # Which benchmarks this ruleset covers. Inside score_breakdown so it
@@ -239,7 +254,7 @@ def score(findings: list[dict], rules: list[dict]) -> dict:
             "rules_failed": len(findings),
             # The problem statement asks for clear Pass/Fail results. The engine
             # only emits failures, so the passing count has to be derived here.
-            "rules_passed": len(rules) - len(findings),
+            "rules_passed": len(passed),
             "failed_weight": failed_weight,
             "total_weight": total_weight,
         },

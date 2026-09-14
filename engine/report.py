@@ -161,6 +161,40 @@ def _findings(result: dict, st) -> list:
         flow.append(KeepTogether(block))
     return flow
 
+def _passed_controls(result: dict, st) -> list: # type: ignore
+    """Controls that passed.
+
+    The problem statement asks for clear Pass/Fail results, and a report
+    listing only failures states half of what was checked. Severity is shown
+    muted here — it is the risk this control would carry if it failed, not a
+    warning about the device.
+    """
+    passed = result.get("passed", [])
+    if not passed:
+        return []
+
+    order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+    rows = sorted(passed, key=lambda p: (order.get((p.get("severity") or "low").lower(), 4),
+                                         p.get("rule_id", "")))
+
+    flow: list = [Paragraph("Passed controls", st["H2x"])]
+    flow.append(Paragraph(
+        f"{len(rows)} of {result.get('score_breakdown', {}).get('rules_evaluated', len(rows))} "
+        f"evaluated controls passed on this device.", st["Body"]))
+    flow.append(Spacer(1, 3 * mm))
+
+    for p in rows:
+        label = p.get("control_ref") or p.get("title", "")
+        block: list = [Paragraph(
+            f'<font color="{colors.HexColor("#3FA9A0")}"><b>PASS</b></font> &nbsp; '
+            f'<b>{p.get("rule_id", "")}</b> &nbsp; {label}', st["Body"])]
+        if p.get("severity"):
+            block.append(Paragraph(
+                f'severity if failed: {p["severity"]}', st["Muted"]))
+        block.append(Spacer(1, 2 * mm))
+        flow.append(KeepTogether(block))
+    return flow
+
 def _validation_note(st):
     """One line describing how the chain logic was validated.
 
@@ -260,6 +294,9 @@ def build_report(result: dict) -> bytes:
     flow += _framework_summary(result, st)
     flow.append(PageBreak())
     flow += _findings(result, st)
+    flow += _findings(result, st)
+    flow += _passed_controls(result, st)
+    flow += _attack_paths(result, st)
     flow += _attack_paths(result, st)
     flow += _unparsed(result, st)
 

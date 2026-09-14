@@ -168,6 +168,7 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None,
         "score_breakdown": scored["score_breakdown"],
         "findings": findings,
         "attack_paths": attack_paths,
+        "passed": scored["passed"],
         # Lines the parser did not recognise, each with a proposed mapping.
         # The problem statement asks for pattern matching to identify keywords
         # in configurations the system has not been pre-trained on: the
