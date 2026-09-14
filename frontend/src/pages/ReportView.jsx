@@ -552,6 +552,7 @@ const ReportView = () => {
                   ['OS Version',  device.os_version],
                   ['Model',       device.model],
                   ['Serial',      device.serial_number],
+                  ['Firmware',    device.firmware],
                   ['Source Type', reportData.source?.type],
                 ].map(([label, value]) => (
                   <div key={label} style={{ backgroundColor: 'var(--panel)', padding: '10px 14px' }}>
@@ -561,6 +562,88 @@ const ReportView = () => {
                 ))}
               </div>
             </motion.div>
+            {/* Known CVEs for the reported OS version */}
+            {reportData.cve_context && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.125 }}
+                style={{ marginBottom: '32px' }}
+              >
+                <h2 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px', letterSpacing: '0.02em' }}>
+                  Known CVEs for this OS version
+                </h2>
+
+                {reportData.cve_context.status !== 'matched' ? (
+                  <div style={{
+                    padding: '12px 14px',
+                    border: '1px solid var(--wire)',
+                    borderRadius: '4px',
+                    backgroundColor: 'var(--panel)',
+                  }}>
+                    <div className="label">
+                      {reportData.cve_context.detail || 'No CVE context available.'}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    border: '1px solid var(--wire)',
+                    borderRadius: '4px',
+                    backgroundColor: 'var(--panel)',
+                    overflow: 'hidden',
+                  }}>
+                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--wire)' }}>
+                      <div className="label" style={{ marginBottom: '3px' }}>
+                        Matched on OS {reportData.cve_context.normalized_version}
+                      </div>
+                      <div className="value">
+                        {reportData.cve_context.total_matched} CVEs match this version
+                        {' · '}
+                        {reportData.cve_context.high_and_critical} rated critical or high
+                        {' · showing top '}
+                        {reportData.cve_context.cves.length} by CVSS score
+                      </div>
+                    </div>
+
+                    {reportData.cve_context.cves.map((cve) => (
+                      <div key={cve.id} style={{
+                        padding: '10px 14px',
+                        borderBottom: '1px solid var(--wire)',
+                        display: 'flex',
+                        gap: '12px',
+                        alignItems: 'flex-start',
+                      }}>
+                        <span
+                          className="mono"
+                          style={{
+                            flexShrink: 0,
+                            fontSize: '10px',
+                            fontWeight: 600,
+                            letterSpacing: '0.04em',
+                            padding: '2px 6px',
+                            borderRadius: '3px',
+                            color: cve.severity === 'CRITICAL' ? 'var(--severity-critical)' : 'var(--severity-high)',
+                            border: '1px solid currentColor',
+                          }}
+                        >
+                          {cve.severity} {cve.score?.toFixed(1)}
+                        </span>
+                        <div style={{ minWidth: 0 }}>
+                          <div className="value mono" style={{ marginBottom: '2px' }}>{cve.id}</div>
+                          <div className="label" style={{ lineHeight: 1.5 }}>{cve.summary}</div>
+                        </div>
+                      </div>
+                    ))}
+
+                    <div style={{ padding: '10px 14px' }}>
+                      <div className="label" style={{ lineHeight: 1.5, fontStyle: 'italic' }}>
+                        {reportData.cve_context.caveat}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
 
             {/* Executive summary box */}
             <motion.div
