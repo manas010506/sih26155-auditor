@@ -96,6 +96,10 @@ const TopBar = ({ device, source, onSettingsClick }) => {
     e.currentTarget.style.borderColor = isEnter ? 'var(--trace)' : 'var(--wire)';
   };
 
+  const deviceLabel = device?.hostname?.startsWith('Not available')
+    ? (source?.filename ?? 'Unnamed device')
+    : (device?.hostname || device?.name || 'Unnamed device');
+
   return (
     <header style={{
       height: '64px',
@@ -126,21 +130,13 @@ const TopBar = ({ device, source, onSettingsClick }) => {
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--panel-raised)'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} title="Connected to audit engine &middot; last sync 2s ago">
-                <LiveDot />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="mono" style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink)' }}>{deviceLabel}</div>
                 <span className="mono hide-on-mobile" style={{ fontSize: '11px', color: 'var(--trace)', letterSpacing: '0.1em' }}>LIVE</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <div className="mono" style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink)' }}>{device.hostname || device.name}</div>
-                <div className="label hide-on-mobile" style={{ fontSize: '10px' }}>{source?.type || device.source_type}</div>
-              </div>
             </button>
-
             <DropdownMenu isOpen={deviceDropdownOpen} onClose={() => setDeviceDropdownOpen(false)} style={{ top: '100%', left: 0 }}>
-              <div className="label" style={{ padding: '8px 12px' }}>Switch Report</div>
-              <DropdownItem icon={Server} label={`${device.hostname || device.name} (Current)`} onClick={() => setDeviceDropdownOpen(false)} />
-              {/* Mocking a second device to switch to */}
-              <DropdownItem icon={Server} label="NYC-CORE-RTR-02" onClick={() => setDeviceDropdownOpen(false)} />
+              <DropdownItem icon={Server} label={`${deviceLabel} (Current)`} onClick={() => setDeviceDropdownOpen(false)} /> 
             </DropdownMenu>
           </div>
         ) : (
@@ -153,12 +149,12 @@ const TopBar = ({ device, source, onSettingsClick }) => {
 
       {/* RIGHT: Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-        
+
 
         {/* Settings */}
         <TactileButton
           className="bezel-panel"
-          style={{ 
+          style={{
             width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'var(--ink-dim)', transition: 'color 0.2s, border-color 0.2s', borderRadius: '2px', padding: 0
           }}
@@ -189,7 +185,7 @@ const TopBar = ({ device, source, onSettingsClick }) => {
               <User size={18} />
             </div>
           </TactileButton>
-          
+
           <DropdownMenu isOpen={userDropdownOpen} onClose={() => setUserDropdownOpen(false)} style={{ top: 'calc(100% + 8px)', right: 0 }}>
             <div style={{ padding: '12px', borderBottom: '1px solid var(--wire)', marginBottom: '4px' }}>
               <div style={{ fontSize: '13px', fontWeight: 500 }}>Admin User</div>

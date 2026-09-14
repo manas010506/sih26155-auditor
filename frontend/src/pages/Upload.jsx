@@ -172,7 +172,7 @@ const Upload = () => {
           <p style={{ fontSize: '14px', color: 'var(--ink-dim)' }}>
             {reportData && (
               <p className="label" style={{ marginTop: '10px' }}>
-                Currently showing results for {reportData.device?.hostname ?? 'a previous file'} — uploading replaces them.
+                Currently showing results for {reportData.device?.hostname?.startsWith('Not available') ? (reportData.source?.filename ?? 'the previous file') : (reportData.device?.hostname ?? 'a previous file')} — uploading replaces them.
               </p>
             )}
           </p>
