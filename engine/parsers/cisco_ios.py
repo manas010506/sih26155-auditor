@@ -146,12 +146,34 @@ class CiscoIOSParser(Parser):
             if mapping is None:
                 continue
 
-            for resource in doc["resources"]:
-                if resource["type"] == mapping["resource_type"]:
-                    resource["attributes"][mapping["attribute"]] = mapping["value"]
-                    self._claimed.add(linenum)
-                    break
+            target = next(
+                (r for r in doc["resources"]
+                 if r["type"] == mapping["resource_type"]),
+                None,
+            )
 
+            # A vendor with no parser emits no resources for the concepts it
+            # configures, so a learned mapping would have nothing to attach to
+            # and would be silently dropped. Creating the resource is the point
+            # of the training loop: the admin has confirmed this line carries
+            # this attribute, so the resource exists on the device.
+            if target is None:
+                target = {
+                    "id": f"learned-{mapping['resource_type']}",
+                    "type": mapping["resource_type"],
+                    "attributes": {},
+                    "attribute_refs": {},
+                    "raw_ref": {"line": linenum + 1, "snippet": text},
+                }
+                doc["resources"].append(target)
+
+            target["attributes"][mapping["attribute"]] = mapping["value"]
+            target.setdefault("attribute_refs", {})[mapping["attribute"]] = {
+                "line": linenum + 1,
+                "snippet": text,
+            }
+            self._claimed.add(linenum)
+            
     def _unparsed_lines(self, config_text: str):
         """Return config lines that were not consumed by the parser.
 
