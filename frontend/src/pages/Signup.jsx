@@ -114,6 +114,9 @@ const Signup = () => {
 
         <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', fontSize: '12px' }}>
           <Link to="/login" style={{ color: 'var(--ink-dim)' }}>Back to login</Link>
+        <div className="label" style={{ marginTop: '12px', textAlign: 'center', color: 'var(--ink-dim)' }}>
+          Demonstration build — authentication is not implemented.
+        </div>
         </div>
       </div>
       
