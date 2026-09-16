@@ -69,14 +69,21 @@ def _device_block(doc: dict, source_type: str) -> dict:
 
     g = next((r for r in doc["resources"] if r["type"] == "global_settings"), None)
     attrs = g["attributes"] if g else {}
+    na = "Not available in supplied configuration"
+
+    # The IOS parser is also the fallback for vendors with no parser of their
+    # own (Aruba, MikroTik). Claim Cisco IOS only when an IOS version line was
+    # actually found; otherwise say we don't know, and say how it was audited.
+    identified = bool(attrs.get("os_version"))
+
     return {
-        "hostname": attrs.get("hostname") or "Not available in supplied configuration",
-        "vendor": "cisco",
-        "os": "IOS",
-        "os_version": attrs.get("os_version") or "Not available in supplied configuration",
-        "model": attrs.get("model") or "Not available in supplied configuration",
-        "serial_number": attrs.get("serial_number") or "Not available in supplied configuration",
-        "firmware": attrs.get("firmware") or "Not available in supplied configuration",
+        "hostname": attrs.get("hostname") or na,
+        "vendor": "cisco" if identified else "Not identified",
+        "os": "IOS" if identified else "Not identified (audited with the Cisco IOS parser)",
+        "os_version": attrs.get("os_version") or na,
+        "model": attrs.get("model") or na,
+        "serial_number": attrs.get("serial_number") or na,
+        "firmware": attrs.get("firmware") or na,
         "role": "network_device",
     }
 
