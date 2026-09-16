@@ -151,6 +151,14 @@ function AttackGraph({ report: reportProp }) {
       }
     );
 
+    // The chain name reads "<entry> to <impact>". Show the impact this chain
+    // actually ends in, not one hardcoded outcome for every chain.
+    const chainName = selectedPath.name ?? '';
+    const cut = chainName.toLowerCase().lastIndexOf(' to ');
+    const impactTitle = cut === -1
+      ? 'Impact'
+      : chainName.slice(cut + 4).replace(/^./, (c) => c.toUpperCase());
+
     const impactId = `impact-${selectedPath.chain_id}`;
 
     const impactIndex =
@@ -168,7 +176,7 @@ function AttackGraph({ report: reportProp }) {
       },
       data: {
         ruleId: "IMPACT",
-        title: "Privileged Takeover",
+        title: impactTitle,
         severity: selectedPath.severity,
         isBreakPoint: false,
         isImpact: true,
