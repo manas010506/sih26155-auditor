@@ -275,7 +275,12 @@ const ReportView = () => {
                       new Paragraph({
                         children: [
                           new TextRun({ text: `Compliance Score: `, bold: true, size: 24 }),
-                          new TextRun({ text: `${reportData.compliance_score ?? 'N/A'}/100`, bold: true, size: 24, color: '10141A' }),
+                          new TextRun({
+                            text: (reportData.score_breakdown?.not_assessable || reportData.compliance_score == null)
+                              ? 'Not assessed'
+                              : `${reportData.compliance_score}/100`,
+                            bold: true, size: 24, color: '10141A',
+                          }),
                         ],
                         spacing: { after: 120 }
                       }),
@@ -320,7 +325,7 @@ const ReportView = () => {
                     width: { size: 30, type: WidthType.PERCENTAGE },
                     shading: { fill: "F9FAFB" },
                     margins: { top: 100, bottom: 100, left: 100, right: 100 },
-                    children: [new Paragraph({ text: label, bold: true })]
+                    children: [new Paragraph({ children: [new TextRun({ text: label, bold: true })] })]
                   }),
                   new TableCell({
                     width: { size: 70, type: WidthType.PERCENTAGE },
@@ -340,8 +345,8 @@ const ReportView = () => {
           }),
           ...(findings.length === 0 ? [
             reportData.score_breakdown?.not_assessable
-              ? new Paragraph({ text: 'Not assessed — no recognised resources were found in this configuration, so no control could be evaluated.', italics: true })
-              : new Paragraph({ text: 'No security findings detected in this configuration.', italics: true })
+              ? new Paragraph({ children: [new TextRun({ text: 'Not assessed — no recognised resources were found in this configuration, so no control could be evaluated.', italics: true })] })
+              : new Paragraph({ children: [new TextRun({ text: 'No security findings detected in this configuration.', italics: true })] })
           ] : findings.map((f, idx) => {
             const severityColors = {
               critical: 'E5484D',
@@ -366,7 +371,7 @@ const ReportView = () => {
                 spacing: { before: 100, after: f.remediation_template ? 200 : 400 },
               }),
               ...(f.remediation_template ? [
-                new Paragraph({ text: 'Remediation CLI:', bold: true, size: 20, color: '666666', spacing: { after: 100 } }),
+                new Paragraph({ children: [new TextRun({ text: 'Remediation CLI:', bold: true, size: 20, color: '666666' })], spacing: { after: 100 } }),
                 new Table({
                   width: { size: 100, type: WidthType.PERCENTAGE },
                   borders: { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder },
@@ -482,7 +487,7 @@ const ReportView = () => {
         <div>
           <div className="heading-sm">Compliance Report</div>
           <div className="label" style={{ marginTop: '2px' }}>
-            {totalFindings} findings · compliance score: {reportData.compliance_score ?? 'N/A'}
+            {totalFindings} findings · compliance score: {reportData.compliance_score ?? 'not assessed'}
           </div>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -782,9 +787,9 @@ const ReportView = () => {
                         borderRadius: '4px',
                         overflow: 'hidden',
                         borderLeft: `3px solid ${finding.severity?.toLowerCase() === 'critical' ? 'var(--severity-critical)' :
-                            finding.severity?.toLowerCase() === 'high' ? 'var(--severity-high)' :
-                              finding.severity?.toLowerCase() === 'medium' ? 'var(--severity-medium)' :
-                                'var(--severity-low)'
+                          finding.severity?.toLowerCase() === 'high' ? 'var(--severity-high)' :
+                            finding.severity?.toLowerCase() === 'medium' ? 'var(--severity-medium)' :
+                              'var(--severity-low)'
                           }`,
                       }}
                     >
