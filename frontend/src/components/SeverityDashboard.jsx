@@ -90,7 +90,7 @@ const SeverityBarGraph = ({ data }) => {
         </div>
       ))}
       <div className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)', textAlign: 'right' }}>
-        {total} findings
+        {total} finding{total !== 1 ? 's' : ''}
       </div>
     </div>
   );

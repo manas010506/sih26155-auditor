@@ -112,7 +112,7 @@ const TopBar = ({ device, source, onSettingsClick }) => {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div className="mono" style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink)' }}>{deviceLabel}</div>
-                {sourceFilename && (
+                {sourceFilename && sourceFilename !== deviceLabel && (
                   <span className="mono hide-on-mobile" style={{ fontSize: '11px', color: 'var(--ink-dim)', letterSpacing: '0.04em' }}>
                     · {sourceFilename}
                   </span>
