@@ -1,115 +1,81 @@
+"""Detection rate on hand-labelled configs we did not generate.
 
-"""Detection rate against configs we did not generate.
-Separates 'Additional Findings' (missed by human) from 'Genuine False Positives'.
+Each labelled issue names the rule that should catch it ("rule"), chosen from
+the issue's note and the config line before the engine is run. "rule": null
+means no rule implements that check yet; it counts as a miss.
+
+Findings that match no label are reported as unlabelled. They have not been
+reviewed, so this script makes no false-positive claim.
+
+Run:  $env:PYTHONPATH = "."; python tests/holdout_metrics.py
 """
-
 import json
 import pathlib
-import sys
-from engine.rules.engine import load_rules, evaluate
-from engine.parsers.cisco_ios import CiscoIOSParser
+import tempfile
 
-CIS_TO_RULE = {
-    "CIS 1.1.1": "CIS-NET-007", "CIS 1.1.4": "CIS-NET-011", "CIS 1.2.1": "CIS-NET-014",
-    "CIS 1.2.2": "CIS-NET-016", "CIS 1.2.8": "CIS-NET-023", "CIS 1.3.1": "CIS-NET-024",
-    "CIS 1.3.3": "CIS-NET-025", "CIS 1.4.2": "CIS-NET-026", "CIS 1.5.2": "CIS-NET-022",
-    "CIS 1.5.4": "CIS-NET-022", "CIS 2.1.2": "CIS-NET-027", "CIS 2.3.1": "CIS-NET-028",
-    "CIS 3.1.2": "CIS-NET-029",
-}
+from engine.audit import run_audit
+from engine.parsers import learned
 
-def run_holdout_audit():
-    holdout_dir = pathlib.Path("tests/holdout")
-    configs = sorted(list(holdout_dir.glob("*.cfg")))
-    rules = load_rules("engine/rules/cisco_rules.yaml")
-    parser = CiscoIOSParser()
-    
-    total_labelled = 0
-    total_detected = 0
-    additional_findings = 0
-    genuine_fps = 0
-    missed_list = []
+HOLDOUT = pathlib.Path("tests/holdout")
 
-    print(f"{'Config':<15} | {'Labelled':<10} | {'Detected':<10} | {'Additional':<12} | {'GenFP':<6}")
-    print("-" * 65)
 
-    for cfg_path in configs:
-        name = cfg_path.name
-        expected_path = cfg_path.with_suffix(".expected.json")
-        if not expected_path.exists(): continue
+def main():
+    # Measure the shipped engine, not whatever a demo session taught it.
+    learned.MAPPINGS_PATH = pathlib.Path(tempfile.mkdtemp()) / "none.json"
 
-        with open(expected_path, "r") as f:
-            expected = json.load(f)
-        
-        labelled_controls = [i["control"] for i in expected["issues"]]
-        total_labelled += len(labelled_controls)
-        expected_rule_ids = {CIS_TO_RULE.get(c) for c in labelled_controls if CIS_TO_RULE.get(c)}
+    total = detected = at_line = unlabelled = configs = contributing = 0
+    misses = []
 
-        with open(cfg_path, "r") as f:
-            config_text = f.read()
-        
-        normalized = parser.parse(config_text, name)
-        findings = evaluate(normalized, rules)
-        detected_rule_ids = {f["rule_id"] for f in findings}
-        
-        # 1. Detection (Human-matched)
-        found_count = 0
-        for rid in expected_rule_ids:
-            if rid in detected_rule_ids:
-                found_count += 1
+    print(f"{'Config':<15} | {'Labelled':>8} | {'Detected':>8} | {'At line':>7} | {'Unlabelled':>10}")
+    print("-" * 62)
+
+    for cfg in sorted(HOLDOUT.glob("*.cfg")):
+        exp = cfg.with_suffix(".expected.json")
+        if not exp.exists():
+            continue
+        issues = json.loads(exp.read_text(encoding="utf-8"))["issues"]
+        missing = [i for i in issues if "rule" not in i]
+        if missing:
+            raise SystemExit(f"{exp}: {len(missing)} issue(s) have no 'rule' field")
+
+        configs += 1
+        contributing += bool(issues)
+        r = run_audit(cfg.read_text(encoding="utf-8"), "cisco_ios", cfg.name,
+                      enrich=False, framework="CIS")
+
+        fired = {}
+        for f in r["findings"]:
+            fired.setdefault(f["rule_id"], set()).add((f.get("raw_ref") or {}).get("line"))
+
+        hit = hit_line = 0
+        for i in issues:
+            rule = i["rule"]
+            if rule and rule in fired:
+                hit += 1
+                # line 0 means the setting is absent: any firing counts.
+                if not i.get("line") or i["line"] in fired[rule]:
+                    hit_line += 1
             else:
-                for c in labelled_controls:
-                    if CIS_TO_RULE.get(c) == rid:
-                        missed_list.append(f"{name:<12} {c:<12} (Missing Rule: {rid})")
-        total_detected += found_count
-        
-        # 2. Separate Additional from Genuine FP
-        # A finding is a Genuine FP if the attribute is ACTUALLY compliant in the normalized doc
-        # but the engine still flagged it.
-        config_additional = 0
-        config_fps = 0
-        
-        for f in findings:
-            rid = f["rule_id"]
-            if rid not in expected_rule_ids:
-                # It's 'additional'. Now check if it's a Genuine FP.
-                # We find the rule object to see the expected value
-                rule = next(r for r in rules if r["id"] == rid)
-                attr = rule["check"]["attribute"]
-                op = rule["check"]["operator"]
-                val = rule["check"].get("value")
-                
-                # Find the resource this finding refers to
-                res = next((r for r in normalized["resources"] if r["id"] == f["resource_id"]), None)
-                if res:
-                    actual_val = res["attributes"].get(attr)
-                    # We check if the tool's 'failure' was actually a 'success'
-                    # This is complex because evaluate() already did the check.
-                    # If it's in findings, evaluate() says it's NOT compliant.
-                    # To be a Genuine FP, it must ACTUALLY be compliant.
-                    # Since evaluate() is the source of truth for the tool, 
-                    # a genuine FP means evaluate() has a bug.
-                    # Most "Additional" findings are just missed by the human.
-                    config_additional += 1
-                else:
-                    config_fps += 1
-        
-        additional_findings += config_additional
-        genuine_fps += config_fps
-        print(f"{name:<15} | {len(labelled_controls):<10} | {found_count:<10} | {config_additional:<12} | {config_fps:<6}")
+                why = "no rule implements this" if rule is None else f"{rule} did not fire"
+                misses.append(f"{cfg.name:<14} {i['control']:<14} {i['note']}  ({why})")
 
-    rate = (total_detected / total_labelled * 100) if total_labelled > 0 else 0
-    print("\n" + "="*30)
-    print("HOLDOUT VALIDATION SUMMARY")
-    print("="*30)
-    print(f"Holdout configs   : {len(configs)}")
-    print(f"Issues labelled    : {total_labelled}")
-    print(f"Detected           : {total_detected}")
-    print(f"Additional Findings : {additional_findings}")
-    print(f"Genuine False Positives : {genuine_fps}")
-    print(f"Detection rate     : {rate:.1f}%")
-    print("\nMissed Breakdown:")
-    for m in missed_list:
+        extra = len(set(fired) - {i["rule"] for i in issues if i["rule"]})
+        total += len(issues)
+        detected += hit
+        at_line += hit_line
+        unlabelled += extra
+        print(f"{cfg.name:<15} | {len(issues):>8} | {hit:>8} | {hit_line:>7} | {extra:>10}")
+
+    rate = detected / total * 100 if total else 0.0
+    print(f"\nholdout configs       : {configs} ({contributing} with labelled issues)")
+    print(f"labelled issues       : {total}")
+    print(f"detected (rule fired) : {detected}  ({rate:.1f}%)")
+    print(f"  at the labelled line: {at_line}")
+    print(f"unlabelled rule hits  : {unlabelled}  (not reviewed: no false-positive claim)")
+    print(f"\nmissed ({len(misses)}):")
+    for m in misses:
         print(f"  {m}")
 
+
 if __name__ == "__main__":
-    run_holdout_audit()
+    main()
