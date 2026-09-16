@@ -1,12 +1,12 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { motion, useInView} from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { IconAlertTriangle, IconLayoutGrid } from '@tabler/icons-react';
 
 const SEVERITY_COLORS = {
   critical: 'var(--severity-critical)',
-  high:     'var(--severity-high)',
-  medium:   'var(--severity-medium)',
-  low:      'var(--severity-low)',
+  high: 'var(--severity-high)',
+  medium: 'var(--severity-medium)',
+  low: 'var(--severity-low)',
 };
 
 /* Animated count-up */
@@ -105,7 +105,7 @@ const ResourceListGraph = ({ categoryData }) => {
       {categoryData.map(([name, value], i) => {
         const widthPct = (value / maxVal) * 100;
         const color = value > 10 ? 'var(--severity-critical)' : value > 4 ? 'var(--severity-high)' : 'var(--severity-medium)';
-        
+
         return (
           <motion.div
             key={name}
@@ -128,7 +128,7 @@ const ResourceListGraph = ({ categoryData }) => {
                 {value} <span style={{ color: 'var(--ink-dim)', fontWeight: 400, fontSize: '10px' }}>FINDINGS</span>
               </div>
             </div>
-            
+
             {/* Mini bar graph under the text */}
             <div style={{ height: '4px', width: '100%', backgroundColor: 'var(--panel-raised)', borderRadius: '2px', overflow: 'hidden' }}>
               <motion.div
@@ -145,7 +145,39 @@ const ResourceListGraph = ({ categoryData }) => {
   );
 };
 
-const SeverityDashboard = ({ findings }) => {
+/* Pass/fail across the checks that were evaluated. Sits at the bottom of
+   the severity panel and puts the pass/fail result the problem statement
+   asks for on the first screen. */
+const CheckSummary = ({ breakdown }) => {
+  if (!breakdown) return null;
+  const passed = breakdown.rules_passed ?? 0;
+  const failed = breakdown.rules_failed ?? 0;
+  const evaluated = breakdown.rules_evaluated ?? passed + failed;
+  const pct = evaluated ? (passed / evaluated) * 100 : 0;
+
+  return (
+    <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+      <div style={{ paddingTop: '16px', borderTop: '1px solid var(--wire)' }}>
+        <div className="mono" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '12px', fontSize: '10px', color: 'var(--ink-dim)', letterSpacing: '0.06em', marginBottom: '8px' }}>
+          <span style={{whiteSpace: 'nowrap'}}>
+            CHECKS · {breakdown.partial ? `${evaluated} OF ${breakdown.controls_total} EVALUATED` : `${evaluated} EVALUATED`}
+          </span>
+          <span>
+            <span style={{ whiteSpace: 'nowrap' }}>{passed} PASSED</span>
+            {' · '}
+            <span style={{ whiteSpace: 'nowrap' }}>{failed} FAILED</span>
+          </span>
+        </div>
+        <div style={{ display: 'flex', height: '8px', borderRadius: '3px', overflow: 'hidden', backgroundColor: 'var(--panel-raised)' }}>
+          <div style={{ width: `${pct}%`, backgroundColor: 'var(--trace)' }} />
+          <div style={{ flex: 1, backgroundColor: 'var(--severity-critical)', opacity: 0.8 }} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SeverityDashboard = ({ findings, breakdown }) => {
   const { severityData, categoryData, criticalCount } = useMemo(() => {
     const sevMap = { critical: 0, high: 0, medium: 0, low: 0 };
     const catMap = {};
@@ -160,9 +192,9 @@ const SeverityDashboard = ({ findings }) => {
 
     const severityData = [
       { name: 'CRITICAL', value: sevMap.critical, fill: SEVERITY_COLORS.critical },
-      { name: 'HIGH',     value: sevMap.high,     fill: SEVERITY_COLORS.high     },
-      { name: 'MEDIUM',   value: sevMap.medium,   fill: SEVERITY_COLORS.medium   },
-      { name: 'LOW',      value: sevMap.low,      fill: SEVERITY_COLORS.low      },
+      { name: 'HIGH', value: sevMap.high, fill: SEVERITY_COLORS.high },
+      { name: 'MEDIUM', value: sevMap.medium, fill: SEVERITY_COLORS.medium },
+      { name: 'LOW', value: sevMap.low, fill: SEVERITY_COLORS.low },
     ];
 
     const categoryData = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
@@ -187,11 +219,12 @@ const SeverityDashboard = ({ findings }) => {
       {/* Custom SVG horizontal bar chart panel */}
       <Panel title="Severity Breakdown" icon={IconAlertTriangle} insight={severityInsight}>
         <SeverityBarGraph data={severityData} />
+        <CheckSummary breakdown={breakdown} />
       </Panel>
 
       {/* Sleek List Graph panel */}
       <Panel title="Affected Resources" icon={IconLayoutGrid} insight={`${categoryData.length} resource${categoryData.length !== 1 ? 's' : ''} with active findings`}>
-        <div style={{ overflowY: 'auto', flex: 1 }}>
+          <div style={{ overflowY: 'auto', flex: 1, maxHeight: '240px' }}>
           <ResourceListGraph categoryData={categoryData} />
         </div>
       </Panel>
