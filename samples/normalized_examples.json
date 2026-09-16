@@ -168,7 +168,16 @@
           ],
           "traps_enabled": false
         },
-        "raw_ref": null
+        "attribute_refs": {
+          "versions_in_use": {
+            "line": 54,
+            "snippet": "snmp-server community public RO"
+          }
+        },
+        "raw_ref": {
+          "line": 54,
+          "snippet": "snmp-server community public RO"
+        }
       },
       {
         "id": "vty-0-4",

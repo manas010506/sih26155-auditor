@@ -34,19 +34,24 @@ def test_saved_value_is_typed(tmp_path):
 
 
 def test_learned_timeout_is_evaluated_not_crashed(tmp_path, monkeypatch):
-    """Confirming `cli-session timeout 0` on Aruba must raise CIS-NET-003
-    at line 36, not crash the audit."""
+    """The demo's training beat: confirming `cli-session timeout 0` on Aruba
+    must raise CIS-NET-003 at line 36 and make exactly one more control
+    evaluable, not crash the audit."""
     monkeypatch.setattr(learned, "MAPPINGS_PATH", tmp_path / "mappings.json")
+    text = (ROOT / "samples" / "demo_aruba.cfg").read_text(encoding="utf-8")
+    before = run_audit(text, "cisco_ios", "demo_aruba.cfg", enrich=False)
+
     add_mapping({"text": "cli-session timeout 0", "source_type": "cisco_ios",
                  "resource_type": "vty_line", "attribute": "exec_timeout_minutes",
                  "value": "0", "line": 36})
-    text = (ROOT / "samples" / "demo_aruba.cfg").read_text(encoding="utf-8")
-    r = run_audit(text, "cisco_ios", "demo_aruba.cfg", enrich=False)
+    after = run_audit(text, "cisco_ios", "demo_aruba.cfg", enrich=False)
 
-    f = next(f for f in r["findings"] if f["rule_id"] == "CIS-NET-003")
+    f = next(f for f in after["findings"] if f["rule_id"] == "CIS-NET-003")
     assert f["raw_ref"]["line"] == 36
-    assert r["score_breakdown"]["rules_evaluated"] == 4
-    assert r["score_breakdown"]["partial"] is True
+    assert (after["score_breakdown"]["rules_evaluated"]
+            == before["score_breakdown"]["rules_evaluated"] + 1)
+    assert len(after["unparsed"]) == len(before["unparsed"]) - 1
+    assert after["score_breakdown"]["partial"] is True
 
 
 def test_juniper_learned_value_is_typed_and_traceable(tmp_path, monkeypatch):

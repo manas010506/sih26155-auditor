@@ -560,6 +560,7 @@ class CiscoIOSParser(Parser):
 
     def _snmp_settings(self, cfg):
         versions = []
+        refs = {}
 
         communities = cfg.find_objects(r"^snmp-server community ")
         if communities:
@@ -586,6 +587,19 @@ class CiscoIOSParser(Parser):
 
         traps = bool(trap_objects)
 
+        # Point each value at the line that set it, so a finding can show
+        # where the problem is. An absent setting gets no ref: there is no
+        # line that proves it, and on a non-native file (Aruba configures v3
+        # as `snmpv3 user`) guessing one would raise an unsupported finding.
+        v3_objs = list(v3_group) + list(v3_user)
+        first_line = communities[0] if communities else (v3_objs[0] if v3_objs else None)
+        if first_line is not None:
+            refs["versions_in_use"] = self._ref(first_line)
+        if v3_objs:
+            refs["v3_configured"] = self._ref(v3_objs[0])
+        if trap_objects:
+            refs["traps_enabled"] = self._ref(trap_objects[0])
+
         return {
             "id": "snmp",
             "type": "snmp_settings",
@@ -594,7 +608,8 @@ class CiscoIOSParser(Parser):
                 "versions_in_use": versions,
                 "traps_enabled": traps,
             },
-            "raw_ref": None,
+            "attribute_refs": refs,
+            "raw_ref": self._ref(first_line) if first_line is not None else None,
         }
 
     # --------------------------------------------------------------- VTY
