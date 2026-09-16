@@ -339,7 +339,9 @@ const ReportView = () => {
             spacing: { before: 400, after: 200 },
           }),
           ...(findings.length === 0 ? [
-            new Paragraph({ text: 'No security findings detected in this configuration.', italics: true })
+            reportData.score_breakdown?.not_assessable
+              ? new Paragraph({ text: 'Not assessed — no recognised resources were found in this configuration, so no control could be evaluated.', italics: true })
+              : new Paragraph({ text: 'No security findings detected in this configuration.', italics: true })
           ] : findings.map((f, idx) => {
             const severityColors = {
               critical: 'E5484D',
