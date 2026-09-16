@@ -4,28 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, User, Server, Shield, LogOut } from 'lucide-react';
 import TactileButton from './TactileButton';
 
-/* Pulsing LIVE dot */
-const LiveDot = () => (
-  <div style={{ position: 'relative', width: '8px', height: '8px', flexShrink: 0 }}>
-    <motion.div
-      animate={{ scale: [1, 1.9, 1], opacity: [0.4, 0, 0.4] }}
-      transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        borderRadius: '50%',
-        backgroundColor: 'var(--trace)',
-        opacity: 0.35,
-      }}
-    />
-    <div style={{
-      position: 'absolute',
-      inset: '1px',
-      borderRadius: '50%',
-      backgroundColor: 'var(--trace)',
-    }} />
-  </div>
-);
 
 /* Thin vertical rule */
 const Divider = () => (
@@ -96,6 +74,8 @@ const TopBar = ({ device, source, onSettingsClick }) => {
     e.currentTarget.style.borderColor = isEnter ? 'var(--trace)' : 'var(--wire)';
   };
 
+      const sourceFilename = source?.filename; // TEMP: wire to the report's source.filename
+
   const deviceLabel = device?.hostname?.startsWith('Not available')
     ? (source?.filename ?? 'Unnamed device')
     : (device?.hostname || device?.name || 'Unnamed device');
@@ -132,11 +112,15 @@ const TopBar = ({ device, source, onSettingsClick }) => {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div className="mono" style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink)' }}>{deviceLabel}</div>
-                <span className="mono hide-on-mobile" style={{ fontSize: '11px', color: 'var(--trace)', letterSpacing: '0.1em' }}>LIVE</span>
+                {sourceFilename && (
+                  <span className="mono hide-on-mobile" style={{ fontSize: '11px', color: 'var(--ink-dim)', letterSpacing: '0.04em' }}>
+                    · {sourceFilename}
+                  </span>
+                )}
               </div>
             </button>
             <DropdownMenu isOpen={deviceDropdownOpen} onClose={() => setDeviceDropdownOpen(false)} style={{ top: '100%', left: 0 }}>
-              <DropdownItem icon={Server} label={`${deviceLabel} (Current)`} onClick={() => setDeviceDropdownOpen(false)} /> 
+              <DropdownItem icon={Server} label={`${deviceLabel} (Current)`} onClick={() => setDeviceDropdownOpen(false)} />
             </DropdownMenu>
           </div>
         ) : (

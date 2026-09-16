@@ -168,13 +168,13 @@ const Upload = () => {
           style={{ textAlign: 'center', marginBottom: '32px' }}
         >
           <h1 className="heading-lg" style={{ marginBottom: '8px' }}>Data Ingestion</h1>
-          <p style={{ fontSize: '14px', color: 'var(--ink-dim)' }}>
+          <div style={{ fontSize: '14px', color: 'var(--ink-dim)' }}>
             {reportData && (
               <p className="label" style={{ marginTop: '10px' }}>
-                Currently showing results for {reportData.device?.hostname?.startsWith('Not available') ? (reportData.source?.filename ?? 'the previous file') : (reportData.device?.hostname ?? 'a previous file')} — uploading replaces them.
+                Currently showing results for ...
               </p>
             )}
-          </p>
+          </div>
         </motion.div>
 
         {/* Error banner */}
@@ -370,7 +370,7 @@ const Upload = () => {
                           <th style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--ink-dim)', fontWeight: 500 }}>Score</th>
                           <th style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--ink-dim)', fontWeight: 500 }}>Findings</th>
                           <th style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--ink-dim)', fontWeight: 500 }}>Critical</th>
-                          <th style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--ink-dim)', fontWeight: 500 }}>Unread</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--ink-dim)', fontWeight: 500 }}>Unparsed</th>
                           <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--ink-dim)', fontWeight: 500 }}></th>
                         </tr>
                       </thead>
