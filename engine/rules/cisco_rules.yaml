@@ -7,7 +7,9 @@
     attribute: transport_input
     operator: not_contains
     value: telnet
-  remediation: "line vty 0 4\n transport input ssh"
+  remediation: |-
+    line vty 0 15
+     transport input ssh
   explanation: Telnet carries usernames and passwords in cleartext. Any device on
     the path between an administrator and this router can read the enable password
     and take control. Restrict VTY transport to SSH only.
@@ -35,9 +37,11 @@
     value:
     - 1
     - 10
-  remediation: "line vty 0 4\n exec-timeout 10 0"
-  explanation: exec-timeout 0 0 disables the idle timer, so an abandoned session stays
-    authenticated indefinitely and can be reused by anyone with access to that terminal.
+  remediation: |-
+    line vty 0 15
+     exec-timeout 10 0
+  explanation: The idle timeout on this line is disabled or longer than 10 minutes, so an abandoned
+    session stays authenticated and can be reused by anyone with access to that terminal.
 - id: CIS-NET-004
   title: VTY lines have no access-class restriction
   applies_to: vty_line
@@ -46,8 +50,11 @@
   check:
     attribute: access_class
     operator: exists
-  remediation: "ip access-list standard MGMT-HOSTS\n permit 10.10.0.0 0.0.0.255\n\
-    line vty 0 4\n access-class MGMT-HOSTS in"
+  remediation: |-
+    ip access-list standard MGMT-HOSTS
+     permit <mgmt-network> <wildcard-mask>
+    line vty 0 15
+     access-class MGMT-HOSTS in
   explanation: No ACL limits who may open a management session, so the management
     plane is reachable from every network that can route to this device, including
     the WAN interface.
@@ -91,9 +98,9 @@
     attribute: encrypted
     operator: equals
     value: true
-  remediation: 'no username admin
-
-    username admin privilege 15 secret <strong-password>'
+  remediation: |-
+    no username <user>
+    username <user> privilege 1 secret <strong-password>
   explanation: This account has full administrative rights and its password is stored
     as type 0, meaning plaintext. Use the secret keyword so the password is hashed.
 - id: CIS-NET-008
@@ -107,12 +114,12 @@
     attribute: is_default_string
     operator: equals
     value: false
-  remediation: no snmp-server community public RO
-  explanation: The community string 'public' is the first value any scanner tries.
-    It exposes the full running configuration, interface list, routing table and ARP
-    cache to anyone who can reach UDP/161.
+  remediation: no snmp-server community <default-community>
+  explanation: Default community strings such as 'public' and 'private' are the first values
+    any scanner tries. A match exposes the running configuration, interface list, routing table
+    and ARP cache to anyone who can reach UDP/161.
 - id: CIS-NET-009
-  title: SNMP read-write community uses a default string
+  title: SNMP read-write community configured
   applies_to: snmp_community
   cis_control: CIS Cisco IOS 2.2.2 - Do not use default or read-write SNMP community
     strings
@@ -121,10 +128,10 @@
     attribute: access
     operator: not_equals
     value: RW
-  remediation: no snmp-server community private RW
-  explanation: A read-write community is a guessable credential that permits configuration
-    changes over UDP with no logging and no session. This is remote device control,
-    not monitoring.
+  remediation: no snmp-server community <rw-community>
+  explanation: A read-write community permits configuration changes over UDP with no session
+    and no per-user logging, protected only by a string sent in cleartext. This is remote device
+    control, not monitoring.
 - id: CIS-NET-011
   title: No syslog server configured
   applies_to: logging
@@ -134,9 +141,9 @@
     attribute: hosts
     operator: min_length
     value: 1
-  remediation: 'logging host 10.10.0.200
-
-    logging trap informational'
+  remediation: |-
+    logging host <syslog-server-ip>
+    logging trap informational
   explanation: Nothing is sent off-box, so administrative logins and configuration
     changes exist only in a buffer that is cleared on reboot and editable by anyone
     with privileged access.
@@ -149,13 +156,11 @@
     attribute: authenticated
     operator: equals
     value: true
-  remediation: 'ntp authenticate
-
+  remediation: |-
     ntp authentication-key 1 md5 <key>
-
     ntp trusted-key 1
-
-    ntp server 10.10.0.250 key 1'
+    ntp authenticate
+    ntp server <ntp-server-ip> key 1
   explanation: Time is accepted from an unauthenticated source. An attacker who can
     spoof NTP can shift the clock and desynchronise every timestamp used to correlate
     logs during an investigation.
@@ -229,7 +234,7 @@
     attribute: servers
     operator: min_length
     value: 1
-  remediation: ntp server 10.10.0.250
+  remediation: ntp server <ntp-server-ip>
   explanation: Without a time source, log timestamps drift and cannot be correlated
     with any other device during an investigation.
 - id: CIS-NET-019
@@ -241,7 +246,9 @@
     attribute: login_method
     operator: not_equals
     value: none
-  remediation: "line vty 0 4\n login authentication default"
+  remediation: |-
+    line vty 0 15
+     login authentication default
   explanation: A VTY line with no login requirement grants a shell to anyone who can
     reach the port, with no credential at all.
 - id: CIS-NET-020
@@ -252,7 +259,7 @@
   check:
     attribute: hostname
     operator: exists
-  remediation: hostname EDGE-RTR-01
+  remediation: hostname <device-name>
   explanation: A device left on its default hostname is hard to identify in logs and
     in an inventory, which slows every incident response.
 - id: CIS-NET-021
@@ -263,7 +270,7 @@
   check:
     attribute: os_version
     operator: exists
-  remediation: '# informational - version is read from the config header'
+  remediation: '! Informational: export the full running-config so its "version" line is included.'
   explanation: The running version determines which CVEs apply, so an audit that cannot
     determine it cannot assess patch exposure.
 - id: CIS-NET-022
@@ -275,7 +282,10 @@
     attribute: versions_in_use
     operator: not_contains
     value: v1
-  remediation: Configure snmp-server group with v3 auth and priv
+  remediation: |-
+    snmp-server group <group> v3 priv
+    snmp-server user <user> <group> v3 auth sha <auth-pass> priv aes 128 <priv-pass>
+    no snmp-server community <community>
   explanation: SNMP v1 and v2c transmit community strings in plaintext. An attacker
     capturing traffic can gain full read or write access to the device configuration.
 - id: CIS-NET-023
@@ -447,13 +457,11 @@
     attribute: access_class
     operator: exists
     value: true
-  remediation: 'ip access-list standard MGMT-HOSTS
-
-    permit 10.10.0.0 0.0.0.255
-
-    line vty 0 4
-
-    access-class MGMT-HOSTS in'
+  remediation: |-
+    ip access-list standard MGMT-HOSTS
+     permit <mgmt-network> <wildcard-mask>
+    line vty 0 15
+     access-class MGMT-HOSTS in
   explanation: AC-3 requires access to be enforced at the point of entry, not left
     to authentication alone. With no access-class, every network that can route to
     this device can open a management session and attempt credentials. The ACL is
@@ -469,9 +477,9 @@
     attribute: hosts
     operator: min_length
     value: 1
-  remediation: 'logging host 10.10.0.200
-
-    logging trap informational'
+  remediation: |-
+    logging host <syslog-server-ip>
+    logging trap informational
   explanation: AU-2 requires audit records to be generated and retained. Logs held
     only in a local buffer are cleared on reboot and editable by anyone with
     privileged access, so the record of an intrusion is under the control of whoever

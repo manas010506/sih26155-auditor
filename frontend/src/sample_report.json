@@ -44,7 +44,7 @@
         "snippet": "transport input telnet ssh"
       },
       "cis_control": "CIS Cisco IOS 1.1.5 - Set transport input ssh on VTY lines",
-      "remediation_template": "line vty 0 4\n transport input ssh",
+      "remediation_template": "line vty 0 15\n transport input ssh",
       "explanation": "Telnet carries usernames and passwords in cleartext. Any device on the path between an administrator and this router can read the enable password and take control. Restrict VTY transport to SSH only."
     },
     {
@@ -70,8 +70,8 @@
         "snippet": "exec-timeout 0 0"
       },
       "cis_control": "CIS Cisco IOS 1.1.6 - Set exec-timeout to 10 minutes or less",
-      "remediation_template": "line vty 0 4\n exec-timeout 10 0",
-      "explanation": "exec-timeout 0 0 disables the idle timer, so an abandoned session stays authenticated indefinitely and can be reused by anyone with access to that terminal."
+      "remediation_template": "line vty 0 15\n exec-timeout 10 0",
+      "explanation": "The idle timeout on this line is disabled or longer than 10 minutes, so an abandoned session stays authenticated and can be reused by anyone with access to that terminal."
     },
     {
       "rule_id": "CIS-NET-004",
@@ -83,7 +83,7 @@
         "snippet": "line vty 0 4"
       },
       "cis_control": "CIS Cisco IOS 1.1.4 - Apply an access-class to VTY lines",
-      "remediation_template": "ip access-list standard MGMT-HOSTS\n permit 10.10.0.0 0.0.0.255\nline vty 0 4\n access-class MGMT-HOSTS in",
+      "remediation_template": "ip access-list standard MGMT-HOSTS\n permit <mgmt-network> <wildcard-mask>\nline vty 0 15\n access-class MGMT-HOSTS in",
       "explanation": "No ACL limits who may open a management session, so the management plane is reachable from every network that can route to this device, including the WAN interface."
     },
     {
@@ -122,7 +122,7 @@
         "snippet": "username admin privilege 15 password 0 admin123"
       },
       "cis_control": "CIS Cisco IOS 1.1.2 - Store local user passwords using irreversible encryption",
-      "remediation_template": "no username admin\nusername admin privilege 15 secret <strong-password>",
+      "remediation_template": "no username <user>\nusername <user> privilege 1 secret <strong-password>",
       "explanation": "This account has full administrative rights and its password is stored as type 0, meaning plaintext. Use the secret keyword so the password is hashed."
     },
     {
@@ -135,12 +135,12 @@
         "snippet": "snmp-server community public RO"
       },
       "cis_control": "CIS Cisco IOS 2.2.1 - Do not use default SNMP community strings",
-      "remediation_template": "no snmp-server community public RO",
-      "explanation": "The community string 'public' is the first value any scanner tries. It exposes the full running configuration, interface list, routing table and ARP cache to anyone who can reach UDP/161."
+      "remediation_template": "no snmp-server community <default-community>",
+      "explanation": "Default community strings such as 'public' and 'private' are the first values any scanner tries. A match exposes the running configuration, interface list, routing table and ARP cache to anyone who can reach UDP/161."
     },
     {
       "rule_id": "CIS-NET-009",
-      "title": "SNMP read-write community uses a default string",
+      "title": "SNMP read-write community configured",
       "severity": "critical",
       "resource_id": "snmp-private",
       "raw_ref": {
@@ -148,8 +148,8 @@
         "snippet": "snmp-server community private RW"
       },
       "cis_control": "CIS Cisco IOS 2.2.2 - Do not use default or read-write SNMP community strings",
-      "remediation_template": "no snmp-server community private RW",
-      "explanation": "A read-write community is a guessable credential that permits configuration changes over UDP with no logging and no session. This is remote device control, not monitoring."
+      "remediation_template": "no snmp-server community <rw-community>",
+      "explanation": "A read-write community permits configuration changes over UDP with no session and no per-user logging, protected only by a string sent in cleartext. This is remote device control, not monitoring."
     },
     {
       "rule_id": "CIS-NET-011",
@@ -158,7 +158,7 @@
       "resource_id": "logging",
       "raw_ref": null,
       "cis_control": "CIS Cisco IOS 3.1.1 - Configure a remote syslog host",
-      "remediation_template": "logging host 10.10.0.200\nlogging trap informational",
+      "remediation_template": "logging host <syslog-server-ip>\nlogging trap informational",
       "explanation": "Nothing is sent off-box, so administrative logins and configuration changes exist only in a buffer that is cleared on reboot and editable by anyone with privileged access."
     },
     {
@@ -171,7 +171,7 @@
         "snippet": "ntp server 10.10.0.250"
       },
       "cis_control": "CIS Cisco IOS 3.2.1 - Use authenticated NTP",
-      "remediation_template": "ntp authenticate\nntp authentication-key 1 md5 <key>\nntp trusted-key 1\nntp server 10.10.0.250 key 1",
+      "remediation_template": "ntp authentication-key 1 md5 <key>\nntp trusted-key 1\nntp authenticate\nntp server <ntp-server-ip> key 1",
       "explanation": "Time is accepted from an unauthenticated source. An attacker who can spoof NTP can shift the clock and desynchronise every timestamp used to correlate logs during an investigation."
     },
     {
@@ -230,7 +230,7 @@
         "snippet": "snmp-server community public RO"
       },
       "cis_control": "CIS Cisco IOS 2.2.0 - Use SNMPv3",
-      "remediation_template": "Configure snmp-server group with v3 auth and priv",
+      "remediation_template": "snmp-server group <group> v3 priv\nsnmp-server user <user> <group> v3 auth sha <auth-pass> priv aes 128 <priv-pass>\nno snmp-server community <community>",
       "explanation": "SNMP v1 and v2c transmit community strings in plaintext. An attacker capturing traffic can gain full read or write access to the device configuration."
     },
     {

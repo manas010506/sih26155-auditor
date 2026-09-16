@@ -1,3 +1,4 @@
+import json
 """Repo path: tests/test_api.py     Owner: Manas
 
 Guards the seam between the UI and the engine. Uses Flask's test client, so it
@@ -49,9 +50,13 @@ def test_terraform_returns_the_terraform_report(client):
     assert r.status_code == 200
     body = r.get_json()
     assert body["source"]["type"] == "terraform_aws"
-    assert len(body["findings"]) == 20
-    assert body["compliance_score"] == 15
-    assert len(body["attack_paths"]) == 3
+    # Compare with the committed fixture, not numbers that go stale
+    # whenever the rules change. build_fixtures_aws.py regenerates it.
+    expected = json.loads((ROOT / "samples" / "sample_report_aws.json")
+                          .read_text(encoding="utf-8"))
+    assert len(body["findings"]) == len(expected["findings"])
+    assert body["compliance_score"] == expected["compliance_score"]
+    assert len(body["attack_paths"]) == len(expected["attack_paths"])
 
 
 def test_a_clean_config_scores_higher_than_a_bad_one(client):
