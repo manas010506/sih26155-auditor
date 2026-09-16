@@ -4,42 +4,50 @@
     {
       "control": "CIS 1.1.1",
       "note": "enable password used instead of secret",
-      "line": 7
+      "line": 6,
+      "rule": "CIS-NET-006"
     },
     {
       "control": "CIS 1.3.1",
       "note": "no login banner",
-      "line": 0
+      "line": 0,
+      "rule": "CIS-NET-014"
     },
     {
       "control": "CIS 1.3.3",
       "note": "no motd banner",
-      "line": 0
+      "line": 0,
+      "rule": "CIS-NET-025"
     },
     {
       "control": "CIS 1.1.4",
       "note": "vty uses simple password/login",
-      "line": 42
+      "line": 0,
+      "rule": "CIS-NET-013"
     },
     {
       "control": "CIS 1.2.2",
       "note": "transport input telnet enabled",
-      "line": 45
+      "line": 55,
+      "rule": "CIS-NET-001"
     },
     {
       "control": "CIS 1.2.8",
       "note": "no exec-timeout on vty",
-      "line": 42
+      "line": 52,
+      "rule": "CIS-NET-003"
     },
     {
       "control": "CIS 1.5.2",
       "note": "default SNMP community public RO",
-      "line": 38
+      "line": 47,
+      "rule": "CIS-NET-008"
     },
     {
       "control": "CIS 1.2.1",
       "note": "ip http server enabled",
-      "line": 11
+      "line": 11,
+      "rule": "CIS-NET-002"
     }
   ]
 }

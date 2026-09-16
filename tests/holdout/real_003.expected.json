@@ -4,27 +4,32 @@
     {
       "control": "CIS 1.3.3",
       "note": "no motd banner",
-      "line": 0
+      "line": 0,
+      "rule": "CIS-NET-025"
     },
     {
       "control": "CIS 1.1.4",
       "note": "no aaa new-model/authentication default",
-      "line": 0
+      "line": 0,
+      "rule": "CIS-NET-013"
     },
     {
       "control": "CIS 1.5.2",
       "note": "uses v2c community LdnRoOnly",
-      "line": 37
+      "line": 38,
+      "rule": "CIS-NET-022"
     },
     {
       "control": "CIS 2.1.2",
       "note": "no cdp run missing",
-      "line": 0
+      "line": 0,
+      "rule": "CIS-NET-015"
     },
     {
       "control": "CIS 2.3.1",
       "note": "ntp authenticate missing",
-      "line": 54
+      "line": 59,
+      "rule": "CIS-NET-012"
     }
   ]
 }

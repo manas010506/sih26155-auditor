@@ -4,27 +4,32 @@
     {
       "control": "CIS 2.1.1.1.3",
       "note": "RSA modulus 1024 < 2048",
-      "line": 14
+      "line": 13,
+      "rule": null
     },
     {
       "control": "CIS 3.1.2",
       "note": "ip proxy-arp enabled on interfaces",
-      "line": 24
+      "line": 28,
+      "rule": null
     },
     {
       "control": "CIS 1.5.2",
       "note": "default SNMP community public RO",
-      "line": 38
+      "line": 46,
+      "rule": "CIS-NET-008"
     },
     {
       "control": "CIS 2.3.1",
       "note": "ntp authenticate missing",
-      "line": 45
+      "line": 53,
+      "rule": "CIS-NET-012"
     },
     {
       "control": "CIS 1.2.8",
       "note": "exec-timeout 45 > 10",
-      "line": 49
+      "line": 61,
+      "rule": "CIS-NET-003"
     }
   ]
 }
