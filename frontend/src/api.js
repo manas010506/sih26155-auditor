@@ -9,7 +9,7 @@ export function sourceTypeFor(filename) {
   return null;
 }
 
-export async function audit(configText, sourceType, framework) {
+export async function exportReport(configText, sourceType, framework, filename) {
   const res = await fetch(`${BASE}/api/audit`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

@@ -10,6 +10,7 @@ Run:  pip install flask flask-cors
       flask --app api/app.py run --port 5000
 """
 import json
+import re
 import pathlib
 from engine.report import build_report
 
@@ -26,6 +27,13 @@ CORS(app)
 SAMPLE = pathlib.Path("samples/sample_report.json")
 MAX_BYTES = 2 * 1024 * 1024
 VALID_TYPES = {"cisco_ios", "terraform_aws","juniper_junos"}
+
+def _clean_filename(value):
+    """Base name only, or None so run_audit falls back to its default."""
+    if not isinstance(value, str):
+        return None
+    name = re.split(r"[\\/]", value.strip())[-1][:255]
+    return name or None
 
 
 @app.get("/api/health")
@@ -49,7 +57,9 @@ def audit():
         return jsonify(error=f"source_type must be one of {sorted(VALID_TYPES)}"), 400
 
     try:
-        return jsonify(run_audit(config_text, source_type, framework=body.get("framework")))
+        return jsonify(run_audit(config_text, source_type,
+          filename=_clean_filename(body.get("filename")),
+          framework=body.get("framework")))
     except Exception as exc:                      # never leak a stack trace
         app.logger.exception("audit failed")
         return jsonify(error=f"audit failed: {type(exc).__name__}"), 500
@@ -71,7 +81,9 @@ def report():
         return jsonify(error=f"source_type must be one of {sorted(VALID_TYPES)}"), 400
 
     try:
-        result = run_audit(config_text, source_type, framework=body.get("framework"))
+        result = run_audit(config_text, source_type,
+          filename=_clean_filename(body.get("filename")),
+          framework=body.get("framework"))
         pdf = build_report(result)
     except Exception as exc:                      # never leak a stack trace
         app.logger.exception("report failed")

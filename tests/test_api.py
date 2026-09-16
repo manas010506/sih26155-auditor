@@ -97,3 +97,19 @@ def test_binary_garbage_does_not_500(client):
     """A judge will upload a .jpg at some point."""
     r = post(client, config_text="\x00\x01\x02 not a config", source_type="cisco_ios")
     assert r.status_code != 500
+
+def test_filename_is_passed_through(client):
+    r = post(client, config_text=CISCO, source_type="cisco_ios", filename="demo_aruba.cfg")
+    assert r.get_json()["source"]["filename"] == "demo_aruba.cfg"
+
+
+def test_filename_path_is_stripped(client):
+    r = post(client, config_text=CISCO, source_type="cisco_ios",
+             filename="C:\\Users\\x\\edge.cfg")
+    assert r.get_json()["source"]["filename"] == "edge.cfg"
+
+
+def test_non_string_filename_does_not_break_the_audit(client):
+    r = post(client, config_text=CISCO, source_type="cisco_ios", filename=42)
+    assert r.status_code == 200
+    assert isinstance(r.get_json()["source"]["filename"], str)

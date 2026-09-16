@@ -104,8 +104,7 @@ const Upload = () => {
           config_text: await t.file.text(),
           source_type: t.type,
         })));
-        const result = await auditBatch(configs, defaultFramework);
-
+        const result = await audit(text, detected.type, defaultFramework, detected.files[0].name);
         // Inject config_text into each result's report so ReportView has access to it
         const enrichedResults = (result.results ?? []).map((r, i) => {
           if (r.report) {

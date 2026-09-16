@@ -425,7 +425,7 @@ const ReportView = () => {
       const sourceType = reportData.source?.type || 'cisco_ios';
       const framework = reportData.score_breakdown?.frameworks?.[0] || 'CIS';
 
-      const blob = await exportReport(configText, sourceType, framework);
+      const blob = await exportReport(configText, sourceType, framework, reportData.source?.filename);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
