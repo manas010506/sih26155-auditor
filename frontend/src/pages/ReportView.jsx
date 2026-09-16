@@ -6,6 +6,7 @@ import SeverityLED from '../components/SeverityLED';
 import EmptyStateCard from '../components/EmptyStateCard';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle, AlignmentType } from 'docx';
 import { exportReport } from '../api';
+import { assessment } from '../assessment';
 
 /* Animated count-up for report numbers */
 const CountUp = ({ end, duration = 1.2 }) => {
@@ -276,9 +277,7 @@ const ReportView = () => {
                         children: [
                           new TextRun({ text: `Compliance Score: `, bold: true, size: 24 }),
                           new TextRun({
-                            text: (reportData.score_breakdown?.not_assessable || reportData.compliance_score == null)
-                              ? 'Not assessed'
-                              : `${reportData.compliance_score}/100`,
+                            text: assessment(reportData).label,
                             bold: true, size: 24, color: '10141A',
                           }),
                         ],
@@ -344,8 +343,10 @@ const ReportView = () => {
             spacing: { before: 400, after: 200 },
           }),
           ...(findings.length === 0 ? [
-            reportData.score_breakdown?.not_assessable
+            assessment(reportData).kind === 'not_assessed'
               ? new Paragraph({ children: [new TextRun({ text: 'Not assessed — no recognised resources were found in this configuration, so no control could be evaluated.', italics: true })] })
+              : assessment(reportData).kind === 'partial'
+              ? new Paragraph({ children: [new TextRun({ text: `Partial assessment — only ${assessment(reportData).evaluated} of ${assessment(reportData).total} controls could be evaluated from the lines this parser recognised. None of those failed; the remaining controls were not checked.`, italics: true })] })
               : new Paragraph({ children: [new TextRun({ text: 'No security findings detected in this configuration.', italics: true })] })
           ] : findings.map((f, idx) => {
             const severityColors = {
@@ -487,7 +488,7 @@ const ReportView = () => {
         <div>
           <div className="heading-sm">Compliance Report</div>
           <div className="label" style={{ marginTop: '2px' }}>
-            {totalFindings} findings · compliance score: {reportData.compliance_score ?? 'not assessed'}
+            {totalFindings} findings · {assessment(reportData).label}
           </div>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -674,7 +675,7 @@ const ReportView = () => {
                   { label: 'Checks Run', value: reportData.score_breakdown?.rules_evaluated ?? '—', color: 'var(--ink)' },
                   { label: 'Passed', value: reportData.score_breakdown?.rules_passed ?? '—', color: 'var(--trace)' },
                   { label: 'Failed', value: totalFindings, color: 'var(--severity-critical)' },
-                  { label: 'Score', value: reportData.compliance_score ?? '—', color: 'var(--ink)' },
+                  { label: 'Score', value: assessment(reportData).kind === 'scored' ? reportData.compliance_score : assessment(reportData).short, color: 'var(--ink)' },
                 ].map(({ label, value, color }) => (
                   <div key={label} style={{ flex: 1, backgroundColor: 'var(--panel)', padding: '16px', textAlign: 'center' }}>
                     <div className="mono" style={{ fontSize: '28px', fontWeight: 700, color, lineHeight: 1, marginBottom: '4px' }}>
@@ -742,7 +743,7 @@ const ReportView = () => {
                     </div>
                     <span className="text-ink-dim">
                       {reportData?.unparsed?.length} lines were not recognised. Rules that depend
-                      on them could not be evaluated, so this score is a floor, not a verdict.
+                      on them could not be evaluated, so the result covers only what was read.
                       {' '}<Link to="/audit/training" style={{ color: 'var(--trace)' }}>Teach the parser</Link>.
                     </span>
                   </div>
@@ -762,12 +763,22 @@ const ReportView = () => {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {findings.length === 0 ? (
-                  reportData.score_breakdown?.not_assessable ? (
+                  assessment(reportData).kind === 'not_assessed' ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px', gap: '12px' }}>
                       <IconAlertTriangle size={32} style={{ color: 'var(--severity-medium)' }} />
                       <div className="mono" style={{ fontSize: '14px', color: 'var(--severity-medium)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Not assessed</div>
                       <div style={{ fontSize: '13px', color: 'var(--ink-dim)', textAlign: 'center', maxWidth: '420px' }}>
                         No recognised resources were found in this configuration, so no control could be evaluated. See the unrecognised lines below.
+                      </div>
+                    </div>
+                  ) : assessment(reportData).kind === 'partial' ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px', gap: '12px' }}>
+                      <IconAlertTriangle size={32} style={{ color: 'var(--severity-medium)' }} />
+                      <div className="mono" style={{ fontSize: '14px', color: 'var(--severity-medium)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                        Partial assessment · {assessment(reportData).evaluated} of {assessment(reportData).total} controls
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--ink-dim)', textAlign: 'center', maxWidth: '460px' }}>
+                        None of the controls that could be evaluated failed. The rest were not checked, because this parser did not recognise the lines they depend on. This is not a compliance verdict.
                       </div>
                     </div>
                   ) : (

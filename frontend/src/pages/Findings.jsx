@@ -4,6 +4,7 @@ import FindingsTable from '../components/FindingsTable';
 import SeverityDashboard from '../components/SeverityDashboard';
 import EmptyStateCard from '../components/EmptyStateCard';
 import { IconSearch } from '@tabler/icons-react';
+import { assessment } from '../assessment';
 
 const Findings = () => {
   const { reportData } = useOutletContext();
@@ -57,8 +58,12 @@ const Findings = () => {
     <div className="h-full flex flex-col">
       <SeverityDashboard findings={reportData?.findings} />
       <div className="flex-1 overflow-hidden">
-        <FindingsTable findings={reportData?.findings} notAssessable={reportData?.score_breakdown?.not_assessable} />      </div>
-    </div>
+        <FindingsTable
+          findings={reportData?.findings}
+          notAssessable={reportData?.score_breakdown?.not_assessable}
+          partial={assessment(reportData).kind === 'partial' ? assessment(reportData) : null}
+        />
+      </div>    </div>
   );
 };
 

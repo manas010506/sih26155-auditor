@@ -142,7 +142,7 @@ const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
 );
 
 /* ── Main component ──────────────────────────────────────────── */
-const FindingsTable = ({ findings, notAssessable }) => {
+const FindingsTable = ({ findings, notAssessable, partial }) => {
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [sortField, setSortField] = useState('severity');
   const [sortDir, setSortDir] = useState('desc');
@@ -270,6 +270,16 @@ const FindingsTable = ({ findings, notAssessable }) => {
               <div className="mono" style={{ fontSize: '14px', color: 'var(--severity-medium)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Not assessed</div>
               <div style={{ fontSize: '13px', color: 'var(--ink-dim)', textAlign: 'center', maxWidth: '420px' }}>
                 No recognised resources were found in this configuration, so no control could be evaluated.
+              </div>
+            </div>
+          ) : partial ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '48px', gap: '12px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--severity-medium)' }} />
+              <div className="mono" style={{ fontSize: '14px', color: 'var(--severity-medium)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Partial assessment · {partial.evaluated} of {partial.total} controls
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--ink-dim)', textAlign: 'center', maxWidth: '460px' }}>
+                No failures among the controls that could be evaluated. The rest depend on lines this parser did not recognise; teach them on the Training page.
               </div>
             </div>
           ) : (

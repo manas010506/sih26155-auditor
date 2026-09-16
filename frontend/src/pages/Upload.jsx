@@ -6,6 +6,7 @@ import { audit, auditBatch } from '../api';
 import TactileButton from '../components/TactileButton';
 import UploadBackground from '../components/UploadBackground';
 import { useSettings } from '../context/SettingsContext';
+import { assessment } from '../assessment';
 
 /* Detect source type from file extension */
 const detectSourceType = (filename) => {
@@ -391,8 +392,8 @@ const Upload = () => {
                           return (
                             <tr key={idx} style={{ borderBottom: '1px solid var(--wire)' }}>
                               <td className="mono" style={{ padding: '8px 12px' }}>{row.filename}</td>
-                              <td className="mono" style={{ padding: '8px 12px', textAlign: 'right', color: scoreColour(row.compliance_score), fontWeight: 600 }}>
-                                {row.compliance_score}
+                              <td className="mono" style={{ padding: '8px 12px', textAlign: 'right', color: row.compliance_score == null ? 'var(--ink-dim)' : scoreColour(row.compliance_score), fontWeight: 600 }}>
+                                {row.compliance_score ?? assessment(row.report).short}
                               </td>
                               <td className="mono" style={{ padding: '8px 12px', textAlign: 'right' }}>{row.findings}</td>
                               <td className="mono" style={{ padding: '8px 12px', textAlign: 'right', color: row.critical > 0 ? 'var(--severity-critical)' : 'var(--ink-dim)' }}>
