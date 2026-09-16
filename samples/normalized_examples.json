@@ -127,6 +127,14 @@
           "is_default_string": true
         },
         "attribute_refs": {
+          "community": {
+            "line": 54,
+            "snippet": "snmp-server community public RO"
+          },
+          "access": {
+            "line": 54,
+            "snippet": "snmp-server community public RO"
+          },
           "is_default_string": {
             "line": 54,
             "snippet": "snmp-server community public RO"
@@ -147,7 +155,15 @@
           "is_default_string": true
         },
         "attribute_refs": {
+          "community": {
+            "line": 55,
+            "snippet": "snmp-server community private RW"
+          },
           "access": {
+            "line": 55,
+            "snippet": "snmp-server community private RW"
+          },
+          "is_default_string": {
             "line": 55,
             "snippet": "snmp-server community private RW"
           }

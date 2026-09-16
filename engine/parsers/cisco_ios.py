@@ -171,6 +171,7 @@ class CiscoIOSParser(Parser):
             target.setdefault("attribute_refs", {})[mapping["attribute"]] = {
                 "line": linenum + 1,
                 "snippet": text,
+                "learned": True,
             }
             self._claimed.add(linenum)
             
@@ -521,12 +522,12 @@ class CiscoIOSParser(Parser):
             self._claim(obj)
             parts = obj.text.strip().split()
 
-            # snmp-server community STRING ACCESS [ACL]
-            if len(parts) < 4:
+            # snmp-server community STRING [ACCESS] [ACL]; IOS defaults to RO.
+            if len(parts) < 3:
                 continue
 
             community = parts[2]
-            access = parts[3]
+            access = parts[3].upper() if len(parts) > 3 else "RO"
             acl = parts[4] if len(parts) > 4 else None
 
             is_default = community.lower() in {
@@ -537,11 +538,9 @@ class CiscoIOSParser(Parser):
                 "secret",
             }
 
-            refs = (
-                {"access": self._ref(obj)}
-                if access.upper() == "RW"
-                else {"is_default_string": self._ref(obj)}
-            )
+            # The line sets every one of these, so every one has evidence.
+            ref = self._ref(obj)
+            refs = {"community": ref, "access": ref, "is_default_string": ref}
 
             out.append({
                 "id": f"snmp-{community}",

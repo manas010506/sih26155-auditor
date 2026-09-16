@@ -136,22 +136,41 @@ def _code_lines(text: str) -> list[str]:
             if l.strip() and not l.lstrip().startswith(("!", "#"))]
 
 
+def _learned_lines(doc: dict) -> set:
+    """Lines recognised only through a learned mapping."""
+    return {ref["line"]
+            for r in doc["resources"]
+            for ref in (r.get("attribute_refs") or {}).values()
+            if isinstance(ref, dict) and ref.get("learned")}
+
+
 def _recognised_share(text: str, doc: dict) -> float:
+    """Share of code lines the parser itself recognised. A taught line is
+    evidence, but it does not make a file the parser's native format:
+    otherwise teaching a few lines would switch a foreign file back to being
+    scored against the parser's defaults."""
     total = len(_code_lines(text))
     if total == 0:
         return 0.0
-    return max(0.0, 1 - len(doc.get("_unparsed", [])) / total)
+    not_native = len(doc.get("_unparsed", [])) + len(_learned_lines(doc))
+    return max(0.0, 1 - not_native / total)
+
+
+def _needed_attributes(rule: dict) -> set:
+    when = rule.get("when") or {}
+    return {rule["check"]["attribute"], *(when if isinstance(when, dict) else {})}
 
 
 def _evidenced_only(doc: dict, rules: list[dict]) -> tuple[dict, list[dict]]:
     """For a file the parser does not natively understand, keep only what a
-    line in the file supports. A parser's default resources say nothing about
-    a file it could not read, so a missing value there is not a finding."""
+    line in the file supports. A rule is evaluated only when every attribute
+    it reads, its `when` condition included, is backed by a line; otherwise
+    a missing condition lets the rule pass on nothing."""
     kept = [r for r in doc["resources"]
             if r.get("raw_ref") is not None or r.get("attribute_refs")]
     evidenced = [rule for rule in rules
                  if any(r["type"] == rule["applies_to"]
-                        and rule["check"]["attribute"] in (r.get("attribute_refs") or {})
+                        and _needed_attributes(rule) <= set(r.get("attribute_refs") or {})
                         for r in kept)]
     return {**doc, "resources": kept}, evidenced
 

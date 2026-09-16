@@ -417,6 +417,7 @@ class JuniperJunOSParser(Parser):
             target.setdefault("attribute_refs", {})[mapping["attribute"]] = {
                 "line": i + 1,
                 "snippet": text,
+                "learned": True,
             }
             self._claimed.add(i)
 
