@@ -1,14 +1,6 @@
 // Repo path: frontend/src/api.js     Owner: Sanavi (Vedant consumes it)
 const BASE = "http://localhost:5000";
 
-export function sourceTypeFor(filename) {
-  const ext = filename.toLowerCase().split(".").pop();
-  if (ext === "tf") return "terraform_aws";
-  if (ext === "conf") return "juniper_junos";
-  if (["cfg", "conf", "txt"].includes(ext)) return "cisco_ios";
-  return null;
-}
-
 export async function audit(configText, sourceType, framework, filename) {
   const res = await fetch(`${BASE}/api/audit`, {
     method: "POST",

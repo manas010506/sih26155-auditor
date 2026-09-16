@@ -185,7 +185,8 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None,
     never depend on a network call or a cache state.
 
     framework filters the ruleset to one benchmark (CIS, NIST, STIG,
-    ISO27001). None evaluates everything loaded, which is the default.
+    ISO27001). None means DEFAULT_FRAMEWORK (CIS); each framework is
+    scored on its own, so results never mix benchmarks.
     """
     if source_type not in SOURCES:
         raise ValueError(

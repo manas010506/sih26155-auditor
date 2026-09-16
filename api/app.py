@@ -214,8 +214,8 @@ def frameworks():
     """Frameworks the loaded rulesets actually cover.
 
     Derived from the rules rather than hardcoded, so the selector can only offer
-    something we can genuinely evaluate against. Today that is CIS alone —
-    adding NIST means authoring YAML, not changing code.
+    something we can genuinely evaluate against. Today that is CIS, plus a
+    partial NIST set; adding a framework means authoring YAML, not changing code.
     """
     return jsonify(frameworks=available_frameworks())
 
