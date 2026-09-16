@@ -68,8 +68,9 @@ def _cover(result: dict, st) -> list:
     flow.append(Spacer(1, 8 * mm))
 
     rows = [(label, device[key]) for label, key in DEVICE_ROWS if key in device]
-    rows.append(("Compliance score", f"{result['compliance_score']} / 100"))
-
+    _score = result.get("compliance_score")
+    rows.append(("Compliance score",
+                 "Not assessed" if _score is None else f"{_score} / 100"))
     t = Table([[Paragraph(f"<b>{k}</b>", st["Body"]), Paragraph(str(v), st["Body"])]
                for k, v in rows], colWidths=[45 * mm, 110 * mm])
     t.setStyle(TableStyle([
@@ -294,9 +295,7 @@ def build_report(result: dict) -> bytes:
     flow += _framework_summary(result, st)
     flow.append(PageBreak())
     flow += _findings(result, st)
-    flow += _findings(result, st)
     flow += _passed_controls(result, st)
-    flow += _attack_paths(result, st)
     flow += _attack_paths(result, st)
     flow += _unparsed(result, st)
 

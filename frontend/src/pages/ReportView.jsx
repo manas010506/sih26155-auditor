@@ -45,7 +45,7 @@ const CountUp = ({ end, duration = 1.2 }) => {
 const CopyButton = ({ text }) => {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
-    navigator.clipboard.writeText(text).catch(() => {});
+    navigator.clipboard.writeText(text).catch(() => { });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -241,7 +241,7 @@ const ReportView = () => {
             children: [new TextRun({ text: `SIH-26155 · NTRO AUDIT REPORT`, bold: true, size: 22, color: '3FA9A0', font: 'Helvetica' })],
             spacing: { after: 400 },
           }),
-          
+
           // Metadata Key-Value Block
           new Paragraph({
             children: [
@@ -348,7 +348,7 @@ const ReportView = () => {
               low: '7C8CA6'
             };
             const sevColor = severityColors[f.severity?.toLowerCase()] || '333333';
-            
+
             return [
               new Paragraph({
                 spacing: { before: 400, after: 100 },
@@ -374,7 +374,7 @@ const ReportView = () => {
                         new TableCell({
                           shading: { fill: "F4F4F5" },
                           margins: { top: 150, bottom: 150, left: 150, right: 150 },
-                          children: f.remediation_template.split('\n').map(line => 
+                          children: f.remediation_template.split('\n').map(line =>
                             new Paragraph({
                               children: [new TextRun({ text: line, font: 'Consolas', size: 20 })],
                               spacing: { after: 0 }
@@ -417,7 +417,7 @@ const ReportView = () => {
       const configText = reportData.config_text;
       const sourceType = reportData.source?.type || 'cisco_ios';
       const framework = reportData.score_breakdown?.frameworks?.[0] || 'CIS';
-      
+
       const blob = await exportReport(configText, sourceType, framework);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -546,13 +546,13 @@ const ReportView = () => {
                 overflow: 'hidden',
               }}>
                 {[
-                  ['Device',      device.hostname],
-                  ['Vendor',      device.vendor],
-                  ['OS',          device.os],
-                  ['OS Version',  device.os_version],
-                  ['Model',       device.model],
-                  ['Serial',      device.serial_number],
-                  ['Firmware',    device.firmware],
+                  ['Device', device.hostname],
+                  ['Vendor', device.vendor],
+                  ['OS', device.os],
+                  ['OS Version', device.os_version],
+                  ['Model', device.model],
+                  ['Serial', device.serial_number],
+                  ['Firmware', device.firmware],
                   ['Source Type', reportData.source?.type],
                 ].map(([label, value]) => (
                   <div key={label} style={{ backgroundColor: 'var(--panel)', padding: '10px 14px' }}>
@@ -664,10 +664,10 @@ const ReportView = () => {
               </h2>
               <div style={{ display: 'flex', gap: '1px', backgroundColor: 'var(--wire)', borderRadius: '4px', overflow: 'hidden' }}>
                 {[
-                  { label: 'Checks Run',       value: reportData.score_breakdown?.rules_evaluated ?? '—', color: 'var(--ink)' },
-                  { label: 'Passed',           value: reportData.score_breakdown?.rules_passed ?? '—',    color: 'var(--trace)' },
-                  { label: 'Failed',           value: totalFindings,                                      color: 'var(--severity-critical)' },
-                  { label: 'Score', value: reportData.compliance_score ?? '—',                 color: 'var(--ink)' },
+                  { label: 'Checks Run', value: reportData.score_breakdown?.rules_evaluated ?? '—', color: 'var(--ink)' },
+                  { label: 'Passed', value: reportData.score_breakdown?.rules_passed ?? '—', color: 'var(--trace)' },
+                  { label: 'Failed', value: totalFindings, color: 'var(--severity-critical)' },
+                  { label: 'Score', value: reportData.compliance_score ?? '—', color: 'var(--ink)' },
                 ].map(({ label, value, color }) => (
                   <div key={label} style={{ flex: 1, backgroundColor: 'var(--panel)', padding: '16px', textAlign: 'center' }}>
                     <div className="mono" style={{ fontSize: '28px', fontWeight: 700, color, lineHeight: 1, marginBottom: '4px' }}>
@@ -755,11 +755,21 @@ const ReportView = () => {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {findings.length === 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px', gap: '12px' }}>
-                    <IconShieldCheck size={32} style={{ color: 'var(--trace)' }} />
-                    <div className="mono" style={{ fontSize: '14px', color: 'var(--trace)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Compliant</div>
-                    <div style={{ fontSize: '13px', color: 'var(--ink-dim)' }}>No security findings detected in this configuration.</div>
-                  </div>
+                  reportData.score_breakdown?.not_assessable ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px', gap: '12px' }}>
+                      <IconAlertTriangle size={32} style={{ color: 'var(--severity-medium)' }} />
+                      <div className="mono" style={{ fontSize: '14px', color: 'var(--severity-medium)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Not assessed</div>
+                      <div style={{ fontSize: '13px', color: 'var(--ink-dim)', textAlign: 'center', maxWidth: '420px' }}>
+                        No recognised resources were found in this configuration, so no control could be evaluated. See the unrecognised lines below.
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px', gap: '12px' }}>
+                      <IconShieldCheck size={32} style={{ color: 'var(--trace)' }} />
+                      <div className="mono" style={{ fontSize: '14px', color: 'var(--trace)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Compliant</div>
+                      <div style={{ fontSize: '13px', color: 'var(--ink-dim)' }}>No security findings detected in this configuration.</div>
+                    </div>
+                  )
                 ) : (
                   findings.map((finding, idx) => (
                     <div
@@ -769,12 +779,11 @@ const ReportView = () => {
                         border: '1px solid var(--wire)',
                         borderRadius: '4px',
                         overflow: 'hidden',
-                        borderLeft: `3px solid ${
-                          finding.severity?.toLowerCase() === 'critical' ? 'var(--severity-critical)' :
-                          finding.severity?.toLowerCase() === 'high' ? 'var(--severity-high)' :
-                          finding.severity?.toLowerCase() === 'medium' ? 'var(--severity-medium)' :
-                          'var(--severity-low)'
-                        }`,
+                        borderLeft: `3px solid ${finding.severity?.toLowerCase() === 'critical' ? 'var(--severity-critical)' :
+                            finding.severity?.toLowerCase() === 'high' ? 'var(--severity-high)' :
+                              finding.severity?.toLowerCase() === 'medium' ? 'var(--severity-medium)' :
+                                'var(--severity-low)'
+                          }`,
                       }}
                     >
                       {/* Finding header row */}

@@ -404,7 +404,9 @@ const Sidebar = ({ score, breakdown, isCollapsed, setIsCollapsed, reportData }) 
                   <polyline points="14 2 14 8 20 8" />
                   <line x1="9" y1="15" x2="15" y2="15" />
                 </svg>
-                <span className="mono" style={{ fontSize: '10px', letterSpacing: '1px' }}>NO FILE LOADED</span>
+                <span className="mono" style={{ fontSize: '10px', letterSpacing: '1px' }}>
+                  {reportData && breakdown?.not_assessable ? 'NOT ASSESSED' : 'NO FILE LOADED'}
+                </span>
               </div>
             )}
           </div>

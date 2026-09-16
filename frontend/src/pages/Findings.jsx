@@ -57,8 +57,7 @@ const Findings = () => {
     <div className="h-full flex flex-col">
       <SeverityDashboard findings={reportData?.findings} />
       <div className="flex-1 overflow-hidden">
-        <FindingsTable findings={reportData?.findings} />
-      </div>
+        <FindingsTable findings={reportData?.findings} notAssessable={reportData?.score_breakdown?.not_assessable} />      </div>
     </div>
   );
 };
