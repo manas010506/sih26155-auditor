@@ -4,6 +4,7 @@ import { Drawer } from 'vaul';
 import { toast } from 'sonner';
 import { useSettings } from '../context/SettingsContext';
 import { getFrameworks } from '../api';
+import { APP_VERSION } from '../version';
 
 const SettingsModal = ({ isOpen, onClose }) => {
   const { defaultFramework, setDefaultFramework } = useSettings();
@@ -93,7 +94,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 <div className="bezel-panel" style={{ padding: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                     <span className="text-ink-dim">App Version</span>
-                    <span className="mono">v0.1.0-alpha</span>
+                    <span className="mono">{APP_VERSION}</span>
                   </div>
                 </div>
               </section>

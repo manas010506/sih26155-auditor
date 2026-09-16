@@ -313,11 +313,11 @@ const ReportView = () => {
               ['Device', device.hostname],
               ['Vendor', device.vendor],
               ['OS', device.os],
-              ['OS Version', device.os_version],
+              [reportData.source?.type === 'terraform_aws' ? 'Provider' : 'OS Version', device.os_version],
               ['Model', device.model],
-              ['Serial', device.serial_number],
+              ['Firmware', device.firmware],
               ['Source Type', reportData.source?.type]
-            ].map(([label, value]) => (
+            ].filter(([, value]) => value != null).map(([label, value]) => (
               new TableRow({
                 children: [
                   new TableCell({
@@ -557,13 +557,13 @@ const ReportView = () => {
                   ['Device', device.hostname],
                   ['Vendor', device.vendor],
                   ['OS', device.os],
-                  ['OS Version', device.os_version],
+                  [reportData.source?.type === 'terraform_aws' ? 'Provider' : 'OS Version', device.os_version],
                   ['Model', device.model],
                   ['Serial', device.serial_number],
                   ['Firmware', device.firmware],
                   ['Source Type', reportData.source?.type],
-                ].map(([label, value]) => (
-                  <div key={label} style={{ backgroundColor: 'var(--panel)', padding: '10px 14px' }}>
+                ].filter(([, value]) => value != null).map(([label, value], i, rows) => (
+                  <div key={label} style={{ backgroundColor: 'var(--panel)', padding: '10px 14px', gridColumn: rows.length % 2 && i === rows.length - 1 ? '1 / -1' : undefined }}>
                     <div className="label" style={{ marginBottom: '3px' }}>{label}</div>
                     <div className="value">{value ?? 'not in config'}</div>
                   </div>

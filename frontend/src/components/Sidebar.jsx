@@ -1,6 +1,7 @@
 import React from 'react';
 import { assessment } from '../assessment';
 import { NavLink, useLocation, useNavigate, Link } from 'react-router-dom';
+import { APP_VERSION } from '../version';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconUpload,
@@ -431,7 +432,7 @@ const Sidebar = ({ score, breakdown, isCollapsed, setIsCollapsed, reportData }) 
         marginTop: 'auto',
       }}>
         {!isCollapsed && (
-          <span className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)' }}>v0.1.0</span>
+          <span className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)' }}>{APP_VERSION}</span>
         )}
         <motion.button
           onClick={() => navigate('/login')}

@@ -172,7 +172,7 @@ const Upload = () => {
           <div style={{ fontSize: '14px', color: 'var(--ink-dim)' }}>
             {reportData && (
               <p className="label" style={{ marginTop: '10px' }}>
-                Currently showing results for ...
+                Currently showing results for {reportData.device?.hostname?.startsWith('Not available') ? (reportData.source?.filename ?? 'the previous file') : (reportData.device?.hostname ?? 'a previous file')} — uploading replaces them.
               </p>
             )}
           </div>
@@ -202,7 +202,7 @@ const Upload = () => {
               <IconAlertCircle size={20} style={{ color: 'var(--severity-critical)', flexShrink: 0, marginTop: '2px' }} />
               <div>
                 <div className="mono" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--severity-critical)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>
-                  Parse Error
+                  Audit Error
                 </div>
                 <div style={{ fontSize: '14px', color: 'var(--ink)' }}>{error}</div>
               </div>
@@ -359,7 +359,7 @@ const Upload = () => {
                   <div style={{ textAlign: 'center' }}>
                     <div className="heading-md" style={{ marginBottom: '4px' }}>Batch Audit Complete</div>
                     <div className="text-ink-dim" style={{ fontSize: '13px' }}>
-                      {batchResults.filter(r => r.ok).length} of {batchResults.length} audited, worst score first
+                      {batchResults.filter(r => r.ok).length} of {batchResults.length} audited · scored files first, lowest score first
                     </div>
                   </div>
 

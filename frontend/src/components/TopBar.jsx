@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, User, Server, Shield, LogOut } from 'lucide-react';
+import { Settings, User, Shield, LogOut } from 'lucide-react';
 import TactileButton from './TactileButton';
 
 
@@ -64,7 +64,6 @@ const DropdownItem = ({ icon: Icon, label, onClick, destructive }) => (
 );
 
 const TopBar = ({ device, source, onSettingsClick }) => {
-  const [deviceDropdownOpen, setDeviceDropdownOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -97,18 +96,13 @@ const TopBar = ({ device, source, onSettingsClick }) => {
 
         {device ? (
           <div style={{ position: 'relative', flexShrink: 0, minWidth: 'max-content' }}>
-            <button
-              onClick={() => setDeviceDropdownOpen(!deviceDropdownOpen)}
+            <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '16px',
                 padding: '8px 12px',
-                borderRadius: '4px',
-                transition: 'background-color 0.15s',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--panel-raised)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div className="mono" style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink)' }}>{deviceLabel}</div>
@@ -118,10 +112,7 @@ const TopBar = ({ device, source, onSettingsClick }) => {
                   </span>
                 )}
               </div>
-            </button>
-            <DropdownMenu isOpen={deviceDropdownOpen} onClose={() => setDeviceDropdownOpen(false)} style={{ top: '100%', left: 0 }}>
-              <DropdownItem icon={Server} label={`${deviceLabel} (Current)`} onClick={() => setDeviceDropdownOpen(false)} />
-            </DropdownMenu>
+            </div>
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
