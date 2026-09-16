@@ -21,6 +21,7 @@ import datetime as _dt
 import json
 import pathlib
 import threading
+import re
 
 MAPPINGS_PATH = pathlib.Path(__file__).resolve().parent / "learned_mappings.json"
 PREFIX_TOKENS = 4
@@ -54,7 +55,7 @@ def add_mapping(entry: dict, path: pathlib.Path | None = None) -> dict:
         "source_type": entry["source_type"],
         "resource_type": entry["resource_type"],
         "attribute": entry["attribute"],
-        "value": entry["value"],
+        "value": coerce_value(entry["value"]),
         "example_line": " ".join(str(entry["text"]).split()),
         "line": entry.get("line"),
         "created_at": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
@@ -83,3 +84,18 @@ def match_line(text: str, mappings: list[dict], source_type: str | None = None) 
         if best is None or len(pref) > len(best["prefix"]):
             best = m
     return best
+
+def coerce_value(value):
+    """Training UI values arrive as text. Rules compare against booleans and
+    integers, so '0' must become 0 and 'false' must become False, or a numeric
+    check crashes and an equality check silently raises a false finding."""
+    if not isinstance(value, str):
+        return value
+    s = value.strip()
+    if s.lower() == "true":
+        return True
+    if s.lower() == "false":
+        return False
+    if re.fullmatch(r"-?\d+", s):
+        return int(s)
+    return s

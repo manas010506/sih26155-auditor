@@ -386,7 +386,7 @@ class JuniperJunOSParser(Parser):
     def _apply_learned(self, doc: dict) -> None:
         """Apply anything an administrator has taught us, same as Cisco."""
         try:
-            from engine.parsers.learned import load_mappings, match_line
+            from engine.parsers.learned import coerce_value, load_mappings, match_line
         except ImportError:
             return
         mappings = load_mappings()
@@ -399,11 +399,26 @@ class JuniperJunOSParser(Parser):
             mapping = match_line(text, mappings, self.source_type)
             if mapping is None:
                 continue
-            for resource in doc["resources"]:
-                if resource["type"] == mapping["resource_type"]:
-                    resource["attributes"][mapping["attribute"]] = mapping["value"]
-                    self._claimed.add(i)
-                    break
+            # Same contract as the Cisco parser: create the resource if the
+            # parser didn't emit one, type the value, and record the line so
+            # the finding is traceable and the evidence gate can see it.
+            target = next((r for r in doc["resources"]
+                           if r["type"] == mapping["resource_type"]), None)
+            if target is None:
+                target = {
+                    "id": f"learned-{mapping['resource_type']}",
+                    "type": mapping["resource_type"],
+                    "attributes": {},
+                    "attribute_refs": {},
+                    "raw_ref": {"line": i + 1, "snippet": text},
+                }
+                doc["resources"].append(target)
+            target["attributes"][mapping["attribute"]] = coerce_value(mapping["value"])
+            target.setdefault("attribute_refs", {})[mapping["attribute"]] = {
+                "line": i + 1,
+                "snippet": text,
+            }
+            self._claimed.add(i)
 
     # -------------------------------------------------------------- unparsed
     def _unparsed_lines(self) -> list[dict]:

@@ -5,7 +5,7 @@ Target: samples/normalized_examples.json -> "cisco_example"
 """
 
 from ciscoconfparse2 import CiscoConfParse
-from engine.parsers.learned import load_mappings, match_line
+from engine.parsers.learned import load_mappings, match_line, coerce_value
 from .base import Parser
 
 
@@ -167,7 +167,7 @@ class CiscoIOSParser(Parser):
                 }
                 doc["resources"].append(target)
 
-            target["attributes"][mapping["attribute"]] = mapping["value"]
+            target["attributes"][mapping["attribute"]] = coerce_value(mapping["value"])
             target.setdefault("attribute_refs", {})[mapping["attribute"]] = {
                 "line": linenum + 1,
                 "snippet": text,
