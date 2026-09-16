@@ -154,7 +154,7 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None,
             f"no rules for framework {framework!r} and source type {source_type!r}")
     findings = evaluate(doc, rules)
     attack_paths = correlate(findings, str(CHAINS))
-    scored = score(findings, rules)
+    scored = score(findings, rules, {r["type"] for r in doc["resources"]})
 
     if enrich:
         _enrich_narratives(attack_paths)

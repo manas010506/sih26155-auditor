@@ -210,21 +210,33 @@ def evaluate(doc: dict, rules: list[dict]) -> list[dict]:
     return findings
 
 
-def score(findings: list[dict], rules: list[dict]) -> dict:
-    """Compliance score and the arithmetic behind it.
+def score(findings: list[dict], rules: list[dict],
+          resource_types: set[str] | None = None) -> dict:
 
-        100 * (1 - failed_weight / total_weight)
-
-    total_weight sums EVERY rule loaded, not just the failing ones. Summing
-    only failures makes the ratio 1 and the score 0 on every input.
-    """
+    applicable = ([r for r in rules if r.get("applies_to") in resource_types]
+                  if resource_types is not None else list(rules))
     failed_weight = sum(SEVERITY_WEIGHT[f["severity"]] for f in findings)
-    total_weight = sum(SEVERITY_WEIGHT[r["severity"]] for r in rules)
+    total_weight = sum(SEVERITY_WEIGHT[r["severity"]] for r in applicable)
 
-    if total_weight == 0:
-        raise RuleError("cannot score against an empty ruleset")
-
+    if not applicable:
+        return {
+            "compliance_score": None,
+            "passed": [],
+            "score_breakdown": {
+                "formula": "not scored - no rule had a resource to evaluate",
+                "frameworks": sorted({r.get("framework", DEFAULT_FRAMEWORK) for r in rules}),
+                "severity_weights": SEVERITY_WEIGHT,
+                "rules_evaluated": 0,
+                "rules_failed": 0,
+                "rules_passed": 0,
+                "failed_weight": 0,
+                "total_weight": 0,
+                "not_assessable": True,
+            },
+        }
+    
     frameworks = sorted({r.get("framework", DEFAULT_FRAMEWORK) for r in rules})
+
 
     failed_ids = {f["rule_id"] for f in findings}
     passed = [
@@ -235,10 +247,8 @@ def score(findings: list[dict], rules: list[dict]) -> dict:
             "control_ref": r.get("control_ref") or r.get("cis_control"),
             "framework": r.get("framework", DEFAULT_FRAMEWORK),
         }
-        for r in rules if r["id"] not in failed_ids
+        for r in applicable if r["id"] not in failed_ids
     ]
-
-    
 
     return {
         "compliance_score": round(100 * (1 - failed_weight / total_weight)),
@@ -250,11 +260,11 @@ def score(findings: list[dict], rules: list[dict]) -> dict:
             # the builders or run_audit().
             "frameworks": frameworks,
             "severity_weights": SEVERITY_WEIGHT,
-            "rules_evaluated": len(rules),
+            "rules_evaluated": len(applicable),
             "rules_failed": len(findings),
             # The problem statement asks for clear Pass/Fail results. The engine
             # only emits failures, so the passing count has to be derived here.
-            "rules_passed": len(passed),
+            "rules_passed": len(passed), 
             "failed_weight": failed_weight,
             "total_weight": total_weight,
         },
