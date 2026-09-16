@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { motion, useInView} from 'framer-motion';
 import { IconAlertTriangle, IconLayoutGrid } from '@tabler/icons-react';
 
 const SEVERITY_COLORS = {
@@ -63,143 +63,35 @@ const Panel = ({ title, icon: Icon, insight, children }) => (
   </motion.div>
 );
 
-/* Sleek Neon Line Graph for Severities matching reference image */
-const SeverityLineGraph = ({ data }) => {
-  const [hoveredPoint, setHoveredPoint] = useState(null);
+/* Severity counts as bars. These are categories, not a series:
+   a line between them would imply a trend that does not exist. */
+const SeverityBarGraph = ({ data }) => {
+  const maxVal = Math.max(...data.map(d => d.value), 1);
+  const total = data.reduce((sum, d) => sum + d.value, 0);
 
-  // SVG coordinates mapping
-  const width = 400;
-  const height = 160;
-  const paddingX = 30;
-  const paddingY = 20;
-
-  const maxVal = Math.max(...data.map(d => d.value), 4); // minimum ceiling to look good
-  
-  const points = data.map((d, idx) => {
-    const x = paddingX + (idx / (data.length - 1)) * (width - 2 * paddingX);
-    const y = height - paddingY - (d.value / maxVal) * (height - 2 * paddingY);
-    return { ...d, x, y };
-  });
-
-  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-  const areaD = `${pathD} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
-
-  // A bright neon gradient matching the uploaded screenshot style
-  const lineColor = '#4ade80'; // Neon green
-  const lineGradientStart = '#2dd4bf'; // Cyan-ish start
-  
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, position: 'relative', marginTop: '16px' }}>
-      
-      <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
-        
-        {/* Y-axis labels */}
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingRight: '12px', borderRight: '1px solid rgba(255,255,255,0.1)', height: `${height - 2*paddingY}px`, marginTop: `${paddingY}px`, color: 'var(--ink-dim)', fontSize: '10px', fontFamily: 'IBM Plex Mono, monospace', alignItems: 'flex-end', width: '32px' }}>
-          <span>{maxVal}</span>
-          <span>{Math.round(maxVal / 2)}</span>
-          <span>0</span>
-        </div>
-
-        {/* The Graph */}
-        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-          <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
-            <defs>
-              <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor={lineGradientStart} />
-                <stop offset="100%" stopColor={lineColor} />
-              </linearGradient>
-              <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={lineColor} stopOpacity="0.4" />
-                <stop offset="100%" stopColor={lineColor} stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            
-            {/* Area Fill */}
-            <motion.path
-              d={areaD}
-              fill="url(#areaGrad)"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.2 }}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '8px' }}>
+      {data.map((d, i) => (
+        <div key={d.name} style={{ display: 'grid', gridTemplateColumns: '72px 1fr 40px', alignItems: 'center', gap: '12px' }}>
+          <span className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)', letterSpacing: '0.06em' }}>
+            {d.name}
+          </span>
+          <div style={{ height: '10px', backgroundColor: 'var(--panel-raised)', borderRadius: '3px', overflow: 'hidden' }}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${(d.value / maxVal) * 100}%` }}
+              transition={{ duration: 0.8, delay: 0.1 + i * 0.08, ease: 'easeOut' }}
+              style={{ height: '100%', backgroundColor: d.fill, borderRadius: '3px' }}
             />
-
-            {/* Line Path */}
-            <motion.path
-              d={pathD}
-              fill="none"
-              stroke="url(#lineGrad)"
-              strokeWidth="4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1.0, ease: 'easeInOut' }}
-            />
-
-            {/* Points */}
-            {points.map((p, i) => {
-              // Interpolate color for the circle stroke based on position (roughly)
-              const pointColor = i < 2 ? lineGradientStart : lineColor;
-              
-              return (
-                <motion.g
-                  key={p.name}
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 1 + i * 0.15, type: 'spring' }}
-                  onMouseEnter={() => setHoveredPoint(p)}
-                  onMouseLeave={() => setHoveredPoint(null)}
-                  style={{ cursor: 'crosshair' }}
-                >
-                  <circle cx={p.x} cy={p.y} r="16" fill="transparent" />
-                  <circle cx={p.x} cy={p.y} r={hoveredPoint?.name === p.name ? "8" : "6"} fill="var(--panel-raised)" stroke={pointColor} strokeWidth="3" style={{ transition: 'all 0.2s' }} />
-                </motion.g>
-              );
-            })}
-          </svg>
-
-          {/* Hover Tooltip */}
-          <AnimatePresence>
-            {hoveredPoint && (
-              <motion.div
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.15 }}
-                style={{
-                  position: 'absolute',
-                  left: `${(hoveredPoint.x / width) * 100}%`,
-                  top: `${(hoveredPoint.y / height) * 100}%`,
-                  transform: 'translate(-50%, -120%)',
-                  background: 'var(--panel-raised)',
-                  border: '1px solid var(--wire)',
-                  padding: '6px 10px',
-                  borderRadius: '6px',
-                  pointerEvents: 'none',
-                  zIndex: 10,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
-                }}
-              >
-                <span className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)' }}>{hoveredPoint.name}</span>
-                <span className="mono" style={{ fontSize: '14px', fontWeight: 'bold', color: hoveredPoint.fill, marginTop: '2px' }}>{hoveredPoint.value}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          </div>
+          <span className="mono" style={{ fontSize: '13px', fontWeight: 600, textAlign: 'right', color: d.value ? d.fill : 'var(--ink-dim)' }}>
+            <CountUp end={d.value} />
+          </span>
         </div>
+      ))}
+      <div className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)', textAlign: 'right' }}>
+        {total} findings
       </div>
-
-      {/* X-axis labels */}
-      <div style={{ display: 'flex', position: 'relative', marginLeft: '32px', marginTop: '12px' }}>
-        {points.map((p, i) => (
-           <span key={p.name} className="mono" style={{ position: 'absolute', left: `${(p.x / width) * 100}%`, transform: 'translateX(-50%)', fontSize: '10px', color: 'var(--ink-dim)' }}>
-             {p.name.substring(0,3)}
-           </span>
-        ))}
-      </div>
-
     </div>
   );
 };
@@ -294,7 +186,7 @@ const SeverityDashboard = ({ findings }) => {
     }}>
       {/* Custom SVG horizontal bar chart panel */}
       <Panel title="Severity Breakdown" icon={IconAlertTriangle} insight={severityInsight}>
-        <SeverityLineGraph data={severityData} />
+        <SeverityBarGraph data={severityData} />
       </Panel>
 
       {/* Sleek List Graph panel */}
