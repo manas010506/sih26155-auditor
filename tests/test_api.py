@@ -113,3 +113,16 @@ def test_non_string_filename_does_not_break_the_audit(client):
     r = post(client, config_text=CISCO, source_type="cisco_ios", filename=42)
     assert r.status_code == 200
     assert isinstance(r.get_json()["source"]["filename"], str)
+
+def test_binary_upload_is_400(client):
+    junk = "".join(chr(i % 256) for i in range(4000))
+    r = post(client, config_text=junk, source_type="cisco_ios")
+    assert r.status_code == 400
+
+def test_batch_with_unscored_file_does_not_crash(client):
+    r = client.post("/api/audit/batch", json={"files": [
+        {"filename": "a.cfg", "config_text": CISCO, "source_type": "cisco_ios"},
+        {"filename": "b.tf", "config_text": "not terraform", "source_type": "terraform_aws"},
+    ]})
+    assert r.status_code == 200
+    assert r.get_json()["results"][0]["filename"] == "a.cfg"

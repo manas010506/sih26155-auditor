@@ -124,6 +124,36 @@ def available_frameworks() -> list[str]:
             continue
     return sorted(seen)
 
+# Share of a file's code lines the parser must recognise before the file is
+# treated as that parser's own format. Measured 16 Sep across all 59 tracked
+# configs: every real config is at 76% or above, every probe/demo file at 43%
+# or below. A real config dense with unsupported syntax could fall under this.
+NATIVE_THRESHOLD = 0.6
+
+
+def _code_lines(text: str) -> list[str]:
+    return [l for l in text.splitlines()
+            if l.strip() and not l.lstrip().startswith(("!", "#"))]
+
+
+def _recognised_share(text: str, doc: dict) -> float:
+    total = len(_code_lines(text))
+    if total == 0:
+        return 0.0
+    return max(0.0, 1 - len(doc.get("_unparsed", [])) / total)
+
+
+def _evidenced_only(doc: dict, rules: list[dict]) -> tuple[dict, list[dict]]:
+    """For a file the parser does not natively understand, keep only what a
+    line in the file supports. A parser's default resources say nothing about
+    a file it could not read, so a missing value there is not a finding."""
+    kept = [r for r in doc["resources"]
+            if r.get("raw_ref") is not None or r.get("attribute_refs")]
+    evidenced = [rule for rule in rules
+                 if any(r["type"] == rule["applies_to"]
+                        and rule["check"]["attribute"] in (r.get("attribute_refs") or {})
+                        for r in kept)]
+    return {**doc, "resources": kept}, evidenced
 
 def run_audit(config_text: str, source_type: str, filename: str | None = None,
               enrich: bool = True, framework: str | None = None) -> dict:
@@ -159,9 +189,29 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None,
     if not rules:
         raise ValueError(
             f"no rules for framework {framework!r} and source type {source_type!r}")
-    findings = evaluate(doc, rules)
+    all_rules = rules
+    recognised = _recognised_share(config_text, doc)
+    native = recognised >= NATIVE_THRESHOLD
+    if not native:
+        doc, rules = _evidenced_only(doc, rules)
+
+    findings = evaluate(doc, rules) if rules else []
     attack_paths = correlate(findings, str(CHAINS))
-    scored = score(findings, rules, {r["type"] for r in doc["resources"]})
+    if rules:
+        scored = score(findings, rules, {r["type"] for r in doc["resources"]})
+    else:
+        scored = score([], all_rules, set())      # existing not-assessable path
+
+    breakdown = scored["score_breakdown"]
+    breakdown["recognised_share"] = round(recognised, 2)
+    breakdown["controls_total"] = len(all_rules)
+    compliance_score = scored["compliance_score"]
+    if not native and rules:
+        # A few evidenced checks are not a compliance verdict: a percentage
+        # over three rules reads 100/100 on a device with a plaintext password.
+        # Report the checks, withhold the score.
+        breakdown["partial"] = True
+        compliance_score = None
 
     if enrich:
         _enrich_narratives(attack_paths)
@@ -171,7 +221,7 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None,
     report = {
         "source": {"type": source_type, "filename": filename},
         "device": _device_block(doc, source_type),
-        "compliance_score": scored["compliance_score"],
+        "compliance_score": compliance_score,
         "score_breakdown": scored["score_breakdown"],
         "findings": findings,
         "attack_paths": attack_paths,

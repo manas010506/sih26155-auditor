@@ -35,6 +35,14 @@ def _clean_filename(value):
     name = re.split(r"[\\/]", value.strip())[-1][:255]
     return name or None
 
+def _looks_binary(text):
+    """Random bytes decode into NULs, control characters and U+FFFD."""
+    if "\x00" in text:
+        return True
+    sample = text[:4096]
+    bad = sum(1 for c in sample
+              if c == "\ufffd" or (ord(c) < 32 and c not in "\r\n\t"))
+    return bad / max(len(sample), 1) > 0.05
 
 @app.get("/api/health")
 def health():
@@ -53,6 +61,8 @@ def audit():
         return jsonify(error="config_text is required"), 400
     if len(config_text.encode()) > MAX_BYTES:
         return jsonify(error="config file too large (2MB limit)"), 413
+    if _looks_binary(config_text):
+        return jsonify(error="file does not look like a text configuration"), 400
     if source_type not in VALID_TYPES:
         return jsonify(error=f"source_type must be one of {sorted(VALID_TYPES)}"), 400
 
@@ -77,6 +87,8 @@ def report():
         return jsonify(error="config_text is required"), 400
     if len(config_text.encode()) > MAX_BYTES:
         return jsonify(error="config file too large (2MB limit)"), 413
+    if _looks_binary(config_text):
+        return jsonify(error="file does not look like a text configuration"), 400
     if source_type not in VALID_TYPES:
         return jsonify(error=f"source_type must be one of {sorted(VALID_TYPES)}"), 400
 
@@ -159,6 +171,8 @@ def audit_batch():
     for entry in files:
         name = (entry or {}).get("filename", "unnamed")
         try:
+            if _looks_binary(entry.get("config_text", "")):
+                raise ValueError("file does not look like a text configuration")
             report = run_audit(
                 entry["config_text"],
                 entry["source_type"],
@@ -190,7 +204,9 @@ def audit_batch():
         "audited": len(audited),
         "failed": len(results) - len(audited),
         # Worst score first — that's the device to look at.
-        "results": sorted(results, key=lambda r: r.get("compliance_score", 999)),
+        # Worst score first; unscored (partial / not assessed / failed) last.
+        "results": sorted(results, key=lambda r: (r.get("compliance_score") is None,
+                                                  r.get("compliance_score") or 0)),
     })
 
 @app.get("/api/frameworks")

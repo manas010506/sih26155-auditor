@@ -69,8 +69,15 @@ def _cover(result: dict, st) -> list:
 
     rows = [(label, device[key]) for label, key in DEVICE_ROWS if key in device]
     _score = result.get("compliance_score")
-    rows.append(("Compliance score",
-                 "Not assessed" if _score is None else f"{_score} / 100"))
+    _b = result.get("score_breakdown", {})
+    if _score is not None:
+        _label = f"{_score} / 100"
+    elif _b.get("partial"):
+        _label = (f"Partial assessment: {_b.get('rules_evaluated', 0)} of "
+                  f"{_b.get('controls_total', '?')} controls (score withheld)")
+    else:
+        _label = "Not assessed"
+    rows.append(("Compliance score", _label))
     t = Table([[Paragraph(f"<b>{k}</b>", st["Body"]), Paragraph(str(v), st["Body"])]
                for k, v in rows], colWidths=[45 * mm, 110 * mm])
     t.setStyle(TableStyle([
@@ -133,7 +140,15 @@ def _findings(result: dict, st) -> list:
     flow: list = [Paragraph("Findings", st["H2x"])]
     findings = result.get("findings", [])
     if not findings:
-        flow.append(Paragraph("No failed checks.", st["Body"]))
+        b = result.get("score_breakdown", {})
+        if b.get("partial"):
+            msg = (f"No failed checks among the {b.get('rules_evaluated', 0)} controls "
+                   f"that could be evaluated. The remaining controls were not checked.")
+        elif b.get("not_assessable"):
+            msg = "Not assessed: no control applied to anything in this configuration."
+        else:
+            msg = "No failed checks."
+        flow.append(Paragraph(msg, st["Body"]))
         return flow
 
     for f in findings:
