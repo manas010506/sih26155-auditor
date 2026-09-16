@@ -9,11 +9,11 @@ export function sourceTypeFor(filename) {
   return null;
 }
 
-export async function exportReport(configText, sourceType, framework, filename) {
+export async function audit(configText, sourceType, framework, filename) {
   const res = await fetch(`${BASE}/api/audit`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ config_text: configText, source_type: sourceType, framework }),
+    body: JSON.stringify({ config_text: configText, source_type: sourceType, framework, filename }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -22,11 +22,11 @@ export async function exportReport(configText, sourceType, framework, filename) 
   return res.json();
 }
 
-export async function exportReport(configText, sourceType, framework) {
+export async function exportReport(configText, sourceType, framework, filename) {
   const res = await fetch(`${BASE}/api/report`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ config_text: configText, source_type: sourceType, framework }),
+    body: JSON.stringify({ config_text: configText, source_type: sourceType, framework, filename }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

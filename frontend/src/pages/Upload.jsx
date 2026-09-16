@@ -104,7 +104,7 @@ const Upload = () => {
           config_text: await t.file.text(),
           source_type: t.type,
         })));
-        const result = await audit(text, detected.type, defaultFramework, detected.files[0].name);
+        const result = await auditBatch(configs, defaultFramework);
         // Inject config_text into each result's report so ReportView has access to it
         const enrichedResults = (result.results ?? []).map((r, i) => {
           if (r.report) {
@@ -117,7 +117,7 @@ const Upload = () => {
         setStatus('batch_summary');
       } else {
         const text = await detected.files[0].text();
-        const result = await audit(text, detected.type, defaultFramework);
+        const result = await audit(text, detected.type, defaultFramework, detected.files[0].name);
 
         // Inject config_text for PDF export later
         result.config_text = text;
