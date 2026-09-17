@@ -136,6 +136,24 @@ def _framework_summary(result: dict, st) -> list:
     return flow
 
 
+def _esc(text) -> str:
+    """Escape text for a ReportLab Paragraph, which parses < and & as markup.
+    Config lines come from the uploaded file, so they must never be trusted."""
+    return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _remediation_label(result: dict) -> str:
+    """Remediation is written in Cisco IOS (or Terraform) syntax; say so when the
+    audited device is not a natively read Cisco IOS config."""
+    src = (result.get("source") or {}).get("type")
+    b = result.get("score_breakdown") or {}
+    if src == "terraform_aws":
+        return "Remediation (Terraform):"
+    if src == "cisco_ios" and not b.get("partial") and not b.get("not_assessable"):
+        return "Remediation:"
+    return "Remediation (Cisco IOS reference syntax):"
+
+
 def _findings(result: dict, st) -> list:
     flow: list = [Paragraph("Findings", st["H2x"])]
     findings = result.get("findings", [])
@@ -161,13 +179,13 @@ def _findings(result: dict, st) -> list:
         ref = f.get("raw_ref") or {}
         if ref.get("snippet"):
             block.append(Paragraph(
-                f'Line {ref.get("line", "?")}: {ref["snippet"]}', st["Mono"]))
+                f'Line {ref.get("line", "?")}: {_esc(ref["snippet"])}', st["Mono"]))
         if f.get("cis_control"):
             block.append(Paragraph(f'Control: {f["cis_control"]}', st["Muted"]))
         if f.get("explanation"):
             block.append(Paragraph(f["explanation"], st["Body"]))
         if f.get("remediation_template"):
-            block.append(Paragraph("Remediation:", st["Muted"]))
+            block.append(Paragraph(_remediation_label(result), st["Muted"]))
             block.append(Paragraph(
                 f["remediation_template"]
                 .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")

@@ -6,7 +6,7 @@ import SeverityLED from '../components/SeverityLED';
 import EmptyStateCard from '../components/EmptyStateCard';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle, AlignmentType } from 'docx';
 import { exportReport } from '../api';
-import { assessment } from '../assessment';
+import { assessment, remediationLabel } from '../assessment';
 
 /* Animated count-up for report numbers */
 const CountUp = ({ end, duration = 1.2 }) => {
@@ -401,7 +401,7 @@ const ReportView = () => {
                 spacing: { before: 100, after: f.remediation_template ? 200 : 400 },
               }),
               ...(f.remediation_template ? [
-                new Paragraph({ children: [new TextRun({ text: 'Remediation CLI:', bold: true, size: 20, color: '666666' })], spacing: { after: 100 } }),
+                new Paragraph({ children: [new TextRun({ text: `${remediationLabel(reportData)}:`, bold: true, size: 20, color: '666666' })], spacing: { after: 100 } }),
                 new Table({
                   width: { size: 100, type: WidthType.PERCENTAGE },
                   borders: { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder },
@@ -880,7 +880,7 @@ const ReportView = () => {
                       {finding.remediation_template && (
                         <div style={{ padding: '12px 16px', backgroundColor: 'rgba(16, 20, 26, 0.5)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <div className="label">Remediation CLI</div>
+                            <div className="label">{remediationLabel(reportData)}</div>
                             <CopyButton text={finding.remediation_template} />
                           </div>
                           <pre style={{

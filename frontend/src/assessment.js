@@ -21,3 +21,14 @@ export function assessment(report) {
     label: `${report.compliance_score}/100`, short: String(report.compliance_score),
   };
 }
+
+
+// Remediation text is written in Cisco IOS syntax (or Terraform for AWS). Say so
+// wherever the audited device is not a natively read Cisco IOS config, so a
+// Juniper, Aruba or MikroTik reader isn't handed commands as if they were theirs.
+export function remediationLabel(report) {
+  const src = report?.source?.type;
+  if (src === 'terraform_aws') return 'Remediation (Terraform)';
+  if (src === 'cisco_ios' && assessment(report).kind === 'scored') return 'Remediation CLI';
+  return 'Remediation · Cisco IOS reference syntax';
+}

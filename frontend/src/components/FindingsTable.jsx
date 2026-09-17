@@ -44,7 +44,7 @@ const SortableHeader = ({ label, field, sortField, sortDir, onSort, style }) => 
 
 
 /* ── Expanded detail panel ───────────────────────────────────── */
-const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
+const ExpandedDetail = ({ finding, copiedId, onCopy, remediationLabel = 'Remediation CLI' }) => (
   <motion.div
     initial={{ opacity: 0, height: 0 }}
     animate={{ opacity: 1, height: 'auto' }}
@@ -102,7 +102,7 @@ const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div className="label">Remediation CLI</div>
+              <div className="label">{remediationLabel}</div>
             </div>
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -142,7 +142,7 @@ const ExpandedDetail = ({ finding, copiedId, onCopy }) => (
 );
 
 /* ── Main component ──────────────────────────────────────────── */
-const FindingsTable = ({ findings, notAssessable, partial }) => {
+const FindingsTable = ({ findings, notAssessable, partial, remediationLabel = 'Remediation CLI' }) => {
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [sortField, setSortField] = useState('severity');
   const [sortDir, setSortDir] = useState('desc');
@@ -403,7 +403,7 @@ const FindingsTable = ({ findings, notAssessable, partial }) => {
                       <td colSpan={6} style={{ padding: 0, borderBottom: isExpanded ? '1px solid var(--wire)' : 'none', backgroundColor: isExpanded ? 'rgba(0,0,0,0.1)' : 'transparent' }}>
                         <AnimatePresence>
                           {isExpanded && (
-                            <ExpandedDetail
+                            <ExpandedDetail remediationLabel={remediationLabel}
                               finding={finding}
                               copiedId={copiedRuleId}
                               onCopy={copyToClipboard}
