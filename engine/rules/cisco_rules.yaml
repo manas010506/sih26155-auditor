@@ -1,7 +1,7 @@
 - id: CIS-NET-001
   title: VTY lines permit Telnet
   applies_to: vty_line
-  cis_control: CIS Cisco IOS 1.1.5 - Set transport input ssh on VTY lines
+  cis_control: CIS Cisco IOS 15 1.2.2 - Set transport input ssh for line vty connections
   severity: critical
   check:
     attribute: transport_input
@@ -16,7 +16,7 @@
 - id: CIS-NET-002
   title: HTTP management server enabled
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.2.1 - Disable the HTTP server
+  cis_control: 'Not in CIS Cisco IOS 15 benchmark - Cisco hardening: disable the HTTP server'
   severity: high
   check:
     attribute: http_server
@@ -29,7 +29,7 @@
 - id: CIS-NET-003
   title: VTY session timeout disabled
   applies_to: vty_line
-  cis_control: CIS Cisco IOS 1.1.6 - Set exec-timeout to 10 minutes or less
+  cis_control: CIS Cisco IOS 15 1.2.9 - Set exec-timeout to 10 minutes or less for line vty
   severity: medium
   check:
     attribute: exec_timeout_minutes
@@ -45,7 +45,7 @@
 - id: CIS-NET-004
   title: VTY lines have no access-class restriction
   applies_to: vty_line
-  cis_control: CIS Cisco IOS 1.1.4 - Apply an access-class to VTY lines
+  cis_control: CIS Cisco IOS 15 1.2.5 - Set access-class for line vty
   severity: high
   check:
     attribute: access_class
@@ -61,7 +61,7 @@
 - id: CIS-NET-005
   title: Password encryption service disabled
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.1.3 - Enable service password-encryption
+  cis_control: CIS Cisco IOS 15 1.4.2 - Enable service password-encryption
   severity: medium
   check:
     attribute: password_encryption
@@ -74,7 +74,7 @@
 - id: CIS-NET-006
   title: Enable password stored unencrypted
   applies_to: enable_secret
-  cis_control: CIS Cisco IOS 1.1.1 - Use enable secret instead of enable password
+  cis_control: CIS Cisco IOS 15 1.4.1 - Set password for enable secret
   severity: critical
   check:
     attribute: uses_secret
@@ -91,8 +91,7 @@
   applies_to: local_user
   when:
     privilege: 15
-  cis_control: CIS Cisco IOS 1.1.2 - Store local user passwords using irreversible
-    encryption
+  cis_control: CIS Cisco IOS 15 1.4.3 - Set username secret for all local users
   severity: high
   check:
     attribute: encrypted
@@ -108,7 +107,7 @@
   applies_to: snmp_community
   when:
     access: RO
-  cis_control: CIS Cisco IOS 2.2.1 - Do not use default SNMP community strings
+  cis_control: CIS Cisco IOS 15 1.5.2, 1.5.3 - Unset private and public for snmp-server community
   severity: high
   check:
     attribute: is_default_string
@@ -121,8 +120,7 @@
 - id: CIS-NET-009
   title: SNMP read-write community configured
   applies_to: snmp_community
-  cis_control: CIS Cisco IOS 2.2.2 - Do not use default or read-write SNMP community
-    strings
+  cis_control: CIS Cisco IOS 15 1.5.4 - Do not set RW for any snmp-server community
   severity: critical
   check:
     attribute: access
@@ -135,7 +133,7 @@
 - id: CIS-NET-011
   title: No syslog server configured
   applies_to: logging
-  cis_control: CIS Cisco IOS 3.1.1 - Configure a remote syslog host
+  cis_control: CIS Cisco IOS 15 2.2.4 - Set IP address for logging host
   severity: high
   check:
     attribute: hosts
@@ -150,7 +148,7 @@
 - id: CIS-NET-012
   title: NTP not authenticated
   applies_to: ntp
-  cis_control: CIS Cisco IOS 3.2.1 - Use authenticated NTP
+  cis_control: CIS Cisco IOS 15 2.3.1.1 - Set ntp authenticate
   severity: low
   check:
     attribute: authenticated
@@ -167,7 +165,7 @@
 - id: CIS-NET-013
   title: AAA not enabled
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.3.1 - Enable AAA
+  cis_control: CIS Cisco IOS 15 1.1.1 - Enable aaa new-model
   severity: medium
   check:
     attribute: aaa_new_model
@@ -184,7 +182,7 @@
 - id: CIS-NET-014
   title: No login banner configured
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.4.1 - Configure a login banner
+  cis_control: CIS Cisco IOS 15 1.3.2 - Set the banner-text for banner login
   severity: low
   check:
     attribute: login_banner
@@ -199,7 +197,7 @@
 - id: CIS-NET-015
   title: CDP enabled globally
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 2.1.1 - Disable CDP where not required
+  cis_control: CIS Cisco IOS 15 2.1.2 - Disable CDP globally
   severity: low
   check:
     attribute: cdp_enabled
@@ -212,7 +210,7 @@
 - id: CIS-NET-016
   title: SSH version 2 not enforced
   applies_to: ssh_settings
-  cis_control: CIS Cisco IOS 1.2.3 - Set ip ssh version 2
+  cis_control: CIS Cisco IOS 15 2.1.1.2 - Set version 2 for ip ssh version
   severity: medium
   check:
     attribute: version
@@ -228,7 +226,7 @@
 - id: CIS-NET-018
   title: No NTP server configured
   applies_to: ntp
-  cis_control: CIS Cisco IOS 3.2.2 - Configure at least one NTP server
+  cis_control: CIS Cisco IOS 15 2.3.2 - Set ip address for ntp server
   severity: medium
   check:
     attribute: servers
@@ -240,7 +238,7 @@
 - id: CIS-NET-019
   title: VTY lines allow login without authentication
   applies_to: vty_line
-  cis_control: CIS Cisco IOS 1.1.7 - Require authentication on VTY lines
+  cis_control: CIS Cisco IOS 15 1.1.6 - Set login authentication for line vty
   severity: critical
   check:
     attribute: login_method
@@ -254,7 +252,7 @@
 - id: CIS-NET-020
   title: Device hostname not set
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.5.1 - Set a unique device hostname
+  cis_control: CIS Cisco IOS 15 2.1.1.1.1 - Set the hostname
   severity: low
   check:
     attribute: hostname
@@ -265,7 +263,7 @@
 - id: CIS-NET-021
   title: IOS version not recorded
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.5.2 - Track the running software version
+  cis_control: 'Not in CIS Cisco IOS 15 benchmark - Cisco hardening: track the running software version'
   severity: low
   check:
     attribute: os_version
@@ -276,7 +274,7 @@
 - id: CIS-NET-022
   title: SNMP v1/v2c community strings in use
   applies_to: snmp_settings
-  cis_control: CIS Cisco IOS 2.2.0 - Use SNMPv3
+  cis_control: CIS Cisco IOS 15 1.5.9 - Set priv for each snmp-server group using SNMPv3
   severity: high
   check:
     attribute: versions_in_use
@@ -291,7 +289,7 @@
 - id: CIS-NET-023
   title: SSH session timeout too high
   applies_to: ssh_settings
-  cis_control: CIS Cisco IOS 1.2.4 - Set SSH timeout to 60 seconds or less
+  cis_control: CIS Cisco IOS 15 2.1.1.1.4 - Set seconds for ip ssh timeout
   severity: low
   check:
     attribute: timeout_seconds
@@ -304,7 +302,7 @@
 - id: CIS-NET-024
   title: IP source routing enabled
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.6.1 - Disable IP source routing
+  cis_control: CIS Cisco IOS 15 3.1.1 - Disable IP source routing
   severity: medium
   check:
     attribute: source_routing
@@ -317,7 +315,7 @@
 - id: CIS-NET-025
   title: No MOTD banner configured
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.4.2 - Configure a Message of the Day (MOTD) banner
+  cis_control: CIS Cisco IOS 15 1.3.3 - Set the banner-text for banner motd
   severity: low
   check:
     attribute: motd_banner
@@ -328,7 +326,7 @@
 - id: CIS-NET-027
   title: AAA login authentication not configured
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.1.2 - Enable 'aaa authentication login'
+  cis_control: CIS Cisco IOS 15 1.1.2 - Enable aaa authentication login
   severity: critical
   check:
     attribute: aaa_auth_login
@@ -339,7 +337,7 @@
 - id: CIS-NET-028
   title: AAA enable authentication not configured
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.1.3 - Enable 'aaa authentication enable default'
+  cis_control: CIS Cisco IOS 15 1.1.3 - Enable aaa authentication enable default
   severity: critical
   check:
     attribute: aaa_auth_enable
@@ -350,8 +348,7 @@
 - id: CIS-NET-029
   title: AAA command accounting disabled
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.1.6 - Set 'aaa accounting' to log all privileged use
-    commands
+  cis_control: CIS Cisco IOS 15 1.1.7 - Set aaa accounting commands 15
   severity: medium
   check:
     attribute: aaa_accounting_commands
@@ -362,7 +359,7 @@
 - id: CIS-NET-030
   title: AAA connection accounting disabled
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.1.7 - Set 'aaa accounting connection'
+  cis_control: CIS Cisco IOS 15 1.1.8 - Set aaa accounting connection
   severity: low
   check:
     attribute: aaa_accounting_connection
@@ -373,7 +370,7 @@
 - id: CIS-NET-031
   title: AAA exec accounting disabled
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.1.8 - Set 'aaa accounting exec'
+  cis_control: CIS Cisco IOS 15 1.1.9 - Set aaa accounting exec
   severity: low
   check:
     attribute: aaa_accounting_exec
@@ -383,7 +380,7 @@
 - id: CIS-NET-032
   title: AAA network accounting disabled
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.1.9 - Set 'aaa accounting network'
+  cis_control: CIS Cisco IOS 15 1.1.10 - Set aaa accounting network
   severity: low
   check:
     attribute: aaa_accounting_network
@@ -393,7 +390,7 @@
 - id: CIS-NET-033
   title: AAA system accounting disabled
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.1.10 - Set 'aaa accounting system'
+  cis_control: CIS Cisco IOS 15 1.1.11 - Set aaa accounting system
   severity: low
   check:
     attribute: aaa_accounting_system
@@ -406,7 +403,7 @@
   applies_to: local_user
   when:
     privilege: 15
-  cis_control: CIS Cisco IOS 1.2.1 - Set 'privilege 1' for local users
+  cis_control: CIS Cisco IOS 15 1.2.1 - Set privilege 1 for local users
   severity: high
   check:
     attribute: privilege
@@ -418,7 +415,7 @@
 - id: CIS-NET-017
   title: HTTPS management server not enabled
   applies_to: global_settings
-  cis_control: CIS Cisco IOS 1.2.2 - Use HTTPS if web management is required
+  cis_control: 'Not in CIS Cisco IOS 15 benchmark - Cisco hardening: use HTTPS if web management is required'
   severity: high
   check:
     attribute: https_server

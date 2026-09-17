@@ -43,7 +43,7 @@
         "line": 71,
         "snippet": "transport input telnet ssh"
       },
-      "cis_control": "CIS Cisco IOS 1.1.5 - Set transport input ssh on VTY lines",
+      "cis_control": "CIS Cisco IOS 15 1.2.2 - Set transport input ssh for line vty connections",
       "remediation_template": "line vty 0 15\n transport input ssh",
       "explanation": "Telnet carries usernames and passwords in cleartext. Any device on the path between an administrator and this router can read the enable password and take control. Restrict VTY transport to SSH only."
     },
@@ -56,7 +56,7 @@
         "line": 29,
         "snippet": "ip http server"
       },
-      "cis_control": "CIS Cisco IOS 1.2.1 - Disable the HTTP server",
+      "cis_control": "Not in CIS Cisco IOS 15 benchmark - Cisco hardening: disable the HTTP server",
       "remediation_template": "no ip http server",
       "explanation": "The unencrypted web management interface is running. Credentials submitted to it travel in cleartext, and the HTTP server has historically been a source of remote code execution vulnerabilities."
     },
@@ -69,7 +69,7 @@
         "line": 68,
         "snippet": "exec-timeout 0 0"
       },
-      "cis_control": "CIS Cisco IOS 1.1.6 - Set exec-timeout to 10 minutes or less",
+      "cis_control": "CIS Cisco IOS 15 1.2.9 - Set exec-timeout to 10 minutes or less for line vty",
       "remediation_template": "line vty 0 15\n exec-timeout 10 0",
       "explanation": "The idle timeout on this line is disabled or longer than 10 minutes, so an abandoned session stays authenticated and can be reused by anyone with access to that terminal."
     },
@@ -82,7 +82,7 @@
         "line": 67,
         "snippet": "line vty 0 4"
       },
-      "cis_control": "CIS Cisco IOS 1.1.4 - Apply an access-class to VTY lines",
+      "cis_control": "CIS Cisco IOS 15 1.2.5 - Set access-class for line vty",
       "remediation_template": "ip access-list standard MGMT-HOSTS\n permit <mgmt-network> <wildcard-mask>\nline vty 0 15\n access-class MGMT-HOSTS in",
       "explanation": "No ACL limits who may open a management session, so the management plane is reachable from every network that can route to this device, including the WAN interface."
     },
@@ -95,7 +95,7 @@
         "line": 7,
         "snippet": "no service password-encryption"
       },
-      "cis_control": "CIS Cisco IOS 1.1.3 - Enable service password-encryption",
+      "cis_control": "CIS Cisco IOS 15 1.4.2 - Enable service password-encryption",
       "remediation_template": "service password-encryption",
       "explanation": "Passwords that have no stronger option are written to the configuration in clear text. Type 7 encryption is reversible and is not a substitute for secret hashes, but it removes casual config-backup exposure."
     },
@@ -108,7 +108,7 @@
         "line": 14,
         "snippet": "enable password cisco123"
       },
-      "cis_control": "CIS Cisco IOS 1.1.1 - Use enable secret instead of enable password",
+      "cis_control": "CIS Cisco IOS 15 1.4.1 - Set password for enable secret",
       "remediation_template": "no enable password\nenable secret <strong-password>",
       "explanation": "The privileged-EXEC password is stored in the configuration in plaintext, so anyone who can read a config backup, a TFTP transfer or an SNMP dump holds full administrative control."
     },
@@ -121,7 +121,7 @@
         "line": 24,
         "snippet": "username admin privilege 15 password 0 admin123"
       },
-      "cis_control": "CIS Cisco IOS 1.1.2 - Store local user passwords using irreversible encryption",
+      "cis_control": "CIS Cisco IOS 15 1.4.3 - Set username secret for all local users",
       "remediation_template": "no username <user>\nusername <user> privilege 1 secret <strong-password>",
       "explanation": "This account has full administrative rights and its password is stored as type 0, meaning plaintext. Use the secret keyword so the password is hashed."
     },
@@ -134,7 +134,7 @@
         "line": 54,
         "snippet": "snmp-server community public RO"
       },
-      "cis_control": "CIS Cisco IOS 2.2.1 - Do not use default SNMP community strings",
+      "cis_control": "CIS Cisco IOS 15 1.5.2, 1.5.3 - Unset private and public for snmp-server community",
       "remediation_template": "no snmp-server community <default-community>",
       "explanation": "Default community strings such as 'public' and 'private' are the first values any scanner tries. A match exposes the running configuration, interface list, routing table and ARP cache to anyone who can reach UDP/161."
     },
@@ -147,7 +147,7 @@
         "line": 55,
         "snippet": "snmp-server community private RW"
       },
-      "cis_control": "CIS Cisco IOS 2.2.2 - Do not use default or read-write SNMP community strings",
+      "cis_control": "CIS Cisco IOS 15 1.5.4 - Do not set RW for any snmp-server community",
       "remediation_template": "no snmp-server community <rw-community>",
       "explanation": "A read-write community permits configuration changes over UDP with no session and no per-user logging, protected only by a string sent in cleartext. This is remote device control, not monitoring."
     },
@@ -157,7 +157,7 @@
       "severity": "high",
       "resource_id": "logging",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 3.1.1 - Configure a remote syslog host",
+      "cis_control": "CIS Cisco IOS 15 2.2.4 - Set IP address for logging host",
       "remediation_template": "logging host <syslog-server-ip>\nlogging trap informational",
       "explanation": "Nothing is sent off-box, so administrative logins and configuration changes exist only in a buffer that is cleared on reboot and editable by anyone with privileged access."
     },
@@ -170,7 +170,7 @@
         "line": 79,
         "snippet": "ntp server 10.10.0.250"
       },
-      "cis_control": "CIS Cisco IOS 3.2.1 - Use authenticated NTP",
+      "cis_control": "CIS Cisco IOS 15 2.3.1.1 - Set ntp authenticate",
       "remediation_template": "ntp authentication-key 1 md5 <key>\nntp trusted-key 1\nntp authenticate\nntp server <ntp-server-ip> key 1",
       "explanation": "Time is accepted from an unauthenticated source. An attacker who can spoof NTP can shift the clock and desynchronise every timestamp used to correlate logs during an investigation."
     },
@@ -183,7 +183,7 @@
         "line": 16,
         "snippet": "no aaa new-model"
       },
-      "cis_control": "CIS Cisco IOS 1.3.1 - Enable AAA",
+      "cis_control": "CIS Cisco IOS 15 1.1.1 - Enable aaa new-model",
       "remediation_template": "aaa new-model\naaa authentication login default group tacacs+ local\naaa accounting exec default start-stop group tacacs+",
       "explanation": "Authentication falls back to shared local passwords, so administrator actions cannot be attributed to an individual and revoking one person's access means changing credentials for everyone."
     },
@@ -193,7 +193,7 @@
       "severity": "low",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 1.4.1 - Configure a login banner",
+      "cis_control": "CIS Cisco IOS 15 1.3.2 - Set the banner-text for banner login",
       "remediation_template": "banner login ^C\nAuthorised access only. Activity is monitored.\n^C",
       "explanation": "No warning banner is presented before authentication. Beyond the hardening benchmark, this weakens the legal position when pursuing unauthorised access."
     },
@@ -206,7 +206,7 @@
         "line": 27,
         "snippet": "cdp run"
       },
-      "cis_control": "CIS Cisco IOS 2.1.1 - Disable CDP where not required",
+      "cis_control": "CIS Cisco IOS 15 2.1.2 - Disable CDP globally",
       "remediation_template": "no cdp run",
       "explanation": "CDP advertises the model, IOS version, management address and native VLAN to any directly connected device, handing an attacker on the local segment a free inventory."
     },
@@ -216,7 +216,7 @@
       "severity": "medium",
       "resource_id": "ssh",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 1.2.3 - Set ip ssh version 2",
+      "cis_control": "CIS Cisco IOS 15 2.1.1.2 - Set version 2 for ip ssh version",
       "remediation_template": "ip ssh version 2\nip ssh time-out 60\nip ssh authentication-retries 3",
       "explanation": "With no explicit version the device may negotiate SSHv1, which has known integrity weaknesses and is downgradeable by an on-path attacker."
     },
@@ -229,7 +229,7 @@
         "line": 54,
         "snippet": "snmp-server community public RO"
       },
-      "cis_control": "CIS Cisco IOS 2.2.0 - Use SNMPv3",
+      "cis_control": "CIS Cisco IOS 15 1.5.9 - Set priv for each snmp-server group using SNMPv3",
       "remediation_template": "snmp-server group <group> v3 priv\nsnmp-server user <user> <group> v3 auth sha <auth-pass> priv aes 128 <priv-pass>\nno snmp-server community <community>",
       "explanation": "SNMP v1 and v2c transmit community strings in plaintext. An attacker capturing traffic can gain full read or write access to the device configuration."
     },
@@ -239,7 +239,7 @@
       "severity": "low",
       "resource_id": "ssh",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 1.2.4 - Set SSH timeout to 60 seconds or less",
+      "cis_control": "CIS Cisco IOS 15 2.1.1.1.4 - Set seconds for ip ssh timeout",
       "remediation_template": "ip ssh time-out 60",
       "explanation": "Excessively long timeouts leave authenticated sessions open longer than necessary, increasing the risk of session hijacking if a terminal is left unattended."
     },
@@ -249,7 +249,7 @@
       "severity": "medium",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 1.6.1 - Disable IP source routing",
+      "cis_control": "CIS Cisco IOS 15 3.1.1 - Disable IP source routing",
       "remediation_template": "no ip source-route",
       "explanation": "Source routing allows a sender to specify the path a packet takes. This can be used by attackers to bypass security controls or map internal network topology."
     },
@@ -259,7 +259,7 @@
       "severity": "low",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 1.4.2 - Configure a Message of the Day (MOTD) banner",
+      "cis_control": "CIS Cisco IOS 15 1.3.3 - Set the banner-text for banner motd",
       "remediation_template": "banner motd ^C Authorized Access Only ^C",
       "explanation": "A MOTD banner provides a legal warning to unauthorized users. Without it, it is harder to prosecute unauthorized access in many legal jurisdictions."
     },
@@ -269,7 +269,7 @@
       "severity": "critical",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 1.1.2 - Enable 'aaa authentication login'",
+      "cis_control": "CIS Cisco IOS 15 1.1.2 - Enable aaa authentication login",
       "remediation_template": "aaa authentication login default group tacacs+ local",
       "explanation": "Without AAA login authentication, the device may fall back to insecure local passwords or no authentication at all."
     },
@@ -279,7 +279,7 @@
       "severity": "critical",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 1.1.3 - Enable 'aaa authentication enable default'",
+      "cis_control": "CIS Cisco IOS 15 1.1.3 - Enable aaa authentication enable default",
       "remediation_template": "aaa authentication enable default group tacacs+ enable",
       "explanation": "Privileged EXEC mode must be protected by AAA to ensure that only authorized administrators can enter enable mode."
     },
@@ -289,7 +289,7 @@
       "severity": "medium",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 1.1.6 - Set 'aaa accounting' to log all privileged use commands",
+      "cis_control": "CIS Cisco IOS 15 1.1.7 - Set aaa accounting commands 15",
       "remediation_template": "aaa accounting commands 15 default start-stop group tacacs+",
       "explanation": "Accounting for privilege 15 commands is essential for forensic audits to see exactly what changes were made by which administrator."
     },
@@ -299,7 +299,7 @@
       "severity": "low",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 1.1.7 - Set 'aaa accounting connection'",
+      "cis_control": "CIS Cisco IOS 15 1.1.8 - Set aaa accounting connection",
       "remediation_template": "aaa accounting connection default start-stop group tacacs+",
       "explanation": "Connection accounting tracks the start and end of sessions, helping to identify session hijacking or unusual login patterns."
     },
@@ -309,7 +309,7 @@
       "severity": "low",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 1.1.8 - Set 'aaa accounting exec'",
+      "cis_control": "CIS Cisco IOS 15 1.1.9 - Set aaa accounting exec",
       "remediation_template": "aaa accounting exec default start-stop group tacacs+",
       "explanation": "Exec accounting logs the start and end of the shell session itself."
     },
@@ -319,7 +319,7 @@
       "severity": "low",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 1.1.9 - Set 'aaa accounting network'",
+      "cis_control": "CIS Cisco IOS 15 1.1.10 - Set aaa accounting network",
       "remediation_template": "aaa accounting network default start-stop group tacacs+",
       "explanation": "Network accounting tracks network-related service requests."
     },
@@ -329,7 +329,7 @@
       "severity": "low",
       "resource_id": "global",
       "raw_ref": null,
-      "cis_control": "CIS Cisco IOS 1.1.10 - Set 'aaa accounting system'",
+      "cis_control": "CIS Cisco IOS 15 1.1.11 - Set aaa accounting system",
       "remediation_template": "aaa accounting system default start-stop group tacacs+",
       "explanation": "System accounting logs events not associated with users, such as system reloads."
     },
@@ -342,7 +342,7 @@
         "line": 24,
         "snippet": "username admin privilege 15 password 0 admin123"
       },
-      "cis_control": "CIS Cisco IOS 1.2.1 - Set 'privilege 1' for local users",
+      "cis_control": "CIS Cisco IOS 15 1.2.1 - Set privilege 1 for local users",
       "remediation_template": "username <user> privilege 1",
       "explanation": "Local accounts should be restricted to privilege 1. Administrative access should be gained via the 'enable' command to ensure a second layer of auth."
     }
@@ -401,35 +401,35 @@
       "rule_id": "CIS-NET-018",
       "title": "No NTP server configured",
       "severity": "medium",
-      "control_ref": "CIS Cisco IOS 3.2.2 - Configure at least one NTP server",
+      "control_ref": "CIS Cisco IOS 15 2.3.2 - Set ip address for ntp server",
       "framework": "CIS"
     },
     {
       "rule_id": "CIS-NET-019",
       "title": "VTY lines allow login without authentication",
       "severity": "critical",
-      "control_ref": "CIS Cisco IOS 1.1.7 - Require authentication on VTY lines",
+      "control_ref": "CIS Cisco IOS 15 1.1.6 - Set login authentication for line vty",
       "framework": "CIS"
     },
     {
       "rule_id": "CIS-NET-020",
       "title": "Device hostname not set",
       "severity": "low",
-      "control_ref": "CIS Cisco IOS 1.5.1 - Set a unique device hostname",
+      "control_ref": "CIS Cisco IOS 15 2.1.1.1.1 - Set the hostname",
       "framework": "CIS"
     },
     {
       "rule_id": "CIS-NET-021",
       "title": "IOS version not recorded",
       "severity": "low",
-      "control_ref": "CIS Cisco IOS 1.5.2 - Track the running software version",
+      "control_ref": "Not in CIS Cisco IOS 15 benchmark - Cisco hardening: track the running software version",
       "framework": "CIS"
     },
     {
       "rule_id": "CIS-NET-017",
       "title": "HTTPS management server not enabled",
       "severity": "high",
-      "control_ref": "CIS Cisco IOS 1.2.2 - Use HTTPS if web management is required",
+      "control_ref": "Not in CIS Cisco IOS 15 benchmark - Cisco hardening: use HTTPS if web management is required",
       "framework": "CIS"
     }
   ],
