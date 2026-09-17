@@ -138,10 +138,11 @@ def _code_lines(text: str) -> list[str]:
 
 def _learned_lines(doc: dict) -> set:
     """Lines recognised only through a learned mapping."""
-    return {ref["line"]
-            for r in doc["resources"]
-            for ref in (r.get("attribute_refs") or {}).values()
-            if isinstance(ref, dict) and ref.get("learned")}
+    from_refs = {ref["line"]
+                 for r in doc["resources"]
+                 for ref in (r.get("attribute_refs") or {}).values()
+                 if isinstance(ref, dict) and ref.get("learned")}
+    return from_refs | set(doc.get("_learned_lines") or [])
 
 
 def _recognised_share(text: str, doc: dict) -> float:

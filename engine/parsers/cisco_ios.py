@@ -5,7 +5,7 @@ Target: samples/normalized_examples.json -> "cisco_example"
 """
 
 from ciscoconfparse2 import CiscoConfParse
-from engine.parsers.learned import load_mappings, match_line, coerce_value
+from engine.parsers.learned import load_mappings, match_line, coerce_value, apply_learned_value
 from .base import Parser
 
 
@@ -136,7 +136,7 @@ class CiscoIOSParser(Parser):
         for linenum, line in enumerate(config_text.splitlines()):
             text = line.strip()
 
-            if not text or text.startswith("!"):
+            if not text or text.startswith(("!", "#")):
                 continue
 
             if linenum in self._claimed:
@@ -167,12 +167,8 @@ class CiscoIOSParser(Parser):
                 }
                 doc["resources"].append(target)
 
-            target["attributes"][mapping["attribute"]] = coerce_value(mapping["value"])
-            target.setdefault("attribute_refs", {})[mapping["attribute"]] = {
-                "line": linenum + 1,
-                "snippet": text,
-                "learned": True,
-            }
+            apply_learned_value(doc, target, mapping["attribute"], mapping["value"],
+                                {"line": linenum + 1, "snippet": text, "learned": True})
             self._claimed.add(linenum)
             
     def _unparsed_lines(self, config_text: str):
@@ -198,7 +194,7 @@ class CiscoIOSParser(Parser):
                     delimiter = None
                 continue
 
-            if not text or text.startswith("!"):
+            if not text or text.startswith(("!", "#")):
                 continue
 
             if text.startswith("banner "):

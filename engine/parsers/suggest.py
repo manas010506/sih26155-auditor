@@ -84,25 +84,42 @@ RULES: list[tuple[str, str, str, str | None]] = [
 ]
 
 
+# A line that switches a service off must not be proposed as enabling it.
+_TURNED_OFF = re.compile(r"\bdisabled\s*=\s*(?:yes|true)\b|\benabled\s*=\s*(?:no|false)\b")
+_SERVICE_FLAGS = frozenset({"http_server", "https_server", "cdp_enabled"})
+# 0.0.0.0 names no host: `remote=0.0.0.0` means remote logging is off.
+_UNSPECIFIED = frozenset({"0.0.0.0", "255.255.255.255"})
+
+
 def suggest(line: str) -> dict | None:
     """Propose a mapping for one unrecognised line, or None.
 
     Returns {resource_type, attribute, value, matched, confidence}.
-    `matched` is the keyword that fired — the UI shows it so the administrator
+    `matched` is the keyword that fired; the UI shows it so the administrator
     can see *why* this was proposed rather than being asked to trust it.
     """
-    text = " ".join(str(line).split()).lower()
-    if not text or text.startswith("!"):
+    original = " ".join(str(line).split())
+    text = original.lower()
+    if not text or text.startswith(("!", "#")):
         return None
+    turned_off = bool(_TURNED_OFF.search(text))
 
     for pattern, resource_type, attribute, value in RULES:
         m = re.search(pattern, text)
         if not m:
             continue
+        if turned_off and attribute == "transport_input":
+            return None  # a disabled protocol adds nothing to the allowed transports
+        if turned_off and attribute in _SERVICE_FLAGS and value == "true":
+            value = "false"
+        if attribute == "versions_in_use":
+            value = _snmp_versions(text)
+        elif value is None:
+            value = _guess_value(original)
         return {
             "resource_type": resource_type,
             "attribute": attribute,
-            "value": value or _guess_value(text),
+            "value": value,
             "matched": m.group(0),
             # Two keyword groups matching is a stronger signal than one.
             "confidence": "high" if len(m.groups()) >= 2 else "medium",
@@ -110,22 +127,40 @@ def suggest(line: str) -> dict | None:
     return None
 
 
+def _snmp_versions(text: str) -> str:
+    """SNMP versions a line puts in use, comma-separated.
+
+    Turning SNMP on without naming versions means the vendor defaults, which
+    include v1 and v2c."""
+    if _TURNED_OFF.search(text):
+        return ""
+    found = [v for v, pat in (("v1", r"\bv1\b|\bversion\s*1\b"),
+                               ("v2c", r"\bv?2c\b"),
+                               ("v3", r"\bv3\b|\bversion\s*3\b"))
+             if re.search(pat, text)]
+    if not found and re.search(r"\benabled?\b", text):
+        found = ["v1", "v2c"]
+    return ",".join(found)
+
+
 def _guess_value(text: str) -> str:
-    """Pull an obvious value out of the line.
+    """Pull an obvious value out of the line, keeping its original case.
 
     An address first, then a key=value or "keyword value" pair, then a bare
     number. Order matters: `name=EDGE-MT-01` should yield the hostname, not the
-    `01` a naive number match would grab.
+    `01` a naive number match would grab. An unspecified address such as
+    0.0.0.0 names no host, so it yields an empty value.
     """
-    ip = re.search(r"\b\d{1,3}(?:\.\d{1,3}){3}\b", text)
-    if ip:
-        return ip.group(0)
+    ips = re.findall(r"\b\d{1,3}(?:\.\d{1,3}){3}\b", text)
+    if ips:
+        real = [ip for ip in ips if ip not in _UNSPECIFIED]
+        return real[0] if real else ""
 
-    kv = re.search(r"\b(?:name|identity|host|server|hostname)\s*=\s*([^\s;,]+)", text)
+    kv = re.search(r"\b(?:name|identity|host|server|hostname)\s*=\s*([^\s;,]+)", text, re.I)
     if kv:
         return kv.group(1)
 
-    kw = re.search(r"\b(?:hostname|host-?name|identity)\s+([^\s;,]+)", text)
+    kw = re.search(r"\b(?:hostname|host-?name|identity)\s+([^\s;,]+)", text, re.I)
     if kw:
         return kw.group(1)
 

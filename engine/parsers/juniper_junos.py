@@ -386,7 +386,7 @@ class JuniperJunOSParser(Parser):
     def _apply_learned(self, doc: dict) -> None:
         """Apply anything an administrator has taught us, same as Cisco."""
         try:
-            from engine.parsers.learned import coerce_value, load_mappings, match_line
+            from engine.parsers.learned import apply_learned_value, coerce_value, load_mappings, match_line
         except ImportError:
             return
         mappings = load_mappings()
@@ -413,12 +413,8 @@ class JuniperJunOSParser(Parser):
                     "raw_ref": {"line": i + 1, "snippet": text},
                 }
                 doc["resources"].append(target)
-            target["attributes"][mapping["attribute"]] = coerce_value(mapping["value"])
-            target.setdefault("attribute_refs", {})[mapping["attribute"]] = {
-                "line": i + 1,
-                "snippet": text,
-                "learned": True,
-            }
+            apply_learned_value(doc, target, mapping["attribute"], mapping["value"],
+                                {"line": i + 1, "snippet": text, "learned": True})
             self._claimed.add(i)
 
     # -------------------------------------------------------------- unparsed

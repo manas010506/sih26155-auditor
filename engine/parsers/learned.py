@@ -99,3 +99,33 @@ def coerce_value(value):
     if re.fullmatch(r"-?\d+", s):
         return int(s)
     return s
+
+
+# Attributes that hold a list. A taught line adds to them instead of replacing
+# them, so teaching `ssh` after `telnet` cannot erase the Telnet finding.
+LIST_ATTRIBUTES = frozenset({"transport_input", "hosts", "servers", "versions_in_use"})
+
+
+def apply_learned_value(doc: dict, target: dict, attribute: str, value, ref: dict) -> None:
+    """Set one learned attribute on a resource and record the line behind it.
+
+    Scalars take the latest taught value. Lists accumulate and keep the first
+    taught line as their reference, so a finding points at the line that
+    introduced the problem. Every taught line is recorded on the document so the
+    evidence gate can tell taught lines from lines the parser read itself."""
+    attrs = target.setdefault("attributes", {})
+    refs = target.setdefault("attribute_refs", {})
+    if attribute in LIST_ATTRIBUTES:
+        current = attrs.get(attribute)
+        items = list(current) if isinstance(current, list) and attribute in refs else []
+        parts = value if isinstance(value, list) else str("" if value is None else value).split(",")
+        for part in parts:
+            item = coerce_value(part.strip()) if isinstance(part, str) else part
+            if item != "" and item not in items:
+                items.append(item)
+        attrs[attribute] = items
+        refs.setdefault(attribute, ref)
+    else:
+        attrs[attribute] = coerce_value(value)
+        refs[attribute] = ref
+    doc.setdefault("_learned_lines", []).append(ref["line"])
