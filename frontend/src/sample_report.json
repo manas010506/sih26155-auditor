@@ -31,7 +31,8 @@
     "failed_weight": 218,
     "total_weight": 257,
     "recognised_share": 1.0,
-    "controls_total": 32
+    "controls_total": 32,
+    "lines_taught": 0
   },
   "findings": [
     {

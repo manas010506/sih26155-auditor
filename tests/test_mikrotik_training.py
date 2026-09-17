@@ -82,3 +82,10 @@ def test_suggestions_keep_case_and_respect_disabled_services():
     assert suggest("/system identity set name=EDGE-MT-01")["value"] == "EDGE-MT-01"
     assert suggest("/ip service set telnet disabled=yes") is None
     assert suggest("/ip service set www disabled=yes")["value"] == "false"
+
+
+def test_taught_lines_are_counted_in_the_breakdown():
+    """The training page shows these, so progress survives a re-audit."""
+    assert audit()["score_breakdown"]["lines_taught"] == 0
+    teach(3, 5, 7)
+    assert audit()["score_breakdown"]["lines_taught"] == 3

@@ -138,7 +138,7 @@ const Training = () => {
 
   const completedCount = Object.keys(mappings).length;
   const remainingCount = Math.max(0, lines.length - completedCount);
-  const progressPercent = lines.length === 0 ? 100 : (completedCount / lines.length) * 100;
+  const progressPercent = lines.length === 0 ? 100 : ((completedCount + (reportData?.score_breakdown?.lines_taught ?? 0)) / (lines.length + (reportData?.score_breakdown?.lines_taught ?? 0))) * 100;
 
   if (!reportData) {
     const TrainingSVG = (
@@ -656,9 +656,9 @@ const Training = () => {
         {lines.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
-              <div className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)', letterSpacing: '0.05em' }}>SESSION PROGRESS</div>
+              <div className="mono" style={{ fontSize: '10px', color: 'var(--ink-dim)', letterSpacing: '0.05em' }}>TRAINING PROGRESS</div>
               <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink)' }}>
-                {completedCount} <span style={{ color: 'var(--ink-dim)', fontWeight: 400, margin: '0 4px' }}>/</span> {lines.length} <span style={{ color: 'var(--trace)', fontSize: '12px', marginLeft: '6px' }}>MAPPED</span>
+                {completedCount + (reportData?.score_breakdown?.lines_taught ?? 0)} <span style={{ color: 'var(--ink-dim)', fontWeight: 400, margin: '0 4px' }}>/</span> {lines.length + (reportData?.score_breakdown?.lines_taught ?? 0)} <span style={{ color: 'var(--trace)', fontSize: '12px', marginLeft: '6px' }}>MAPPED</span>
               </div>
             </div>
             <div style={{ width: '120px', height: '4px', background: 'var(--substrate)', borderRadius: '2px', overflow: 'hidden', border: '1px solid var(--wire)' }}>

@@ -226,6 +226,9 @@ def run_audit(config_text: str, source_type: str, filename: str | None = None,
     breakdown = scored["score_breakdown"]
     breakdown["recognised_share"] = round(recognised, 2)
     breakdown["controls_total"] = len(all_rules)
+    # Lines recognised only because an administrator taught them. The
+    # training page counts them, so progress survives a re-audit.
+    breakdown["lines_taught"] = len(_learned_lines(doc))
     compliance_score = scored["compliance_score"]
     if not native and rules:
         # A few evidenced checks are not a compliance verdict: a percentage
