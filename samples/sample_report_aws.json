@@ -38,7 +38,7 @@
         "line": 56,
         "snippet": "description = \"SSH from anywhere\""
       },
-      "cis_control": "CIS AWS 5.2 - No ingress from 0.0.0.0/0 to remote administration ports",
+      "cis_control": "CIS AWS 1.5.0 5.2 - No security group ingress from 0.0.0.0/0 to remote administration ports",
       "remediation_template": "ingress {\n  from_port   = 22\n  to_port     = 22\n  protocol    = \"tcp\"\n  cidr_blocks = [\"10.0.0.0/8\"]\n}",
       "explanation": "SSH is reachable from every address on the internet. This is the most scanned port on AWS and the usual first step in a host compromise."
     },
@@ -51,7 +51,7 @@
         "line": 72,
         "snippet": "description = \"Temporary debug access\""
       },
-      "cis_control": "CIS AWS 5.3 - Restrict security group ingress to required ports only",
+      "cis_control": "CIS AWS 1.5.0 5.2 - No security group ingress from 0.0.0.0/0 to remote administration ports",
       "remediation_template": "# Remove the 0-65535 ingress block entirely.\n# Open only the ports the service actually needs.",
       "explanation": "A rule opening ports 0-65535 to 0.0.0.0/0 makes every other ingress restriction on the group meaningless."
     },
@@ -64,7 +64,7 @@
         "line": 23,
         "snippet": "acl    = \"public-read\""
       },
-      "cis_control": "CIS AWS 2.1.5 - Ensure S3 buckets are not publicly accessible",
+      "cis_control": "CIS AWS 1.5.0 2.1.5 - Configure S3 Block Public Access (bucket settings)",
       "remediation_template": "resource \"aws_s3_bucket_acl\" \"sensitive_data\" {\n  bucket = aws_s3_bucket.sensitive_data.id\n  acl    = \"private\"\n}",
       "explanation": "A public-read ACL exposes every object in the bucket to anonymous requests."
     },
@@ -77,7 +77,7 @@
         "line": 98,
         "snippet": "Action   = \"*\""
       },
-      "cis_control": "CIS AWS 1.16 - Ensure IAM policies grant least privilege",
+      "cis_control": "CIS AWS 1.5.0 1.16 - No IAM policies granting full *:* administrative privileges",
       "remediation_template": "Statement = [{\n  Effect   = \"Allow\"\n  Action   = [\"s3:GetObject\", \"s3:PutObject\"]\n  Resource = [\"arn:aws:s3:::corp-app-logs-prod/*\"]\n}]",
       "explanation": "Action \"*\" on Resource \"*\" is administrator access, so a single compromised workload becomes full account control."
     },
@@ -90,7 +90,7 @@
         "line": 113,
         "snippet": "publicly_accessible        = true"
       },
-      "cis_control": "CIS AWS 2.3.3 - Ensure RDS instances are not publicly accessible",
+      "cis_control": "CIS AWS 1.5.0 2.3.3 - Ensure public access is not given to RDS instances",
       "remediation_template": "publicly_accessible = false",
       "explanation": "The production database has a public endpoint, so its only protection is the security group in front of it."
     },
@@ -103,7 +103,7 @@
         "line": 64,
         "snippet": "description = \"RDP from anywhere\""
       },
-      "cis_control": "CIS AWS 5.2 - No ingress from 0.0.0.0/0 to remote administration ports",
+      "cis_control": "CIS AWS 1.5.0 5.2 - No security group ingress from 0.0.0.0/0 to remote administration ports",
       "remediation_template": "cidr_blocks = [\"10.0.0.0/8\"]",
       "explanation": "RDP open to the world is continuously scanned and brute-forced, and exposes the service to protocol-level vulnerabilities regardless of password strength."
     },
@@ -113,7 +113,7 @@
       "severity": "high",
       "resource_id": "s3-sensitive_data",
       "raw_ref": null,
-      "cis_control": "CIS AWS 2.1.5 - Enable S3 Block Public Access at the bucket level",
+      "cis_control": "CIS AWS 1.5.0 2.1.5 - Configure S3 Block Public Access (bucket settings)",
       "remediation_template": "resource \"aws_s3_bucket_public_access_block\" \"sensitive_data\" {\n  bucket                  = aws_s3_bucket.sensitive_data.id\n  block_public_acls       = true\n  block_public_policy     = true\n  ignore_public_acls      = true\n  restrict_public_buckets = true\n}",
       "explanation": "Nothing prevents a future ACL or bucket policy from making this bucket public again. The block is the control that survives human error."
     },
@@ -123,7 +123,7 @@
       "severity": "high",
       "resource_id": "s3-sensitive_data",
       "raw_ref": null,
-      "cis_control": "CIS AWS 2.1.1 - Ensure S3 buckets employ encryption at rest",
+      "cis_control": "CIS AWS 1.5.0 2.1.1 - Ensure all S3 buckets employ encryption-at-rest",
       "remediation_template": "resource \"aws_s3_bucket_server_side_encryption_configuration\" \"sensitive_data\" {\n  bucket = aws_s3_bucket.sensitive_data.id\n  rule {\n    apply_server_side_encryption_by_default {\n      sse_algorithm     = \"aws:kms\"\n      kms_master_key_id = aws_kms_key.app_key.arn\n    }\n  }\n}",
       "explanation": "Objects are stored unencrypted while another bucket in the same file is encrypted, which is drift rather than a deliberate choice."
     },
@@ -136,7 +136,7 @@
         "line": 131,
         "snippet": "is_multi_region_trail         = false"
       },
-      "cis_control": "CIS AWS 3.1 - Ensure CloudTrail is enabled in all regions",
+      "cis_control": "CIS AWS 1.5.0 3.1 - Ensure CloudTrail is enabled in all regions",
       "remediation_template": "is_multi_region_trail = true",
       "explanation": "Activity outside the trail's region is unrecorded, and attackers routinely operate in unused regions for exactly that reason."
     },
@@ -149,7 +149,7 @@
         "line": 114,
         "snippet": "storage_encrypted          = false"
       },
-      "cis_control": "CIS AWS 2.3.1 - Ensure RDS instances have encryption at rest enabled",
+      "cis_control": "CIS AWS 1.5.0 2.3.1 - Ensure encryption is enabled for RDS instances",
       "remediation_template": "storage_encrypted = true\nkms_key_id        = aws_kms_key.app_key.arn",
       "explanation": "Volumes and automated snapshots are unencrypted, and this cannot be fixed in place \u2014 it needs a snapshot, an encrypted copy and a restore."
     },
@@ -159,7 +159,7 @@
       "severity": "medium",
       "resource_id": "s3-sensitive_data",
       "raw_ref": null,
-      "cis_control": "CIS AWS 2.1.3 - Ensure S3 bucket versioning is enabled",
+      "cis_control": "Not in CIS AWS Foundations 1.5.0 - AWS hardening: enable S3 bucket versioning",
       "remediation_template": "resource \"aws_s3_bucket_versioning\" \"sensitive_data\" {\n  bucket = aws_s3_bucket.sensitive_data.id\n  versioning_configuration {\n    status = \"Enabled\"\n  }\n}",
       "explanation": "Without versioning an overwrite or deletion is unrecoverable, whether accidental or from ransomware."
     },
@@ -169,7 +169,7 @@
       "severity": "medium",
       "resource_id": "s3-sensitive_data",
       "raw_ref": null,
-      "cis_control": "CIS AWS 2.1.2 - Ensure S3 bucket access logging is enabled",
+      "cis_control": "Not in CIS AWS Foundations 1.5.0 - AWS hardening: enable S3 server access logging",
       "remediation_template": "resource \"aws_s3_bucket_logging\" \"sensitive_data\" {\n  bucket        = aws_s3_bucket.sensitive_data.id\n  target_bucket = aws_s3_bucket.app_logs.id\n  target_prefix = \"s3-access/\"\n}",
       "explanation": "No record exists of who read objects from this bucket, so an exploited public ACL leaves no trail."
     },
@@ -182,7 +182,7 @@
         "line": 125,
         "snippet": "enable_key_rotation = false"
       },
-      "cis_control": "CIS AWS 3.6 - Ensure rotation for customer-created KMS keys is enabled",
+      "cis_control": "CIS AWS 1.5.0 3.8 - Ensure rotation for customer-created KMS keys is enabled",
       "remediation_template": "enable_key_rotation = true",
       "explanation": "Key material never changes, so a key compromised at any point stays useful indefinitely. Rotation is automatic and needs no application change."
     },
@@ -195,7 +195,7 @@
         "line": 115,
         "snippet": "backup_retention_period    = 1"
       },
-      "cis_control": "CIS AWS 2.3.2 - Ensure adequate RDS backup retention",
+      "cis_control": "Not in CIS AWS Foundations 1.5.0 - AWS hardening: keep RDS backup retention at 7 days or more",
       "remediation_template": "backup_retention_period = 7",
       "explanation": "A single day of automated backups means a problem found on Monday morning may already be unrecoverable."
     },
@@ -208,7 +208,7 @@
         "line": 132,
         "snippet": "enable_log_file_validation    = false"
       },
-      "cis_control": "CIS AWS 3.2 - Ensure CloudTrail log file validation is enabled",
+      "cis_control": "CIS AWS 1.5.0 3.2 - Ensure CloudTrail log file validation is enabled",
       "remediation_template": "enable_log_file_validation = true",
       "explanation": "Without validation there is no way to prove log files were not altered after delivery, which undermines their value as evidence."
     }

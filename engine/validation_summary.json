@@ -1,6 +1,6 @@
 {
-  "generated": "2026-09-17T06:52:35+00:00",
-  "commit": "09c00b4",
+  "generated": "2026-09-17T07:03:07+00:00",
+  "commit": "a158962",
   "method": "Each chain has a minimal positive fixture and a negative that applies that chain's break_chain fix and nothing else. Expected verdicts were recorded before the engine was run.",
   "positive_fixtures": 3,
   "negative_fixtures": 3,

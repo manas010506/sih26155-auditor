@@ -3,7 +3,7 @@
   applies_to: security_group_rule
   when:
     open_to_internet: true
-  cis_control: CIS AWS 5.2 - No ingress from 0.0.0.0/0 to remote administration ports
+  cis_control: CIS AWS 1.5.0 5.2 - No security group ingress from 0.0.0.0/0 to remote administration ports
   severity: critical
   check:
     attribute: from_port
@@ -21,7 +21,7 @@
   when:
     open_to_internet: true
     from_port: 3389
-  cis_control: CIS AWS 5.2 - No ingress from 0.0.0.0/0 to remote administration ports
+  cis_control: CIS AWS 1.5.0 5.2 - No security group ingress from 0.0.0.0/0 to remote administration ports
   severity: high
   check:
     attribute: cidr_blocks
@@ -35,7 +35,7 @@
   applies_to: security_group_rule
   when:
     open_to_internet: true
-  cis_control: CIS AWS 5.3 - Restrict security group ingress to required ports only
+  cis_control: CIS AWS 1.5.0 5.2 - No security group ingress from 0.0.0.0/0 to remote administration ports
   severity: critical
   check:
     attribute: is_wide_range
@@ -49,7 +49,7 @@
 - id: CIS-CLOUD-004
   title: S3 bucket has a public ACL
   applies_to: s3_bucket
-  cis_control: CIS AWS 2.1.5 - Ensure S3 buckets are not publicly accessible
+  cis_control: CIS AWS 1.5.0 2.1.5 - Configure S3 Block Public Access (bucket settings)
   severity: critical
   check:
     attribute: acl
@@ -64,7 +64,7 @@
 - id: CIS-CLOUD-005
   title: S3 bucket has no public access block
   applies_to: s3_bucket
-  cis_control: CIS AWS 2.1.5 - Enable S3 Block Public Access at the bucket level
+  cis_control: CIS AWS 1.5.0 2.1.5 - Configure S3 Block Public Access (bucket settings)
   severity: high
   check:
     attribute: public_access_block
@@ -79,7 +79,7 @@
 - id: CIS-CLOUD-006
   title: S3 bucket has no server-side encryption
   applies_to: s3_bucket
-  cis_control: CIS AWS 2.1.1 - Ensure S3 buckets employ encryption at rest
+  cis_control: CIS AWS 1.5.0 2.1.1 - Ensure all S3 buckets employ encryption-at-rest
   severity: high
   check:
     attribute: encrypted
@@ -94,7 +94,7 @@
 - id: CIS-CLOUD-007
   title: S3 bucket versioning disabled
   applies_to: s3_bucket
-  cis_control: CIS AWS 2.1.3 - Ensure S3 bucket versioning is enabled
+  cis_control: 'Not in CIS AWS Foundations 1.5.0 - AWS hardening: enable S3 bucket versioning'
   severity: medium
   check:
     attribute: versioning
@@ -108,7 +108,7 @@
 - id: CIS-CLOUD-008
   title: S3 access logging disabled
   applies_to: s3_bucket
-  cis_control: CIS AWS 2.1.2 - Ensure S3 bucket access logging is enabled
+  cis_control: 'Not in CIS AWS Foundations 1.5.0 - AWS hardening: enable S3 server access logging'
   severity: medium
   check:
     attribute: access_logging
@@ -124,7 +124,7 @@
   applies_to: iam_policy
   when:
     wildcard_resource: true
-  cis_control: CIS AWS 1.16 - Ensure IAM policies grant least privilege
+  cis_control: CIS AWS 1.5.0 1.16 - No IAM policies granting full *:* administrative privileges
   severity: critical
   check:
     attribute: wildcard_action
@@ -137,7 +137,7 @@
 - id: CIS-CLOUD-010
   title: CloudTrail is not multi-region
   applies_to: cloudtrail
-  cis_control: CIS AWS 3.1 - Ensure CloudTrail is enabled in all regions
+  cis_control: CIS AWS 1.5.0 3.1 - Ensure CloudTrail is enabled in all regions
   severity: high
   check:
     attribute: multi_region
@@ -149,7 +149,7 @@
 - id: CIS-CLOUD-015
   title: CloudTrail log file validation disabled
   applies_to: cloudtrail
-  cis_control: CIS AWS 3.2 - Ensure CloudTrail log file validation is enabled
+  cis_control: CIS AWS 1.5.0 3.2 - Ensure CloudTrail log file validation is enabled
   severity: low
   check:
     attribute: log_file_validation
@@ -161,7 +161,7 @@
 - id: CIS-CLOUD-011
   title: RDS instance is publicly accessible
   applies_to: rds_instance
-  cis_control: CIS AWS 2.3.3 - Ensure RDS instances are not publicly accessible
+  cis_control: CIS AWS 1.5.0 2.3.3 - Ensure public access is not given to RDS instances
   severity: critical
   check:
     attribute: publicly_accessible
@@ -173,7 +173,7 @@
 - id: CIS-CLOUD-012
   title: RDS storage is not encrypted
   applies_to: rds_instance
-  cis_control: CIS AWS 2.3.1 - Ensure RDS instances have encryption at rest enabled
+  cis_control: CIS AWS 1.5.0 2.3.1 - Ensure encryption is enabled for RDS instances
   severity: high
   check:
     attribute: storage_encrypted
@@ -187,7 +187,7 @@
 - id: CIS-CLOUD-014
   title: RDS backup retention below policy minimum
   applies_to: rds_instance
-  cis_control: CIS AWS 2.3.2 - Ensure adequate RDS backup retention
+  cis_control: 'Not in CIS AWS Foundations 1.5.0 - AWS hardening: keep RDS backup retention at 7 days or more'
   severity: low
   check:
     attribute: backup_retention_days
@@ -199,7 +199,7 @@
 - id: CIS-CLOUD-013
   title: KMS key rotation disabled
   applies_to: kms_key
-  cis_control: CIS AWS 3.6 - Ensure rotation for customer-created KMS keys is enabled
+  cis_control: CIS AWS 1.5.0 3.8 - Ensure rotation for customer-created KMS keys is enabled
   severity: medium
   check:
     attribute: key_rotation
@@ -211,7 +211,7 @@
 - id: CIS-CLOUD-016
   title: CloudTrail is not configured
   applies_to: cloudtrail
-  cis_control: CIS AWS 3.1 - Ensure CloudTrail is enabled
+  cis_control: CIS AWS 1.5.0 3.1 - Ensure CloudTrail is enabled in all regions
   severity: high
   check:
     attribute: exists
@@ -223,7 +223,7 @@
 - id: CIS-CLOUD-017
   title: RDS deletion protection disabled
   applies_to: rds_instance
-  cis_control: CIS AWS 2.3.4 - Enable deletion protection on production databases
+  cis_control: 'Not in CIS AWS Foundations 1.5.0 - AWS hardening: enable RDS deletion protection'
   severity: medium
   check:
     attribute: deletion_protection
@@ -235,7 +235,7 @@
 - id: CIS-CLOUD-018
   title: RDS automatic minor version upgrades disabled
   applies_to: rds_instance
-  cis_control: CIS AWS 2.3.5 - Keep database engines patched
+  cis_control: CIS AWS 1.5.0 2.3.2 - Ensure Auto Minor Version Upgrade is enabled for RDS instances
   severity: medium
   check:
     attribute: auto_minor_version_upgrade
