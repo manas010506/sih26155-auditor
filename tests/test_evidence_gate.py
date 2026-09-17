@@ -90,3 +90,13 @@ def test_community_without_access_keyword_is_read_as_ro():
     r = audit(sample("demo_aruba.cfg"), "cisco_ios")
     f = next(f for f in r["findings"] if f["rule_id"] == "CIS-NET-008")
     assert f["raw_ref"]["line"] == 15
+
+
+def test_unknown_cloud_sample_is_not_assessed():
+    """samples/unknown_cloud.tf uses only resource types no rule covers
+    (EFS, Elasticsearch, Redshift). It must read as Not assessed, never as
+    a clean 100/100: the original vacuous-pass bug."""
+    r = run_audit(sample("unknown_cloud.tf"), "terraform_aws", enrich=False)
+    assert r["compliance_score"] is None
+    assert r["score_breakdown"]["not_assessable"] is True
+    assert r["findings"] == []
